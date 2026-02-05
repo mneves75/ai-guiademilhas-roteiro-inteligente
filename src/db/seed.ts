@@ -1,24 +1,56 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema/postgres';
+import { DB_PROVIDER } from './client';
 
 /**
- * Seed development database with sample data
+ * Multi-database seed script.
+ * Resolves the correct driver based on DB_PROVIDER env var.
  */
 async function runSeed() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    console.error('DATABASE_URL not set');
-    process.exit(1);
+  console.log(`Seeding database (provider: ${DB_PROVIDER})...`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let db: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let schema: any;
+  let cleanup: () => Promise<void> = async () => {};
+
+  if (DB_PROVIDER === 'sqlite') {
+    const Database = (await import('better-sqlite3')).default;
+    const { drizzle } = await import('drizzle-orm/better-sqlite3');
+    const sqliteSchema = await import('./schema/sqlite');
+
+    const dbPath = process.env.SQLITE_PATH ?? './data/app.db';
+    const { mkdirSync, existsSync } = await import('fs');
+    const { dirname } = await import('path');
+    const dir = dirname(dbPath);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+
+    const sqlite = new Database(dbPath);
+    sqlite.pragma('journal_mode = WAL');
+    sqlite.pragma('foreign_keys = ON');
+
+    db = drizzle(sqlite, { schema: sqliteSchema });
+    schema = sqliteSchema;
+    cleanup = async () => {
+      sqlite.close();
+    };
+  } else {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      console.error('DATABASE_URL not set');
+      process.exit(1);
+    }
+
+    const pg = (await import('postgres')).default;
+    const { drizzle } = await import('drizzle-orm/postgres-js');
+    const pgSchema = await import('./schema/postgres');
+
+    const client = pg(connectionString);
+    db = drizzle(client, { schema: pgSchema });
+    schema = pgSchema;
+    cleanup = async () => client.end();
   }
 
-  const client = postgres(connectionString);
-  const db = drizzle(client, { schema });
-
-  console.log('Seeding database...');
-
   try {
-    // Create sample users
     const userIds = [
       'user_01',
       'user_02',
@@ -45,7 +77,6 @@ async function runSeed() {
     await db.insert(schema.users).values(sampleUsers).onConflictDoNothing();
     console.log('  + 10 users');
 
-    // Create sample workspaces
     const workspaceData = [
       { name: 'Acme Corp', slug: 'acme-corp', ownerUserId: 'user_01' },
       { name: 'TechStart Inc', slug: 'techstart-inc', ownerUserId: 'user_02' },
@@ -67,7 +98,6 @@ async function runSeed() {
       .returning();
     console.log('  + 5 workspaces');
 
-    // Create workspace members
     if (insertedWorkspaces.length > 0) {
       const memberData: {
         workspaceId: number;
@@ -78,7 +108,6 @@ async function runSeed() {
       }[] = [];
 
       for (const ws of insertedWorkspaces) {
-        // Owner is always a member with 'owner' role
         memberData.push({
           workspaceId: ws.id,
           userId: ws.ownerUserId,
@@ -86,8 +115,7 @@ async function runSeed() {
           createdAt: new Date(),
           updatedAt: new Date(),
         });
-        // Add 2 members to each workspace
-        const memberIndex = (ws.id % 5) + 5; // Users 6-10
+        const memberIndex = (ws.id % 5) + 5;
         memberData.push({
           workspaceId: ws.id,
           userId: userIds[memberIndex] ?? 'user_06',
@@ -107,8 +135,8 @@ async function runSeed() {
       await db.insert(schema.workspaceMembers).values(memberData).onConflictDoNothing();
       console.log('  + 15 workspace members');
 
-      // Create subscriptions
-      const subscriptionData = insertedWorkspaces.map((ws, i) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const subscriptionData = insertedWorkspaces.map((ws: any, i: number) => ({
         workspaceId: ws.id,
         stripeCustomerId: `cus_sample_${ws.id}`,
         stripeSubscriptionId: `sub_sample_${ws.id}`,
@@ -126,11 +154,11 @@ async function runSeed() {
     }
 
     console.log('\nDatabase seeded successfully');
-    await client.end();
+    await cleanup();
     process.exit(0);
   } catch (error) {
     console.error('Seed failed:', error);
-    await client.end();
+    await cleanup();
     process.exit(1);
   }
 }

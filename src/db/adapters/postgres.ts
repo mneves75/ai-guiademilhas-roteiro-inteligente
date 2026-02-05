@@ -12,7 +12,10 @@ type Schema = typeof schema;
  */
 export function createPostgresDb(): PostgresJsDatabase<Schema> {
   if (!process.env.DATABASE_URL) {
-    return undefined as unknown as PostgresJsDatabase<Schema>;
+    throw new Error(
+      'DATABASE_URL is required when DB_PROVIDER=postgres. ' +
+        'Set it in .env or environment variables.'
+    );
   }
   return drizzle(postgres(process.env.DATABASE_URL), { schema });
 }
@@ -23,7 +26,9 @@ export function createPostgresDb(): PostgresJsDatabase<Schema> {
  */
 export function createPostgresEdgeDb(): NeonHttpDatabase<Schema> {
   if (!process.env.DATABASE_URL) {
-    return undefined as unknown as NeonHttpDatabase<Schema>;
+    throw new Error(
+      'DATABASE_URL is required for edge runtime. ' + 'Set it in .env or environment variables.'
+    );
   }
   return drizzleNeon(neon(process.env.DATABASE_URL), { schema });
 }
