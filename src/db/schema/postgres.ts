@@ -302,18 +302,3 @@ export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvit
 });
 
 export const selectWorkspaceInvitationSchema = createSelectSchema(workspaceInvitations);
-
-// ==================== TYPE EXPORTS ====================
-
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-export type Session = typeof sessions.$inferSelect;
-export type Account = typeof accounts.$inferSelect;
-export type Workspace = typeof workspaces.$inferSelect;
-export type NewWorkspace = typeof workspaces.$inferInsert;
-export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
-export type NewWorkspaceMember = typeof workspaceMembers.$inferInsert;
-export type Subscription = typeof subscriptions.$inferSelect;
-export type NewSubscription = typeof subscriptions.$inferInsert;
-export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
-export type NewWorkspaceInvitation = typeof workspaceInvitations.$inferInsert;

@@ -6,5 +6,11 @@ export * from '@/db/queries/users';
 export * from '@/db/queries/workspaces';
 export * from '@/db/queries/subscriptions';
 
-// Re-export schema (for type definitions)
-export * from '@/db/schema';
+// Re-export types (for consumers that import types from here)
+export type {
+  User,
+  Workspace,
+  WorkspaceMember,
+  Subscription,
+  WorkspaceInvitation,
+} from '@/db/schema';

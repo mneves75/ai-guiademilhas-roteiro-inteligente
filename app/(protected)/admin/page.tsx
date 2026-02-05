@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getSystemStats, getRecentActivity } from '@/lib/admin';
 import { Users, FolderKanban, CreditCard, TrendingUp } from 'lucide-react';
+import type { User, Workspace } from '@/db/schema/types';
 
 export default async function AdminDashboardPage() {
   const stats = await getSystemStats();
@@ -68,7 +69,7 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">No users yet.</p>
             ) : (
               <div className="space-y-3">
-                {activity.recentUsers.map((user) => (
+                {activity.recentUsers.map((user: User) => (
                   <div key={user.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
@@ -99,7 +100,7 @@ export default async function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">No workspaces yet.</p>
             ) : (
               <div className="space-y-3">
-                {activity.recentWorkspaces.map((workspace) => (
+                {activity.recentWorkspaces.map((workspace: Workspace & { owner?: User | null }) => (
                   <div key={workspace.id} className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">{workspace.name}</p>

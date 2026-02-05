@@ -1,5 +1,4 @@
-import { db } from '@/db/client';
-import { users, workspaces, subscriptions } from '@/db/schema';
+import { db, users, workspaces, subscriptions } from '@/db/client';
 import { count, desc, sql } from 'drizzle-orm';
 
 /**

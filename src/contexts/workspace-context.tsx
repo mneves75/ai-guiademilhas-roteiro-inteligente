@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import type { Workspace } from '@/db/schema';
+import type { Workspace } from '@/db/schema/types';
 
 type WorkspaceWithRole = {
   workspace: Workspace;

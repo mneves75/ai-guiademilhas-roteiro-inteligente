@@ -1,5 +1,4 @@
-import { db } from '@/db/client';
-import { workspaceInvitations, workspaceMembers } from '@/db/schema';
+import { db, workspaceInvitations, workspaceMembers } from '@/db/client';
 import { eq } from 'drizzle-orm';
 import { withSoftDeleteFilter } from './base';
 import crypto from 'crypto';

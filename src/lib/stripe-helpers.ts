@@ -1,6 +1,5 @@
 import { stripe, STRIPE_PLANS, type PlanId } from './stripe';
-import { db } from '@/db/client';
-import { subscriptions } from '@/db/schema';
+import { db, subscriptions } from '@/db/client';
 import { eq } from 'drizzle-orm';
 
 /**

@@ -1,0 +1,30 @@
+# Cloudflare Workers + D1 + R2 deployment config
+# Docs: https://developers.cloudflare.com/workers/configuration/
+
+name = "nextjs-bootstrapped-shipped"
+compatibility_date = "2025-01-01"
+main = ".worker/index.js"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "app-db"
+database_id = "" # Set after: wrangler d1 create app-db
+
+# R2 Storage binding
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "app-uploads"
+
+# Environment variables
+[vars]
+DB_PROVIDER = "d1"
+STORAGE_PROVIDER = "r2"
+
+# Production overrides
+[env.production]
+name = "nextjs-bootstrapped-shipped-prod"
+
+[env.production.vars]
+DB_PROVIDER = "d1"
+STORAGE_PROVIDER = "r2"

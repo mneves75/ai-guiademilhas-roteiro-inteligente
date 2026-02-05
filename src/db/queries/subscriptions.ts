@@ -1,5 +1,4 @@
-import { db } from '@/db/client';
-import { subscriptions } from '@/db/schema';
+import { db, subscriptions } from '@/db/client';
 import { eq } from 'drizzle-orm';
 import { withSoftDeleteFilter } from './base';
 
