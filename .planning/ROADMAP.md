@@ -13,7 +13,7 @@
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 1 | Foundation & Code Quality | 10 | Pending |
+| 1 | Foundation & Code Quality | 10 | Planning Complete |
 | 2 | Database & Schema | 5 | Pending |
 | 3 | Authentication Core | 8 | Pending |
 | 4 | Design System & UI | 11 | Pending |
@@ -55,6 +55,14 @@
 2. Pre-commit hook prevents commits with TypeScript errors or ESLint violations
 3. GitHub Actions workflows run automatically on PR and report linting/type issues
 4. New code written in phases 2-12 must pass all quality checks before merge
+
+**Plans:** 4 plans in 3 waves
+
+Plans:
+- [ ] 01-01-PLAN.md — Configure TypeScript strict mode + ESLint 9 flat config + Prettier (Wave 1)
+- [ ] 01-02-PLAN.md — Create GitHub Actions workflows: lint, type-check, test (Wave 1, parallel)
+- [ ] 01-03-PLAN.md — Install Husky + lint-staged + enable Vercel GitHub App (Wave 2)
+- [ ] 01-04-PLAN.md — End-to-end verification checkpoint (Wave 3)
 
 ---
 
@@ -443,4 +451,4 @@ Roadmap is complete when:
 
 ---
 
-**Roadmap approved and ready for Phase 1 planning.**
+**Phase 1 planning complete. Ready for execution via `/gsd:execute-phase 1`.**
