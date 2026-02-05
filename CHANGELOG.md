@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded to Next.js 16.1.6 (from 15.x)
+- Upgraded @typescript-eslint packages to v8 for ESLint 9 compatibility
+- Updated eslint-config-next and @next/eslint-plugin-next to v16
+
 ### Added
 
 - Phase 1: Foundation & Code Quality complete

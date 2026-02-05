@@ -4,7 +4,7 @@ A modern, full-featured Next.js 15 boilerplate for shipping production apps fast
 
 ## Features
 
-- **Next.js 15** + React 19 + TypeScript (strict mode)
+- **Next.js 16** + React 19 + TypeScript (strict mode)
 - **Better Auth** - Modern authentication (coming soon)
 - **PostgreSQL + Drizzle ORM** - Type-safe database (coming soon)
 - **Stripe Integration** - Payments & subscriptions (coming soon)
@@ -32,7 +32,7 @@ Open [http://localhost:3000](http://localhost:3000) to see your app.
 
 | Category   | Technology                   |
 | ---------- | ---------------------------- |
-| Framework  | Next.js 15 (App Router)      |
+| Framework  | Next.js 16 (App Router)      |
 | Language   | TypeScript 5.9 (strict mode) |
 | Styling    | Tailwind CSS + shadcn/ui     |
 | Database   | PostgreSQL + Drizzle ORM     |
