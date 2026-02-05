@@ -162,6 +162,35 @@ export const workspaceMembers = pgTable(
 );
 
 /**
+ * WORKSPACE_INVITATIONS TABLE
+ * Pending invitations to join a workspace
+ */
+export const workspaceInvitations = pgTable(
+  'workspace_invitations',
+  {
+    id: serial().primaryKey(),
+    workspaceId: integer()
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    email: varchar({ length: 255 }).notNull(),
+    role: varchar({ length: 50 }).notNull().default('member'),
+    token: varchar({ length: 255 }).notNull().unique(),
+    invitedByUserId: varchar({ length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp().notNull(),
+    acceptedAt: timestamp(),
+    ...timestamps,
+  },
+  (table) => [
+    index('idx_invitations_workspace').on(table.workspaceId),
+    index('idx_invitations_email').on(table.email),
+    index('idx_invitations_token').on(table.token),
+    index('idx_invitations_deleted').on(table.deletedAt),
+  ]
+);
+
+/**
  * SUBSCRIPTIONS TABLE
  * Stripe billing per workspace
  */
@@ -205,6 +234,7 @@ export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
   }),
   members: many(workspaceMembers),
   subscriptions: many(subscriptions),
+  invitations: many(workspaceInvitations),
 }));
 
 export const workspaceMemberRelations = relations(workspaceMembers, ({ one }) => ({
@@ -222,6 +252,17 @@ export const subscriptionRelations = relations(subscriptions, ({ one }) => ({
   workspace: one(workspaces, {
     fields: [subscriptions.workspaceId],
     references: [workspaces.id],
+  }),
+}));
+
+export const workspaceInvitationRelations = relations(workspaceInvitations, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [workspaceInvitations.workspaceId],
+    references: [workspaces.id],
+  }),
+  invitedBy: one(users, {
+    fields: [workspaceInvitations.invitedByUserId],
+    references: [users.id],
   }),
 }));
 
@@ -253,6 +294,15 @@ export const insertWorkspaceMemberSchema = createInsertSchema(workspaceMembers).
 
 export const selectWorkspaceMemberSchema = createSelectSchema(workspaceMembers);
 
+export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvitations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+});
+
+export const selectWorkspaceInvitationSchema = createSelectSchema(workspaceInvitations);
+
 // ==================== TYPE EXPORTS ====================
 
 export type User = typeof users.$inferSelect;
@@ -265,3 +315,5 @@ export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
 export type NewWorkspaceMember = typeof workspaceMembers.$inferInsert;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+export type WorkspaceInvitation = typeof workspaceInvitations.$inferSelect;
+export type NewWorkspaceInvitation = typeof workspaceInvitations.$inferInsert;
