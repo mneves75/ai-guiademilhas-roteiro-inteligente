@@ -1,8 +1,8 @@
 # STATE: NextJS Bootstrapped Shipped
 
 **Project:** NextJS Bootstrapped Shipped (nextjs-bootstrapped-shipped)
-**Status:** Roadmap Complete → Ready for Phase 1 Planning
-**Updated:** 2025-02-05
+**Status:** Phase 1 Execution in Progress
+**Updated:** 2026-02-05
 
 ---
 
@@ -37,11 +37,11 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 
 ```
 [█---------] 8% Complete (Phase 1: 1/4 plans done)
-Phase 1 in progress; Phase 2-12 pending
+01-01 COMPLETE | 01-02 pending | 01-03 pending | 01-04 pending
 ```
 
-**Last Activity:** 2026-02-05 - Completed Plan 01-02 (GitHub Actions CI/CD workflows)
-**Next Action:** Execute Plan 01-03 (Vercel GitHub App preview deployment)
+**Last Activity:** 2026-02-05 - Completed Plan 01-01 (TypeScript strict mode, ESLint 9, Prettier)
+**Next Action:** Execute Plan 01-02 (GitHub Actions CI/CD workflows)
 
 ---
 
@@ -54,7 +54,7 @@ Phase 1 in progress; Phase 2-12 pending
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 1 | Foundation & Code Quality | 10 | Pending |
+| 1 | Foundation & Code Quality | 10 | In Progress (1/4 plans) |
 | 2 | Database & Schema | 5 | Pending |
 | 3 | Authentication Core | 8 | Pending |
 | 4 | Design System & UI | 11 | Pending |
@@ -209,6 +209,9 @@ Track actual vs. estimated to calibrate Phase 9-12 timelines.
 | 2025-02-05 | I18N included in v1 | Kept despite PROJECT.md marking "out-of-scope"; easy quick win |
 | 2025-02-05 | Email in Phase 7, not Phase 9 | Email needed for Phase 6 invitations; no reason to delay |
 | 2025-02-05 | Testing in Phase 12 (final) | All features must exist before comprehensive testing |
+| 2026-02-05 | Initialize project during 01-01 execution | Entry criteria not met (no package.json/Next.js); auto-initialized as blocking fix (Rule 3) |
+| 2026-02-05 | Upgrade eslint-config-prettier to v10 | v9 lacks flat config support for ESLint 9; upgraded for compatibility |
+| 2026-02-05 | Add @next/eslint-plugin-next explicit dep | pnpm hoisting required explicit dependency; added to package.json |
 
 ---
 
@@ -223,10 +226,10 @@ Track actual vs. estimated to calibrate Phase 9-12 timelines.
 6. Seed 10 example QUAL and CICD requirements into initial setup
 
 **Entry Criteria for Phase 1:**
-- [ ] Project repository created and cloned locally
-- [ ] pnpm installed (not npm/yarn)
-- [ ] Initial Next.js scaffold with App Router
-- [ ] TypeScript config exists (tsconfig.json)
+- [x] Project repository created and cloned locally
+- [x] pnpm installed (not npm/yarn) - v10.28.2
+- [x] Initial Next.js scaffold with App Router (Next.js 15.5.12)
+- [x] TypeScript config exists (tsconfig.json) - strict mode enabled
 
 **Exit Criteria for Phase 1:**
 - [ ] All 10 QUAL + CICD requirements complete
@@ -237,5 +240,5 @@ Track actual vs. estimated to calibrate Phase 9-12 timelines.
 ---
 
 **Roadmap Status:** ✓ APPROVED (Phase 1 execution in progress)
-**Completed Plans:** 01-02 (GitHub Actions CI/CD)
-**Next Plan:** 01-03 (Vercel preview deployment)
+**Completed Plans:** 01-01 (TypeScript strict mode, ESLint 9, Prettier)
+**Next Plan:** 01-02 (GitHub Actions CI/CD workflows)
