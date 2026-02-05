@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/mneves75/nextjs-bootstrapped-shipped#readme
+    about: Check the README and DEVELOPMENT.md for answers
+  - name: Discussions
+    url: https://github.com/mneves75/nextjs-bootstrapped-shipped/discussions
+    about: Ask questions and discuss features
+  - name: Security Vulnerability
+    url: https://github.com/mneves75/nextjs-bootstrapped-shipped/security/policy
+    about: Report security vulnerabilities privately
