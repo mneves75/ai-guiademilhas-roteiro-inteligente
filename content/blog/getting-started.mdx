@@ -1,0 +1,98 @@
+---
+title: "Getting Started with NextJS Bootstrapped Shipped"
+description: "Learn how to quickly set up and customize your Next.js application with our production-ready boilerplate."
+date: "2025-01-15"
+author:
+  name: "Shipped Team"
+  avatar: "/avatars/shipped.png"
+image: "/blog/getting-started.jpg"
+tags: ["guide", "nextjs", "tutorial"]
+published: true
+---
+
+Welcome to NextJS Bootstrapped Shipped! This guide will help you get up and running with your new project in minutes.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Node.js 20+ or Bun 1.0+
+- A PostgreSQL database (we recommend [Neon](https://neon.tech))
+- A Stripe account for payments
+
+## Quick Start
+
+1. Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/your-org/nextjs-bootstrapped-shipped.git
+cd nextjs-bootstrapped-shipped
+bun install
+```
+
+2. Copy the environment file and configure your variables:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Set up your database:
+
+```bash
+bun db:push
+bun db:seed
+```
+
+4. Start the development server:
+
+```bash
+bun dev
+```
+
+## Project Structure
+
+The project follows a clean, organized structure:
+
+- `app/` - Next.js 16 App Router pages and layouts
+- `src/components/` - Reusable UI components
+- `src/lib/` - Utility functions and configurations
+- `src/db/` - Database schema and queries
+- `content/` - MDX blog content
+
+## Key Features
+
+### Authentication
+
+We use Better Auth for authentication, supporting:
+
+- Email/password login
+- OAuth providers (Google, GitHub)
+- Magic links
+- Session management
+
+### Multi-Tenancy
+
+Built-in workspace support with:
+
+- Team invitations
+- Role-based access control
+- Workspace isolation
+
+### Payments
+
+Stripe integration includes:
+
+- Subscription management
+- Customer portal
+- Webhook handling
+- Usage-based billing support
+
+## Next Steps
+
+Now that you're set up, explore these resources:
+
+- [Authentication Guide](/docs/auth)
+- [Database Schema](/docs/database)
+- [Deployment Guide](/docs/deployment)
+
+Happy shipping!
