@@ -194,27 +194,103 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-* | TBD | Pending |
-| TEAM-* | TBD | Pending |
-| PAY-* | TBD | Pending |
-| DASH-* | TBD | Pending |
-| ADMIN-* | TBD | Pending |
-| CONT-* | TBD | Pending |
-| SEO-* | TBD | Pending |
-| EMAIL-* | TBD | Pending |
-| I18N-* | TBD | Pending |
-| DB-* | TBD | Pending |
-| UI-* | TBD | Pending |
-| TEST-* | TBD | Pending |
-| QUAL-* | TBD | Pending |
-| CICD-* | TBD | Pending |
-| DEPLOY-* | TBD | Pending |
+| AUTH-01 | 3 | Pending |
+| AUTH-02 | 3 | Pending |
+| AUTH-03 | 3 | Pending |
+| AUTH-04 | 3 | Pending |
+| AUTH-05 | 3 | Pending |
+| AUTH-06 | 3 | Pending |
+| AUTH-07 | 3 | Pending |
+| AUTH-08 | 3 | Pending |
+| TEAM-01 | 6 | Pending |
+| TEAM-02 | 6 | Pending |
+| TEAM-03 | 6 | Pending |
+| TEAM-04 | 6 | Pending |
+| TEAM-05 | 6 | Pending |
+| TEAM-06 | 6 | Pending |
+| TEAM-07 | 6 | Pending |
+| PAY-01 | 9 | Pending |
+| PAY-02 | 9 | Pending |
+| PAY-03 | 9 | Pending |
+| PAY-04 | 9 | Pending |
+| PAY-05 | 9 | Pending |
+| PAY-06 | 9 | Pending |
+| PAY-07 | 9 | Pending |
+| PAY-08 | 9 | Pending |
+| PAY-09 | 9 | Pending |
+| DASH-01 | 8 | Pending |
+| DASH-02 | 8 | Pending |
+| DASH-03 | 8 | Pending |
+| DASH-04 | 8 | Pending |
+| DASH-05 | 8 | Pending |
+| ADMIN-01 | 10 | Pending |
+| ADMIN-02 | 10 | Pending |
+| ADMIN-03 | 10 | Pending |
+| ADMIN-04 | 10 | Pending |
+| ADMIN-05 | 10 | Pending |
+| ADMIN-06 | 10 | Pending |
+| ADMIN-07 | 10 | Pending |
+| CONT-01 | 5 | Pending |
+| CONT-02 | 5 | Pending |
+| CONT-03 | 5 | Pending |
+| CONT-04 | 5 | Pending |
+| CONT-05 | 11 | Pending |
+| CONT-06 | 11 | Pending |
+| CONT-07 | 11 | Pending |
+| SEO-01 | 11 | Pending |
+| SEO-02 | 11 | Pending |
+| SEO-03 | 11 | Pending |
+| SEO-04 | 11 | Pending |
+| SEO-05 | 11 | Pending |
+| EMAIL-01 | 7 | Pending |
+| EMAIL-02 | 7 | Pending |
+| EMAIL-03 | 7 | Pending |
+| EMAIL-04 | 7 | Pending |
+| EMAIL-05 | 7 | Pending |
+| EMAIL-06 | 7 | Pending |
+| I18N-01 | 4 | Pending |
+| I18N-02 | 4 | Pending |
+| I18N-03 | 4 | Pending |
+| I18N-04 | 4 | Pending |
+| DB-01 | 2 | Pending |
+| DB-02 | 2 | Pending |
+| DB-03 | 2 | Pending |
+| DB-04 | 2 | Pending |
+| DB-05 | 2 | Pending |
+| UI-01 | 4 | Pending |
+| UI-02 | 4 | Pending |
+| UI-03 | 4 | Pending |
+| UI-04 | 4 | Pending |
+| UI-05 | 4 | Pending |
+| UI-06 | 4 | Pending |
+| UI-07 | 4 | Pending |
+| TEST-01 | 12 | Pending |
+| TEST-02 | 12 | Pending |
+| TEST-03 | 12 | Pending |
+| TEST-04 | 12 | Pending |
+| TEST-05 | 12 | Pending |
+| QUAL-01 | 1 | Pending |
+| QUAL-02 | 1 | Pending |
+| QUAL-03 | 1 | Pending |
+| QUAL-04 | 1 | Pending |
+| QUAL-05 | 1 | Pending |
+| QUAL-06 | 1 | Pending |
+| CICD-01 | 1 | Pending |
+| CICD-02 | 1 | Pending |
+| CICD-03 | 1 | Pending |
+| CICD-04 | 1 | Pending |
+| DEPLOY-01 | 12 | Pending |
+| DEPLOY-02 | 12 | Pending |
+| DEPLOY-03 | 12 | Pending |
+| DEPLOY-04 | 12 | Pending |
+| DEPLOY-05 | 12 | Pending |
 
 **Coverage:**
-- v1 requirements: 74 total
-- Mapped to phases: 0
-- Unmapped: 74 ⚠️
+- v1 requirements: 90 total
+- Mapped to phases: 90
+- Unmapped: 0 ✓
 
 ---
+
 *Requirements defined: 2025-02-05*
-*Last updated: 2025-02-05 after initial definition*
+*Last updated: 2025-02-05 after roadmap creation*
