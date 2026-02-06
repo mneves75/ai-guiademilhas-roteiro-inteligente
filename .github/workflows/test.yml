@@ -72,6 +72,7 @@ jobs:
           pnpm db:push:pg
           pnpm db:seed
           pnpm db:assert-seed
+          pnpm db:portability-check
 
   sqlite-smoke:
     runs-on: ubuntu-latest
@@ -114,5 +115,6 @@ jobs:
           pnpm db:push
           pnpm db:seed
           pnpm db:assert-seed
+          pnpm db:portability-check
 
           rm -rf "$TMPDIR"

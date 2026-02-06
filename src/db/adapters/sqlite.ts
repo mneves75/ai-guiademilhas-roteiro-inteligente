@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../schema/sqlite';
 import { mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
+import { getSqlitePath } from '../env';
 
 type Schema = typeof schema;
 
@@ -22,7 +23,7 @@ export function createSqliteDb(): BetterSQLite3Database<Schema> {
     require('drizzle-orm/better-sqlite3') as typeof import('drizzle-orm/better-sqlite3');
   /* eslint-enable @typescript-eslint/no-require-imports */
 
-  const dbPath = process.env.SQLITE_PATH ?? './data/app.db';
+  const dbPath = getSqlitePath();
 
   // Ensure parent directory exists
   const dir = dirname(dbPath);

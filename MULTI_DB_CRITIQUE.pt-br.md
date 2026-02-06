@@ -70,6 +70,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
   - configs explicitas existem para usos diretos
 - **CI smokes**: workflows rodam `push + seed + assert-seed` em Postgres e SQLite.
 - **Portabilidade**: ESLint bloqueia `sql``...`` e `import { sql } from 'drizzle-orm'` no codigo do app.
+- **Portabilidade (runtime)**: `pnpm db:portability-check` roda um conjunto pequeno de operacoes (insert/update/select) em Postgres e SQLite e e executado nos smokes do CI.
 
 ## Trade-offs (o que esta "caro" e por que aceitavel)
 
@@ -131,6 +132,7 @@ export SQLITE_PATH="$TMPDIR/app.db"
 pnpm db:push
 pnpm db:seed
 pnpm db:assert-seed
+pnpm db:portability-check
 ```
 
 Postgres smoke (push + seed + assert):
@@ -144,12 +146,13 @@ export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nextjs
 pnpm db:push:pg
 pnpm db:seed
 pnpm db:assert-seed
+pnpm db:portability-check
 ```
 
 ## O que eu faria melhor (prioridade por impacto/risco)
 
-1. **Env validation tipada** (Zod) para inputs criticos (`DB_PROVIDER`, `DATABASE_URL`, `SQLITE_PATH`) em runtime, com mensagens consistentes e testadas.
-2. **Suite de portabilidade**: um pequeno conjunto de queries que roda nos 2 dialetos (pg/sqlite) pra garantir que a camada de queries nao driftou.
+1. **Env validation tipada mais ampla**: hoje DB vars criticas ja falham com mensagens consistentes; o proximo passo e aplicar o mesmo padrao para outros subsistemas (auth/email/stripe) sem reintroduzir efeitos colaterais no import.
+2. **Suite de portabilidade expandida**: hoje existe `db:portability-check`; o proximo passo e cobrir operacoes usadas em producao (ex: `onConflictDoNothing()` em webhooks) e invariantes de schema (paridade pg/sqlite).
 3. **Reducao da mentira de tipos**:
    - expor uma interface minima (subset) em vez de tipar tudo como Postgres, ou
    - criar boundaries onde o cast e permitido e revisar usos Postgres-only conscientemente.

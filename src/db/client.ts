@@ -4,6 +4,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { DbProvider } from './schema/types';
 import { createPostgresDb, createPostgresEdgeDb } from './adapters/postgres';
 import { createSqliteDb } from './adapters/sqlite';
+import { resolveDbProvider } from './env';
 
 /**
  * Multi-database factory (Node + Edge).
@@ -33,17 +34,7 @@ import { createSqliteDb } from './adapters/sqlite';
 type CanonicalSchema = typeof pgSchema;
 type CanonicalDb = PostgresJsDatabase<CanonicalSchema>;
 
-const VALID_PROVIDERS = new Set<string>(['postgres', 'sqlite', 'd1']);
-
-function resolveProvider(): DbProvider {
-  const raw = process.env.DB_PROVIDER ?? 'postgres';
-  if (!VALID_PROVIDERS.has(raw)) {
-    throw new Error(`DB_PROVIDER="${raw}" is invalid. Accepted values: postgres | sqlite | d1`);
-  }
-  return raw as DbProvider;
-}
-
-export const DB_PROVIDER: DbProvider = resolveProvider();
+export const DB_PROVIDER: DbProvider = resolveDbProvider(process.env.DB_PROVIDER);
 
 // ---------------------------------------------------------------------------
 // Lazy singleton — connection created on first property access, not import

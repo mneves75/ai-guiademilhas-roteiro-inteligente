@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized invalid `DB_PROVIDER` error messaging to English for consistency
 - Refreshed the multi-DB first-principles critique to reflect current CI smokes and portability constraints
 - Playwright webServer no longer overrides `NEXT_DIST_DIR` to avoid `next-env.d.ts` churn
+- Centralized DB env parsing (`DB_PROVIDER`, `DATABASE_URL`, `SQLITE_PATH`) and added a cross-dialect portability check wired into CI smokes
 
 ## [0.2.0] - 2026-02-06
 

@@ -111,6 +111,7 @@ jobs:
           pnpm db:push:pg
           pnpm db:seed
           pnpm db:assert-seed
+          pnpm db:portability-check
 
       - name: SQLite DB smoke (push + seed)
         env:
@@ -122,6 +123,7 @@ jobs:
           pnpm db:push
           pnpm db:seed
           pnpm db:assert-seed
+          pnpm db:portability-check
 
           rm -rf "$TMPDIR"
 
