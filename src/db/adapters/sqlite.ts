@@ -40,5 +40,5 @@ export function createSqliteDb(): BetterSQLite3Database<Schema> {
   sqlite.pragma('foreign_keys = ON');
   sqlite.pragma('busy_timeout = 5000');
 
-  return drizzle(sqlite, { schema });
+  return drizzle(sqlite, { schema, casing: 'snake_case' });
 }

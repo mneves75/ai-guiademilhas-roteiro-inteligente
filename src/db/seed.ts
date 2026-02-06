@@ -46,7 +46,7 @@ async function seedSqlite() {
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
 
-  const db: Db = drizzle(sqlite, { schema });
+  const db: Db = drizzle(sqlite, { schema, casing: 'snake_case' });
 
   try {
     const now = new Date();
@@ -158,7 +158,7 @@ async function seedPostgres() {
   type Db = import('drizzle-orm/postgres-js').PostgresJsDatabase<Schema>;
 
   const client = pg(connectionString);
-  const db: Db = drizzle(client, { schema });
+  const db: Db = drizzle(client, { schema, casing: 'snake_case' });
 
   try {
     const now = new Date();

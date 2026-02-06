@@ -17,7 +17,7 @@ export function createPostgresDb(): PostgresJsDatabase<Schema> {
         'Set it in .env or environment variables.'
     );
   }
-  return drizzle(postgres(process.env.DATABASE_URL), { schema });
+  return drizzle(postgres(process.env.DATABASE_URL), { schema, casing: 'snake_case' });
 }
 
 /**
@@ -30,5 +30,5 @@ export function createPostgresEdgeDb(): NeonHttpDatabase<Schema> {
       'DATABASE_URL is required for edge runtime. ' + 'Set it in .env or environment variables.'
     );
   }
-  return drizzleNeon(neon(process.env.DATABASE_URL), { schema });
+  return drizzleNeon(neon(process.env.DATABASE_URL), { schema, casing: 'snake_case' });
 }

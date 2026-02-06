@@ -14,7 +14,7 @@ type Schema = typeof schema;
  *   const db = createD1Db(env.DB);
  */
 export function createD1Db(d1Binding: unknown): DrizzleD1Database<Schema> {
-  return drizzle(d1Binding as D1Database, { schema });
+  return drizzle(d1Binding as D1Database, { schema, casing: 'snake_case' });
 }
 
 // D1Database type — only available in Cloudflare Workers runtime
