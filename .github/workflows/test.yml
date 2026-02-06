@@ -71,6 +71,7 @@ jobs:
         run: |
           pnpm db:push:pg
           pnpm db:seed
+          pnpm db:assert-seed
 
   sqlite-smoke:
     runs-on: ubuntu-latest
@@ -112,16 +113,6 @@ jobs:
 
           pnpm db:push
           pnpm db:seed
-
-          node - <<'NODE'
-          const Database = require('better-sqlite3');
-          const db = new Database(process.env.SQLITE_PATH);
-          const users = db.prepare('select count(*) as c from users').get().c;
-          const workspaces = db.prepare('select count(*) as c from workspaces').get().c;
-          const members = db.prepare('select count(*) as c from workspace_members').get().c;
-          const subs = db.prepare('select count(*) as c from subscriptions').get().c;
-          console.log(JSON.stringify({ users, workspaces, members, subs }));
-          db.close();
-          NODE
+          pnpm db:assert-seed
 
           rm -rf "$TMPDIR"
