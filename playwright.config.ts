@@ -34,7 +34,9 @@ export default defineConfig({
   ],
   webServer: {
     // Run against a production build for deterministic results (no dev overlay, no HMR races).
-    command: `NEXT_DIST_DIR=.next-playwright PORT=${serverPort} pnpm build && NEXT_DIST_DIR=.next-playwright PORT=${serverPort} pnpm start`,
+    // Note: Next.js writes `next-env.d.ts` based on the active distDir; keeping the
+    // default `.next` avoids `next-env.d.ts` churn when running E2E locally.
+    command: `PORT=${serverPort} pnpm build && PORT=${serverPort} pnpm start`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 240 * 1000,

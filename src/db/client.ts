@@ -38,7 +38,7 @@ const VALID_PROVIDERS = new Set<string>(['postgres', 'sqlite', 'd1']);
 function resolveProvider(): DbProvider {
   const raw = process.env.DB_PROVIDER ?? 'postgres';
   if (!VALID_PROVIDERS.has(raw)) {
-    throw new Error(`DB_PROVIDER="${raw}" inválido. Valores aceitos: postgres | sqlite | d1`);
+    throw new Error(`DB_PROVIDER="${raw}" is invalid. Accepted values: postgres | sqlite | d1`);
   }
   return raw as DbProvider;
 }
