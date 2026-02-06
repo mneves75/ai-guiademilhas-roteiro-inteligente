@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { getUserWorkspaces, createWorkspace, addWorkspaceMember } from '@/db/queries/workspaces';
+import { isUniqueConstraintError } from '@/db/errors';
 
 /**
  * GET /api/workspaces
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ workspace }, { status: 201 });
   } catch (error) {
     // Handle unique constraint violation
-    if (error instanceof Error && error.message.includes('unique')) {
+    if (isUniqueConstraintError(error)) {
       return NextResponse.json({ error: 'Slug already taken' }, { status: 409 });
     }
     throw error;

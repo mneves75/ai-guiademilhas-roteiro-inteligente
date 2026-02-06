@@ -72,6 +72,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
 - **Portabilidade**: ESLint bloqueia `sql``...`` e `import { sql } from 'drizzle-orm'` no codigo do app.
 - **Portabilidade (runtime)**: `pnpm db:portability-check` roda um conjunto pequeno de operacoes (insert/update/select) em Postgres e SQLite e e executado nos smokes do CI.
 - **Paridade de schema**: `pnpm db:schema-parity` falha se Postgres e SQLite divergirem em nome de tabela ou colunas (sem precisar de DB).
+- **Sem dependencia de `RETURNING`**: helpers de escrita re-selecionam apos writes e idempotencia critica (Stripe) e tratada via unique constraint.
 
 ## Trade-offs (o que esta "caro" e por que aceitavel)
 

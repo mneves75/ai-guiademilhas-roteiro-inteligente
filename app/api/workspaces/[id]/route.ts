@@ -7,6 +7,7 @@ import {
   updateWorkspace,
   softDeleteWorkspace,
 } from '@/db/queries/workspaces';
+import { isUniqueConstraintError } from '@/db/errors';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -72,7 +73,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const [updated] = await updateWorkspace(workspaceId, { name, slug });
     return NextResponse.json({ workspace: updated });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('unique')) {
+    if (isUniqueConstraintError(error)) {
       return NextResponse.json({ error: 'Slug already taken' }, { status: 409 });
     }
     throw error;

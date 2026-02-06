@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { DB_PROVIDER, db, users, workspaces, workspaceMembers } from './client';
+import { DB_PROVIDER, db, stripeEvents, users, workspaces, workspaceMembers } from './client';
+import { recordStripeEventReceived } from '@/db/queries/stripe-events';
 
 function uniqueId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -21,6 +22,7 @@ async function main() {
   const now = new Date();
 
   let workspaceId: number | undefined;
+  const eventId = uniqueId('stripe_evt');
 
   try {
     // 1) Basic select should work on both dialects.
@@ -80,10 +82,18 @@ async function main() {
       .where(eq(workspaceMembers.workspaceId, workspaceId));
     if (members.length < 1) throw new Error('Expected at least one workspace member.');
 
+    // 7) Idempotency path (unique constraint) should behave consistently cross-dialect.
+    const first = await recordStripeEventReceived({ eventId, type: 'test.event' });
+    const second = await recordStripeEventReceived({ eventId, type: 'test.event' });
+    if (first !== true || second !== false) {
+      throw new Error('Expected stripe event idempotency (true then false).');
+    }
+
     console.log(`db:portability-check OK (provider=${DB_PROVIDER})`);
   } finally {
     // Cleanup to keep CI/local DBs from accumulating junk.
     // Order matters: child rows first.
+    await db.delete(stripeEvents).where(eq(stripeEvents.stripeEventId, eventId));
     if (workspaceId) {
       await db.delete(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId));
       await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
