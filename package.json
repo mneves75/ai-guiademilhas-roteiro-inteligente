@@ -32,6 +32,7 @@
     "db:seed": "tsx ./src/db/seed.ts",
     "db:assert-seed": "tsx ./src/db/assert-seed.ts",
     "db:portability-check": "tsx ./src/db/portability-check.ts",
+    "db:schema-parity": "tsx ./src/db/schema-parity.ts",
     "db:reset": "drizzle-kit push --force && tsx ./src/db/seed.ts"
   },
   "dependencies": {

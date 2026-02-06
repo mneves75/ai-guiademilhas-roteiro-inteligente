@@ -69,6 +69,7 @@ jobs:
           DB_PROVIDER: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
         run: |
+          pnpm db:schema-parity
           pnpm db:push:pg
           pnpm db:seed
           pnpm db:assert-seed
@@ -109,6 +110,7 @@ jobs:
         env:
           DB_PROVIDER: sqlite
         run: |
+          pnpm db:schema-parity
           TMPDIR="$(mktemp -d)"
           export SQLITE_PATH="$TMPDIR/app.db"
 

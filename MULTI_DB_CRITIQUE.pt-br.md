@@ -71,6 +71,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
 - **CI smokes**: workflows rodam `push + seed + assert-seed` em Postgres e SQLite.
 - **Portabilidade**: ESLint bloqueia `sql``...`` e `import { sql } from 'drizzle-orm'` no codigo do app.
 - **Portabilidade (runtime)**: `pnpm db:portability-check` roda um conjunto pequeno de operacoes (insert/update/select) em Postgres e SQLite e e executado nos smokes do CI.
+- **Paridade de schema**: `pnpm db:schema-parity` falha se Postgres e SQLite divergirem em nome de tabela ou colunas (sem precisar de DB).
 
 ## Trade-offs (o que esta "caro" e por que aceitavel)
 
