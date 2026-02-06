@@ -13,6 +13,8 @@ const baseIgnores = [
   'build/',
   '.vercel/',
   'coverage/',
+  'playwright-report/',
+  'test-results/',
   '.git/',
   '.planning/',
   'pnpm-lock.yaml',

@@ -1,15 +1,29 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-const publicRoutes = ['/', '/login', '/signup', '/api/auth'];
+// Public routes should be accessible without a session cookie.
+// Keep API allowlist tight: only endpoints that must be callable anonymously.
+const publicRoutes = [
+  '/',
+  '/login',
+  '/signup',
+  '/blog',
+  '/invite',
+  '/api/auth',
+  '/api/og',
+  '/api/invitations/accept',
+  '/api/stripe/webhook',
+];
 const authRoutes = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
-  const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith('/api/auth')
-  );
+  const isPublicRoute = publicRoutes.some((route) => {
+    if (pathname === route) return true;
+    // Treat "directories" as public too (e.g. /blog/*, /invite/*).
+    return pathname.startsWith(`${route}/`);
+  });
 
   // Check for session cookie
   const sessionCookie = request.cookies.get('better-auth.session_token');
