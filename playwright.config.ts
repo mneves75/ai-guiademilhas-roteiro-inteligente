@@ -5,6 +5,10 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 const { port } = new URL(baseURL);
 const serverPort = port || '3000';
 
+// Default E2E should be deterministic without requiring every browser engine
+// to be installed locally. Opt-in to full cross-browser via PW_FULL=1.
+const isFullMatrix = process.env.PW_FULL === '1';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -18,26 +22,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'mobile-safari',
-      use: { ...devices['iPhone 12'] },
-    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+    ...(isFullMatrix
+      ? [
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+          { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
+        ]
+      : []),
   ],
   webServer: {
     command: isCI ? `PORT=${serverPort} pnpm start` : `PORT=${serverPort} pnpm dev`,

@@ -141,13 +141,23 @@ wrangler d1 execute app-db --local --file=src/db/seed.d1.sql
 
 ### Running Tests
 
-Tests are configured in Phase 12. For now:
+Unit tests:
 
 ```bash
-pnpm test          # Will show no test files (expected)
+pnpm test
 ```
 
-Tests will be added as features are built.
+E2E tests (Chromium + mobile-chrome by default):
+
+```bash
+pnpm test:e2e
+```
+
+Full cross-browser matrix (requires Firefox/WebKit installed):
+
+```bash
+PW_FULL=1 pnpm test:e2e
+```
 
 ## Code Style Guidelines
 
