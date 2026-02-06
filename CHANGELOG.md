@@ -7,11 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Multi-database Drizzle client with `DB_PROVIDER` support: `postgres` (default), `sqlite`, `d1`
+- Database tooling
+  - Provider-specific drizzle-kit configs for Postgres/SQLite/D1
+  - Multi-provider seed script plus a Drizzle-based seed assertion (`pnpm db:assert-seed`)
+- Playwright E2E tests and CI-friendly `webServer` configuration
+- Landing page refactor: home page split into explicit components under `src/components/landing/`
+- Nightly scheduled workflow to run the full Playwright browser matrix (`PW_FULL=1`)
+- Engineering sign-off and multi-DB first-principles critique docs
+
 ### Changed
 
 - Upgraded to Next.js 16.1.6 (from 15.x)
 - Upgraded @typescript-eslint packages to v8 for ESLint 9 compatibility
 - Updated eslint-config-next and @next/eslint-plugin-next to v16
+- Tailwind CSS v4 PostCSS setup and globals configuration
+- Type-check now runs `next typegen` before `tsc` to keep typed routes consistent
+- CI updated to use pnpm 10 (lockfile v9 compatibility) and reproducible installs
+
+### Fixed
+
+- Prevented build-time crashes from missing Stripe env by initializing Stripe at runtime call sites
+- Fixed auth/env handling and reduced build-time failures by failing fast with clear messages
+- Wrapped `useSearchParams()` usage behind `Suspense` to avoid CSR bailout warnings on prerender
+- Middleware route allowlist updated for public blog and required anonymous APIs (webhooks, auth, OG, invites)
+- Playwright E2E stability: port handling, baseURL-derived webServer port, and route path fixes (`/signup`)
 
 ### Added
 
