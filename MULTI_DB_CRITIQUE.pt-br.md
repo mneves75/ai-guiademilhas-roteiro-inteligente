@@ -168,6 +168,12 @@ Um comando (paridade de schema + smokes sqlite + postgres):
 pnpm db:smoke
 ```
 
+E2E deterministico (por padrao usa SQLite e provisiona DB no `webServer`):
+
+```bash
+pnpm test:e2e:ci
+```
+
 ## O que eu faria melhor (prioridade por impacto/risco)
 
 1. **Env validation tipada mais ampla**: hoje DB vars criticas ja falham com mensagens consistentes; o proximo passo e aplicar o mesmo padrao para outros subsistemas (auth/email/stripe) sem reintroduzir efeitos colaterais no import.
