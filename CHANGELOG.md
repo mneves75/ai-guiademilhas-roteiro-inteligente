@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playwright webServer no longer overrides `NEXT_DIST_DIR` to avoid `next-env.d.ts` churn
 - Centralized DB env parsing (`DB_PROVIDER`, `DATABASE_URL`, `SQLITE_PATH`) and added a cross-dialect portability check wired into CI smokes
 - Added a schema parity check (`db:schema-parity`) to fail fast if Postgres and SQLite schemas drift (table names/columns)
+- Removed reliance on SQL `RETURNING` in app query helpers for stronger cross-dialect compatibility (re-select after writes; unique-violation detection for idempotency)
 
 ## [0.2.0] - 2026-02-06
 

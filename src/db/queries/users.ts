@@ -44,12 +44,13 @@ export async function getActiveUsersPaginated(limit: number = 50, offset: number
  * Update user (name, image)
  */
 export async function updateUser(id: string, data: { name?: string; image?: string }) {
-  return db
+  await db
     .update(users)
     .set({
       ...data,
       updatedAt: new Date(),
     })
-    .where(eq(users.id, id))
-    .returning();
+    .where(eq(users.id, id));
+
+  return db.select().from(users).where(eq(users.id, id)).limit(1);
 }

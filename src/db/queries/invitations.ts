@@ -1,5 +1,5 @@
 import { db, workspaceInvitations, workspaceMembers } from '@/db/client';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { withSoftDeleteFilter } from './base';
 import crypto from 'crypto';
 
@@ -24,19 +24,22 @@ export async function createInvitation(data: {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + (data.expiresInDays ?? 7));
 
+  await db.insert(workspaceInvitations).values({
+    workspaceId: data.workspaceId,
+    email: data.email.toLowerCase(),
+    role: data.role ?? 'member',
+    token,
+    invitedByUserId: data.invitedByUserId,
+    expiresAt,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   return db
-    .insert(workspaceInvitations)
-    .values({
-      workspaceId: data.workspaceId,
-      email: data.email.toLowerCase(),
-      role: data.role ?? 'member',
-      token,
-      invitedByUserId: data.invitedByUserId,
-      expiresAt,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+    .select()
+    .from(workspaceInvitations)
+    .where(eq(workspaceInvitations.token, token))
+    .limit(1);
 }
 
 /**
@@ -114,16 +117,24 @@ export async function acceptInvitation(token: string, userId: string) {
     .where(eq(workspaceInvitations.token, token));
 
   // Add user to workspace
+  await db.insert(workspaceMembers).values({
+    workspaceId: invitation.workspaceId,
+    userId,
+    role: invitation.role,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   return db
-    .insert(workspaceMembers)
-    .values({
-      workspaceId: invitation.workspaceId,
-      userId,
-      role: invitation.role,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+    .select()
+    .from(workspaceMembers)
+    .where(
+      and(
+        eq(workspaceMembers.workspaceId, invitation.workspaceId),
+        eq(workspaceMembers.userId, userId)
+      )
+    )
+    .limit(1);
 }
 
 /**

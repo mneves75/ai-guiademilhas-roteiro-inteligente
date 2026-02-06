@@ -59,14 +59,13 @@ export async function verifyWorkspaceMember(workspaceId: number, userId: string)
  * Create workspace
  */
 export async function createWorkspace(data: { name: string; slug: string; ownerUserId: string }) {
-  return db
-    .insert(workspaces)
-    .values({
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+  await db.insert(workspaces).values({
+    ...data,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  return db.select().from(workspaces).where(eq(workspaces.slug, data.slug)).limit(1);
 }
 
 /**
@@ -77,15 +76,23 @@ export async function addWorkspaceMember(data: {
   userId: string;
   role?: string;
 }) {
+  await db.insert(workspaceMembers).values({
+    ...data,
+    role: data.role ?? 'member',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   return db
-    .insert(workspaceMembers)
-    .values({
-      ...data,
-      role: data.role ?? 'member',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+    .select()
+    .from(workspaceMembers)
+    .where(
+      and(
+        eq(workspaceMembers.workspaceId, data.workspaceId),
+        eq(workspaceMembers.userId, data.userId)
+      )
+    )
+    .limit(1);
 }
 
 /**
@@ -138,26 +145,32 @@ export async function restoreWorkspace(workspaceId: number) {
  * Update workspace
  */
 export async function updateWorkspace(id: number, data: { name?: string; slug?: string }) {
-  return db
+  await db
     .update(workspaces)
     .set({
       ...data,
       updatedAt: new Date(),
     })
-    .where(eq(workspaces.id, id))
-    .returning();
+    .where(eq(workspaces.id, id));
+
+  return db.select().from(workspaces).where(eq(workspaces.id, id)).limit(1);
 }
 
 /**
  * Change member role
  */
 export async function updateMemberRole(workspaceId: number, userId: string, role: string) {
-  return db
+  await db
     .update(workspaceMembers)
     .set({
       role,
       updatedAt: new Date(),
     })
+    .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)));
+
+  return db
+    .select()
+    .from(workspaceMembers)
     .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)))
-    .returning();
+    .limit(1);
 }

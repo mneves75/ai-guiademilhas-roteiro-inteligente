@@ -1,19 +1,20 @@
 import { db, stripeEvents } from '@/db/client';
 import { eq } from 'drizzle-orm';
+import { isUniqueConstraintError } from '@/db/errors';
 
 export async function recordStripeEventReceived(params: { eventId: string; type: string }) {
-  const inserted = await db
-    .insert(stripeEvents)
-    .values({
+  try {
+    await db.insert(stripeEvents).values({
       stripeEventId: params.eventId,
       type: params.type,
       status: 'received',
       receivedAt: new Date(),
-    })
-    .onConflictDoNothing({ target: stripeEvents.stripeEventId })
-    .returning({ id: stripeEvents.id });
-
-  return inserted.length > 0;
+    });
+    return true;
+  } catch (err) {
+    if (isUniqueConstraintError(err)) return false;
+    throw err;
+  }
 }
 
 export async function markStripeEventProcessed(params: { eventId: string }) {

@@ -153,11 +153,12 @@ pnpm db:portability-check
 ## O que eu faria melhor (prioridade por impacto/risco)
 
 1. **Env validation tipada mais ampla**: hoje DB vars criticas ja falham com mensagens consistentes; o proximo passo e aplicar o mesmo padrao para outros subsistemas (auth/email/stripe) sem reintroduzir efeitos colaterais no import.
-2. **Suite de portabilidade expandida**: hoje existe `db:portability-check`; o proximo passo e cobrir operacoes usadas em producao (ex: `onConflictDoNothing()` em webhooks) e invariantes de schema (paridade pg/sqlite).
+2. **Suite de portabilidade expandida**: hoje existe `db:portability-check`; o proximo passo e cobrir operacoes usadas em producao (ex: idempotencia via unique constraint em webhooks) e invariantes de schema (paridade pg/sqlite).
 3. **Reducao da mentira de tipos**:
    - expor uma interface minima (subset) em vez de tipar tudo como Postgres, ou
    - criar boundaries onde o cast e permitido e revisar usos Postgres-only conscientemente.
 4. **D1 separado por projeto/target**: manter o codigo de D1 (Workers) como um "target" separado, com testes em wrangler, em vez de fingir que o app Next consegue rodar D1 local.
+5. **Evitar dependencias de features de SQL**: preferir re-select apos writes e tratar idempotencia via unique constraint, para reduzir dependencia de `RETURNING` e outras features que mudam entre ambientes.
 
 ## Referencias (o que guiou as decisoes)
 

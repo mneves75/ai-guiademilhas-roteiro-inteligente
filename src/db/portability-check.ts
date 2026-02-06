@@ -42,16 +42,19 @@ async function main() {
     });
 
     // 3) Insert workspace (timestamps have defaults in both dialects).
-    const insertedWorkspaces = await db
-      .insert(workspaces)
-      .values({
-        name: 'Portability Workspace',
-        slug: workspaceSlug,
-        ownerUserId: userId,
-      })
-      .returning({ id: workspaces.id });
+    await db.insert(workspaces).values({
+      name: 'Portability Workspace',
+      slug: workspaceSlug,
+      ownerUserId: userId,
+    });
 
-    workspaceId = insertedWorkspaces[0]?.id;
+    const workspaceRows = await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.slug, workspaceSlug))
+      .limit(1);
+
+    workspaceId = workspaceRows[0]?.id;
     if (!workspaceId) throw new Error('Failed to create workspace (missing id).');
 
     // 4) Insert membership using composite unique index (workspaceId, userId).

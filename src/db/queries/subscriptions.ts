@@ -1,5 +1,5 @@
 import { db, subscriptions } from '@/db/client';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { withSoftDeleteFilter } from './base';
 
 /**
@@ -48,15 +48,19 @@ export async function createSubscription(data: {
   stripePriceId?: string;
   status?: string;
 }) {
+  await db.insert(subscriptions).values({
+    ...data,
+    status: data.status ?? 'incomplete',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   return db
-    .insert(subscriptions)
-    .values({
-      ...data,
-      status: data.status ?? 'incomplete',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.workspaceId, data.workspaceId))
+    .orderBy(desc(subscriptions.id))
+    .limit(1);
 }
 
 /**
@@ -71,29 +75,41 @@ export async function updateSubscriptionStatus(
     cancelAtPeriodEnd?: boolean;
   }
 ) {
-  return db
+  await db
     .update(subscriptions)
     .set({
       ...data,
       updatedAt: new Date(),
     })
+    .where(eq(subscriptions.workspaceId, workspaceId));
+
+  return db
+    .select()
+    .from(subscriptions)
     .where(eq(subscriptions.workspaceId, workspaceId))
-    .returning();
+    .orderBy(desc(subscriptions.id))
+    .limit(1);
 }
 
 /**
  * Soft delete subscription
  */
 export async function softDeleteSubscription(workspaceId: number) {
-  return db
+  await db
     .update(subscriptions)
     .set({
       deletedAt: new Date(),
       status: 'canceled',
       updatedAt: new Date(),
     })
+    .where(eq(subscriptions.workspaceId, workspaceId));
+
+  return db
+    .select()
+    .from(subscriptions)
     .where(eq(subscriptions.workspaceId, workspaceId))
-    .returning();
+    .orderBy(desc(subscriptions.id))
+    .limit(1);
 }
 
 /**
