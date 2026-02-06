@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import {
   getWorkspaceMembers,
@@ -15,6 +15,7 @@ type RouteContext = { params: Promise<{ id: string }> };
  * List workspace members
  */
 export async function GET(_request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -38,6 +39,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
  * Update member role (owner/admin only)
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -78,6 +80,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  * Remove member from workspace (owner/admin only, or self-leave)
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -1,27 +1,23 @@
+import { Github } from 'lucide-react';
+
+const badges = ['Open Source', 'Next.js 16', 'TypeScript', 'MIT License'];
+
 export function SocialProof() {
   return (
-    <section className="border-b">
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl border bg-card p-6 text-card-foreground shadow">
-            <div className="text-sm font-medium">Sane defaults</div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Strict TypeScript, zero-warning lint, and a repo layout that scales.
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-6 text-card-foreground shadow">
-            <div className="text-sm font-medium">CI-ready</div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Reproducible installs and checks that run the same locally and in CI.
-            </p>
-          </div>
-          <div className="rounded-xl border bg-card p-6 text-card-foreground shadow">
-            <div className="text-sm font-medium">No magic</div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Fail-fast env validation and minimal abstraction around core primitives.
-            </p>
-          </div>
-        </div>
+    <section className="py-12 md:py-16">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 px-4 sm:px-6">
+        {badges.map((badge) => (
+          <span
+            key={badge}
+            className="rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm"
+          >
+            {badge}
+          </span>
+        ))}
+        <span className="flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">
+          <Github className="h-3.5 w-3.5" />
+          Star us on GitHub
+        </span>
       </div>
     </section>
   );

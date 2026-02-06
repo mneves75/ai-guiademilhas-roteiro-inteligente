@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Plus, Settings, Users } from 'lucide-react';
 
 export default async function WorkspacesPage() {
+  const auth = getAuth();
   const session = await auth.api.getSession({
     headers: await headers(),
   });

@@ -1,29 +1,37 @@
+const technologies = [
+  'Next.js 16',
+  'React 19',
+  'TypeScript',
+  'Tailwind CSS',
+  'Drizzle ORM',
+  'Stripe',
+  'Better Auth',
+  'Resend',
+  'shadcn/ui',
+];
+
 export function TechStack() {
   return (
-    <section className="border-b">
-      <div className="mx-auto max-w-6xl px-4 py-16">
-        <h2 className="text-2xl font-semibold tracking-tight">Tech stack</h2>
-        <ul className="mt-6 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
-          <li>
-            <span className="font-medium text-foreground">Next.js 16</span> App Router, RSC-first
-          </li>
-          <li>
-            <span className="font-medium text-foreground">React 19</span> with modern patterns
-          </li>
-          <li>
-            <span className="font-medium text-foreground">Drizzle ORM</span> Postgres, SQLite, D1
-          </li>
-          <li>
-            <span className="font-medium text-foreground">Tailwind CSS v4</span> design tokens via
-            CSS variables
-          </li>
-          <li>
-            <span className="font-medium text-foreground">Vitest</span> unit tests
-          </li>
-          <li>
-            <span className="font-medium text-foreground">Playwright</span> end-to-end tests
-          </li>
-        </ul>
+    <section className="py-20 md:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
+            Built with the best
+          </h2>
+          <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+            Modern tools and frameworks you already know and love.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          {technologies.map((tech) => (
+            <span
+              key={tech}
+              className="rounded-full border bg-muted/50 px-4 py-1.5 text-sm font-medium text-foreground"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );

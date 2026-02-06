@@ -1,9 +1,11 @@
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { isAdmin } from '@/lib/admin';
 import Link from 'next/link';
 import { Shield, Users, FolderKanban, BarChart3, Settings, ArrowLeft } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 const navigation = [
   { name: 'Overview', href: '/admin', icon: BarChart3 },
@@ -13,6 +15,7 @@ const navigation = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const auth = getAuth();
   const session = await auth.api.getSession({
     headers: await headers(),
   });

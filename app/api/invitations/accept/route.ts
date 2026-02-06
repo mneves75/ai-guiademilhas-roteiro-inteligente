@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { acceptInvitation, getInvitationByToken } from '@/db/queries/invitations';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
@@ -9,6 +9,7 @@ import { verifyWorkspaceMember } from '@/db/queries/workspaces';
  * Accept an invitation using token
  */
 export async function POST(request: NextRequest) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

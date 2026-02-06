@@ -1,11 +1,14 @@
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const auth = getAuth();
   const session = await auth.api.getSession({
     headers: await headers(),
   });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import {
@@ -16,6 +16,7 @@ type RouteContext = { params: Promise<{ id: string }> };
  * List pending invitations (owner/admin only)
  */
 export async function GET(_request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -39,6 +40,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
  * Create new invitation (owner/admin only)
  */
 export async function POST(request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -89,6 +91,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Revoke invitation (owner/admin only)
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

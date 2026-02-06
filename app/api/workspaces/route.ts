@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { getUserWorkspaces, createWorkspace, addWorkspaceMember } from '@/db/queries/workspaces';
 
@@ -8,6 +8,7 @@ import { getUserWorkspaces, createWorkspace, addWorkspaceMember } from '@/db/que
  * List all workspaces for current user
  */
 export async function GET() {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,6 +28,7 @@ export async function GET() {
  * Create a new workspace
  */
 export async function POST(request: NextRequest) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

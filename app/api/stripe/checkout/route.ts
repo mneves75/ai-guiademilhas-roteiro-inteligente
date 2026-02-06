@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getOrCreateStripeCustomer, createCheckoutSession } from '@/lib/stripe-helpers';
@@ -10,6 +10,7 @@ import { STRIPE_PLANS, type PlanId } from '@/lib/stripe';
  * Create Stripe Checkout session for subscription upgrade
  */
 export async function POST(request: NextRequest) {
+  const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
