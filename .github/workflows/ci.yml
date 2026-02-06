@@ -98,11 +98,9 @@ jobs:
         run: pnpm test
 
       - name: Upload coverage
-        if: ${{ secrets.CODECOV_TOKEN }}
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage/coverage-final.json
-          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
       - name: Postgres DB smoke (push + seed)
