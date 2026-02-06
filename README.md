@@ -1,15 +1,19 @@
 # NextJS Bootstrapped Shipped
 
-A modern, full-featured Next.js 15 boilerplate for shipping production apps fast. Not just scaffolding—a working foundation with auth, quality tooling, and all the patterns you need.
+A modern, full-featured Next.js 16 boilerplate for shipping production apps fast. Not just scaffolding: a working demo app with auth, teams, billing, admin, blog, and production checks.
 
 ## Features
 
 - **Next.js 16** + React 19 + TypeScript (strict mode)
-- **Better Auth** - Modern authentication (coming soon)
+- **Better Auth** - Email/password, OAuth (Google/GitHub), password reset, magic link
 - **PostgreSQL / SQLite / D1 + Drizzle ORM** - Type-safe database (multi-provider)
-- **Stripe Integration** - Payments & subscriptions (coming soon)
-- **Geist Design System** - Vercel's design system + shadcn/ui (coming soon)
-- **Email System** - Resend + React Email (coming soon)
+- **Multi-tenancy** - Workspaces, members, invitations, roles
+- **Stripe Integration** - Subscriptions (monthly/yearly), one-time payment, portal, idempotent webhooks
+- **Admin Dashboard** - User list/details, subscriptions, revenue, impersonation
+- **Email System** - Resend + React Email templates + dev preview
+- **Geist + shadcn/ui** - Design system and UI primitives
+- **I18N** - Cookie-based locale + language switcher (en, pt-BR)
+- **Storage** - Avatar uploads with adapters (local, R2, Vercel Blob)
 - **Full CI/CD** - GitHub Actions + Vercel previews
 
 ## Quick Start
@@ -60,12 +64,9 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
 
 ## Project Status
 
-| Phase                        | Status      | Description                  |
-| ---------------------------- | ----------- | ---------------------------- |
-| 1. Foundation & Code Quality | ✅ Complete | TypeScript, ESLint, CI/CD    |
-| 2. Database & Schema         | ✅ Complete | Postgres/SQLite/D1, Drizzle  |
-| 3. Authentication            | ⏳ Planned  | Better Auth integration      |
-| 4-12. Features               | ⏳ Planned  | Teams, Payments, Admin, etc. |
+| Phase            | Status      | Description                 |
+| ---------------- | ----------- | --------------------------- |
+| 1-12. v1 Roadmap | ✅ Complete | End-to-end demo app + gates |
 
 ## Contributing
 

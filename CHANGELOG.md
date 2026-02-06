@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-06
+
 ### Added
 
 - Multi-database Drizzle client with `DB_PROVIDER` support: `postgres` (default), `sqlite`, `d1`
@@ -79,5 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - pnpm as package manager
   - GitHub repository with best practices docs
 
-[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/releases/tag/v0.1.0
