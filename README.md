@@ -6,7 +6,7 @@ A modern, full-featured Next.js 15 boilerplate for shipping production apps fast
 
 - **Next.js 16** + React 19 + TypeScript (strict mode)
 - **Better Auth** - Modern authentication (coming soon)
-- **PostgreSQL + Drizzle ORM** - Type-safe database (coming soon)
+- **PostgreSQL / SQLite / D1 + Drizzle ORM** - Type-safe database (multi-provider)
 - **Stripe Integration** - Payments & subscriptions (coming soon)
 - **Geist Design System** - Vercel's design system + shadcn/ui (coming soon)
 - **Email System** - Resend + React Email (coming soon)
@@ -63,7 +63,7 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
 | Phase                        | Status      | Description                  |
 | ---------------------------- | ----------- | ---------------------------- |
 | 1. Foundation & Code Quality | ✅ Complete | TypeScript, ESLint, CI/CD    |
-| 2. Database & Schema         | 🔜 Next     | PostgreSQL, Drizzle ORM      |
+| 2. Database & Schema         | ✅ Complete | Postgres/SQLite/D1, Drizzle  |
 | 3. Authentication            | ⏳ Planned  | Better Auth integration      |
 | 4-12. Features               | ⏳ Planned  | Teams, Payments, Admin, etc. |
 

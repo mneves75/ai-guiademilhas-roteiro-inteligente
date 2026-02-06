@@ -86,8 +86,36 @@ cp .env.example .env.local
 Edit .env.local (never commit this file):
 
 - DATABASE_URL: PostgreSQL connection string
+- DB_PROVIDER: `postgres` (default) | `sqlite` | `d1`
+- SQLITE_PATH: SQLite file path (only when `DB_PROVIDER=sqlite`)
 - NEXT_PUBLIC_APP_URL: http://localhost:3000 (for development)
 - API keys: Stripe, Resend, etc.
+
+### Database Workflows
+
+Postgres:
+
+```bash
+pnpm db:push:pg
+pnpm db:seed
+```
+
+SQLite:
+
+```bash
+DB_PROVIDER=sqlite SQLITE_PATH=./data/app.db pnpm db:push
+DB_PROVIDER=sqlite SQLITE_PATH=./data/app.db pnpm db:seed
+```
+
+Cloudflare D1:
+
+```bash
+# Migrations (requires CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_DATABASE_ID / CLOUDFLARE_D1_TOKEN)
+DB_PROVIDER=d1 pnpm db:push
+
+# Seed (Worker runtime): use Wrangler
+wrangler d1 execute app-db --local --file=src/db/seed.d1.sql
+```
 
 ### Troubleshooting
 

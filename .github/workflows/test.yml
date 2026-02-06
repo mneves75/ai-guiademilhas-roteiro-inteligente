@@ -63,3 +63,65 @@ jobs:
         run: pnpm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
+
+      - name: Postgres DB smoke (push + seed)
+        env:
+          DB_PROVIDER: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
+        run: |
+          pnpm db:push:pg
+          pnpm db:seed
+
+  sqlite-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: SQLite DB smoke (push + seed)
+        env:
+          DB_PROVIDER: sqlite
+        run: |
+          TMPDIR="$(mktemp -d)"
+          export SQLITE_PATH="$TMPDIR/app.db"
+
+          pnpm db:push
+          pnpm db:seed
+
+          node - <<'NODE'
+          const Database = require('better-sqlite3');
+          const db = new Database(process.env.SQLITE_PATH);
+          const users = db.prepare('select count(*) as c from users').get().c;
+          const workspaces = db.prepare('select count(*) as c from workspaces').get().c;
+          const members = db.prepare('select count(*) as c from workspace_members').get().c;
+          const subs = db.prepare('select count(*) as c from subscriptions').get().c;
+          console.log(JSON.stringify({ users, workspaces, members, subs }));
+          db.close();
+          NODE
+
+          rm -rf "$TMPDIR"
