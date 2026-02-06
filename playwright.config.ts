@@ -8,8 +8,19 @@ const serverPort = port || '3000';
 const dbProvider = process.env.DB_PROVIDER ?? 'sqlite';
 const sqlitePath = process.env.SQLITE_PATH ?? '.next-playwright/e2e.db';
 
-function getDbEnv(): string {
-  if (dbProvider === 'sqlite') return `DB_PROVIDER=sqlite SQLITE_PATH=${sqlitePath}`;
+function getWebServerEnv(): Record<string, string> {
+  // Carry through the parent environment for CI compatibility, then override
+  // the few values we need deterministically.
+  const env: Record<string, string> = { ...(process.env as Record<string, string>) };
+
+  env.PORT = serverPort;
+  env.DB_PROVIDER = dbProvider;
+
+  if (dbProvider === 'sqlite') {
+    env.SQLITE_PATH = sqlitePath;
+    return env;
+  }
+
   if (dbProvider === 'postgres') {
     const url = process.env.DATABASE_URL;
     if (!url) {
@@ -18,21 +29,27 @@ function getDbEnv(): string {
           'Either set DATABASE_URL, or omit DB_PROVIDER to use sqlite by default.'
       );
     }
-    return `DB_PROVIDER=postgres DATABASE_URL=${url}`;
+    env.DATABASE_URL = url;
+    return env;
   }
+
   throw new Error(
     `Playwright E2E does not support DB_PROVIDER=${dbProvider}. Use sqlite or postgres.`
   );
 }
 
 function getDbSetupCommand(): string {
-  const env = getDbEnv();
   if (dbProvider === 'sqlite') {
     // E2E should be deterministic and not depend on external services by default.
-    return `mkdir -p .next-playwright && rm -f ${sqlitePath} && ${env} pnpm db:push:sqlite && ${env} pnpm db:seed`;
+    return (
+      `node -e "const fs=require('fs');` +
+      `fs.mkdirSync('.next-playwright',{recursive:true});` +
+      `fs.rmSync(process.env.SQLITE_PATH,{force:true});"` +
+      ` && pnpm db:push:sqlite && pnpm db:seed`
+    );
   }
   // For postgres runs, rely on the configured DATABASE_URL.
-  return `${env} pnpm db:push:pg && ${env} pnpm db:seed`;
+  return `pnpm db:push:pg && pnpm db:seed`;
 }
 
 // Default E2E should be deterministic without requiring every browser engine
@@ -66,9 +83,10 @@ export default defineConfig({
     // Run against a production build for deterministic results (no dev overlay, no HMR races).
     // Note: Next.js writes `next-env.d.ts` based on the active distDir; keeping the
     // default `.next` avoids `next-env.d.ts` churn when running E2E locally.
-    command: `${getDbSetupCommand()} && PORT=${serverPort} ${getDbEnv()} pnpm build && PORT=${serverPort} ${getDbEnv()} pnpm start`,
+    command: `${getDbSetupCommand()} && pnpm build && pnpm start`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 240 * 1000,
+    env: getWebServerEnv(),
   },
 });
