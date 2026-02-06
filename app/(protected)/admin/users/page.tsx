@@ -2,13 +2,8 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getAdminUsers } from '@/lib/admin';
-import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { AdminUserActions } from './user-actions';
 
 export default async function AdminUsersPage({
   searchParams,
@@ -62,20 +57,7 @@ export default async function AdminUsersPage({
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Impersonate</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Disable Account
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <AdminUserActions userId={user.id} />
                     </td>
                   </tr>
                 ))}

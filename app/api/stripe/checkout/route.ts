@@ -3,7 +3,7 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getOrCreateStripeCustomer, createCheckoutSession } from '@/lib/stripe-helpers';
-import { STRIPE_PLANS, type PlanId } from '@/lib/stripe';
+import { getPlanPriceId, STRIPE_PLANS, type BillingInterval, type PlanId } from '@/lib/stripe';
 
 /**
  * POST /api/stripe/checkout
@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { workspaceId, plan } = body as { workspaceId: number; plan: PlanId };
+  const { workspaceId, plan, interval } = body as {
+    workspaceId: number;
+    plan: PlanId;
+    interval?: BillingInterval;
+  };
 
   if (!workspaceId || !plan) {
     return NextResponse.json({ error: 'workspaceId and plan are required' }, { status: 400 });
@@ -31,7 +35,9 @@ export async function POST(request: NextRequest) {
 
   // Get plan details
   const planConfig = STRIPE_PLANS[plan];
-  if (!planConfig || !planConfig.priceId) {
+  const billingInterval: BillingInterval = interval === 'year' ? 'year' : 'month';
+  const priceId = getPlanPriceId(plan, billingInterval);
+  if (!planConfig || !priceId) {
     return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
   }
 
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') ?? 'http://localhost:3000';
     const checkoutSession = await createCheckoutSession({
       workspaceId,
-      priceId: planConfig.priceId,
+      priceId,
       customerId,
       successUrl: `${origin}/dashboard/billing?success=true`,
       cancelUrl: `${origin}/dashboard/billing?canceled=true`,

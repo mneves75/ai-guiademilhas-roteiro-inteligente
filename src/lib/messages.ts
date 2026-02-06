@@ -15,6 +15,7 @@ export const MESSAGES: Record<
       signInTitle: string;
       createAccount: string;
       email: string;
+      magicLinkEmail: string;
       password: string;
       forgotPassword: string;
       magicLinkTitle: string;
@@ -48,6 +49,7 @@ export const MESSAGES: Record<
       signInTitle: 'Sign in to your account',
       createAccount: 'create a new account',
       email: 'Email address',
+      magicLinkEmail: 'Email for magic link',
       password: 'Password',
       forgotPassword: 'Forgot your password?',
       magicLinkTitle: 'Magic link',
@@ -80,6 +82,7 @@ export const MESSAGES: Record<
       signInTitle: 'Entre na sua conta',
       createAccount: 'criar uma nova conta',
       email: 'Email',
+      magicLinkEmail: 'Email para link magico',
       password: 'Senha',
       forgotPassword: 'Esqueceu sua senha?',
       magicLinkTitle: 'Link magico',

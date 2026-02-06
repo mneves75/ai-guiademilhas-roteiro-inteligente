@@ -2,6 +2,7 @@ import { sendEmail, type EmailResult } from './email';
 import { WelcomeEmail } from '@/emails/welcome-email';
 import { InvitationEmail } from '@/emails/invitation-email';
 import { PasswordResetEmail } from '@/emails/password-reset-email';
+import { MagicLinkEmail } from '@/emails/magic-link-email';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -49,15 +50,35 @@ export async function sendInvitationEmail(params: {
 export async function sendPasswordResetEmail(params: {
   to: string;
   name: string;
-  token: string;
+  resetUrl: string;
+  expiresInMinutes?: number;
 }): Promise<EmailResult> {
   return sendEmail({
     to: params.to,
     subject: 'Reset your Shipped password',
     react: PasswordResetEmail({
       name: params.name,
-      resetUrl: `${APP_URL}/reset-password?token=${params.token}`,
-      expiresInMinutes: 60,
+      resetUrl: params.resetUrl,
+      expiresInMinutes: params.expiresInMinutes ?? 60,
+    }),
+  });
+}
+
+/**
+ * Send magic link email (passwordless sign-in).
+ */
+export async function sendMagicLinkEmail(params: {
+  to: string;
+  url: string;
+  expiresInMinutes?: number;
+}): Promise<EmailResult> {
+  return sendEmail({
+    to: params.to,
+    subject: 'Your Shipped magic sign-in link',
+    react: MagicLinkEmail({
+      signInUrl: params.url,
+      expiresInMinutes: params.expiresInMinutes ?? 5,
+      supportUrl: `${APP_URL}/login`,
     }),
   });
 }

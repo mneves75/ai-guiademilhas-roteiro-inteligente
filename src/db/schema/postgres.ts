@@ -38,6 +38,11 @@ export const users = pgTable(
     email: varchar({ length: 255 }).notNull().unique(),
     emailVerified: boolean().notNull().default(false),
     image: varchar({ length: 255 }),
+    // Better Auth admin plugin fields
+    role: varchar({ length: 255 }),
+    banned: boolean().notNull().default(false),
+    banReason: text(),
+    banExpires: timestamp(),
     createdAt: timestamp().notNull(),
     updatedAt: timestamp().notNull(),
   },
@@ -59,6 +64,8 @@ export const sessions = pgTable(
     expiresAt: timestamp().notNull(),
     ipAddress: varchar({ length: 255 }),
     userAgent: varchar({ length: 255 }),
+    // Better Auth admin plugin field (tracks impersonator user id)
+    impersonatedBy: varchar({ length: 255 }),
     createdAt: timestamp().notNull(),
     updatedAt: timestamp().notNull(),
   },
@@ -216,6 +223,24 @@ export const subscriptions = pgTable(
     index('idx_subscriptions_stripe_subscription').on(table.stripeSubscriptionId),
     index('idx_subscriptions_deleted').on(table.deletedAt),
   ]
+);
+
+/**
+ * STRIPE_EVENTS TABLE
+ * Webhook idempotency + processing audit.
+ */
+export const stripeEvents = pgTable(
+  'stripe_events',
+  {
+    id: serial().primaryKey(),
+    stripeEventId: varchar({ length: 255 }).notNull().unique(),
+    type: varchar({ length: 255 }).notNull(),
+    status: varchar({ length: 32 }).notNull().default('received'),
+    receivedAt: timestamp().defaultNow().notNull(),
+    processedAt: timestamp(),
+    error: text(),
+  },
+  (table) => [index('idx_stripe_events_event_id').on(table.stripeEventId)]
 );
 
 // ==================== RELATIONS ====================

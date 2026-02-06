@@ -22,7 +22,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="flex min-h-screen">
         <DashboardNav user={session.user} />
         <div className="flex flex-1 flex-col">
-          <DashboardHeader user={session.user} />
+          <DashboardHeader
+            user={session.user}
+            impersonatedBy={session.session.impersonatedBy ?? null}
+          />
           <main className="flex-1 bg-muted/30 p-6">{children}</main>
         </div>
       </div>

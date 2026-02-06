@@ -14,13 +14,24 @@ export type User = {
   email: string;
   emailVerified: boolean;
   image: string | null;
+  role: string | null;
+  banned: boolean;
+  banReason: string | null;
+  banExpires: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type NewUser = Omit<User, 'emailVerified' | 'image'> & {
+export type NewUser = Omit<
+  User,
+  'emailVerified' | 'image' | 'role' | 'banned' | 'banReason' | 'banExpires'
+> & {
   emailVerified?: boolean;
   image?: string | null;
+  role?: string | null;
+  banned?: boolean;
+  banReason?: string | null;
+  banExpires?: Date | null;
 };
 
 export type Session = {
@@ -30,6 +41,7 @@ export type Session = {
   expiresAt: Date;
   ipAddress: string | null;
   userAgent: string | null;
+  impersonatedBy: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -93,6 +105,16 @@ export type Subscription = {
 };
 
 export type NewSubscription = Omit<Subscription, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+
+export type StripeEvent = {
+  id: number;
+  stripeEventId: string;
+  type: string;
+  status: string;
+  receivedAt: Date;
+  processedAt: Date | null;
+  error: string | null;
+};
 
 export type WorkspaceInvitation = {
   id: number;

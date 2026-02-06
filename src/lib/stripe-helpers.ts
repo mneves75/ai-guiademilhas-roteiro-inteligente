@@ -1,4 +1,4 @@
-import { getStripe, STRIPE_PLANS, type PlanId } from './stripe';
+import { getOneTimePriceId, getStripe, STRIPE_PLANS, type PlanId } from './stripe';
 import { db, subscriptions } from '@/db/client';
 import { eq } from 'drizzle-orm';
 
@@ -100,6 +100,35 @@ export async function createCheckoutSession({
 }
 
 /**
+ * Create Stripe Checkout session for one-time payment.
+ */
+export async function createOneTimeCheckoutSession({
+  workspaceId,
+  customerId,
+  successUrl,
+  cancelUrl,
+}: {
+  workspaceId: number;
+  customerId: string;
+  successUrl: string;
+  cancelUrl: string;
+}) {
+  const stripe = getStripe();
+  const priceId = getOneTimePriceId();
+  return stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'payment',
+    payment_method_types: ['card'],
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      workspaceId: workspaceId.toString(),
+    },
+  });
+}
+
+/**
  * Create Stripe Customer Portal session
  */
 export async function createPortalSession({
@@ -132,10 +161,19 @@ export async function getWorkspaceSubscription(workspaceId: number) {
 
   // Determine plan from price ID
   let plan: PlanId = 'free';
-  if (subscription.stripePriceId === STRIPE_PLANS.pro.priceId) {
-    plan = 'pro';
-  } else if (subscription.stripePriceId === STRIPE_PLANS.enterprise.priceId) {
-    plan = 'enterprise';
+  const priceId = subscription.stripePriceId;
+  if (priceId) {
+    if (
+      priceId === STRIPE_PLANS.pro.priceIds?.month ||
+      priceId === STRIPE_PLANS.pro.priceIds?.year
+    ) {
+      plan = 'pro';
+    } else if (
+      priceId === STRIPE_PLANS.enterprise.priceIds?.month ||
+      priceId === STRIPE_PLANS.enterprise.priceIds?.year
+    ) {
+      plan = 'enterprise';
+    }
   }
 
   return {

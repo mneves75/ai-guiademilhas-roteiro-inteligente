@@ -121,10 +121,10 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 <strong>Invited by:</strong> {invite?.invitedBy}
               </p>
             </div>
-            <Link href={`/login?redirect=/invite/${token}`}>
+            <Link href={`/login?callbackUrl=/invite/${token}`}>
               <Button className="w-full">Sign In</Button>
             </Link>
-            <Link href={`/signup?redirect=/invite/${token}`}>
+            <Link href={`/signup?callbackUrl=/invite/${token}`}>
               <Button variant="outline" className="w-full">
                 Create Account
               </Button>

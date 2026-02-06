@@ -9,6 +9,7 @@ import prettier from 'eslint-config-prettier/flat';
 const baseIgnores = [
   'node_modules/',
   '.next/',
+  '.next-playwright/',
   'dist/',
   'build/',
   '.vercel/',

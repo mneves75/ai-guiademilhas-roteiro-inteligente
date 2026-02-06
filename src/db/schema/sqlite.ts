@@ -30,6 +30,11 @@ export const users = sqliteTable(
     email: text().notNull().unique(),
     emailVerified: integer({ mode: 'boolean' }).notNull().default(false),
     image: text(),
+    // Better Auth admin plugin fields
+    role: text(),
+    banned: integer({ mode: 'boolean' }).notNull().default(false),
+    banReason: text(),
+    banExpires: integer({ mode: 'timestamp' }),
     createdAt: integer({ mode: 'timestamp' }).notNull(),
     updatedAt: integer({ mode: 'timestamp' }).notNull(),
   },
@@ -47,6 +52,8 @@ export const sessions = sqliteTable(
     expiresAt: integer({ mode: 'timestamp' }).notNull(),
     ipAddress: text(),
     userAgent: text(),
+    // Better Auth admin plugin field (tracks impersonator user id)
+    impersonatedBy: text(),
     createdAt: integer({ mode: 'timestamp' }).notNull(),
     updatedAt: integer({ mode: 'timestamp' }).notNull(),
   },
@@ -180,6 +187,22 @@ export const subscriptions = sqliteTable(
     index('idx_subscriptions_stripe_subscription').on(table.stripeSubscriptionId),
     index('idx_subscriptions_deleted').on(table.deletedAt),
   ]
+);
+
+export const stripeEvents = sqliteTable(
+  'stripe_events',
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    stripeEventId: text().notNull().unique(),
+    type: text().notNull(),
+    status: text().notNull().default('received'),
+    receivedAt: integer({ mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+    processedAt: integer({ mode: 'timestamp' }),
+    error: text(),
+  },
+  (table) => [index('idx_stripe_events_event_id').on(table.stripeEventId)]
 );
 
 // ==================== RELATIONS ====================

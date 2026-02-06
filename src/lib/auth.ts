@@ -1,8 +1,105 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { admin } from 'better-auth/plugins/admin';
+import { magicLink } from 'better-auth/plugins/magic-link';
+import { eq } from 'drizzle-orm';
 import { db, DB_PROVIDER, users, sessions, accounts, verification } from '@/db/client';
+import { sendMagicLinkEmail, sendPasswordResetEmail, sendWelcomeEmail } from '@/lib/email-actions';
 
-let cachedAuth: ReturnType<typeof betterAuth> | null = null;
+function initAuth() {
+  const baseURL = resolveBaseURL();
+  const secret = requireSecret();
+  const socialProviders = resolveSocialProviders();
+  const adminEmails = getAdminEmailAllowlist();
+
+  return betterAuth({
+    secret,
+    baseURL,
+    database: drizzleAdapter(db, {
+      provider: DB_PROVIDER === 'postgres' ? 'pg' : 'sqlite',
+      schema: {
+        user: users,
+        session: sessions,
+        account: accounts,
+        verification: verification,
+      },
+    }),
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false, // Enable in production
+      sendResetPassword: async ({ user, url }) => {
+        await sendPasswordResetEmail({
+          to: user.email,
+          name: user.name || user.email,
+          resetUrl: url,
+          expiresInMinutes: 60,
+        });
+      },
+    },
+    ...(Object.keys(socialProviders).length ? { socialProviders } : {}),
+    session: {
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day
+    },
+    trustedOrigins: [baseURL],
+    plugins: [
+      admin({
+        defaultRole: 'user',
+        adminRoles: ['admin'],
+        allowImpersonatingAdmins: false,
+        impersonationSessionDuration: 60 * 60, // 1 hour
+      }),
+      magicLink({
+        expiresIn: 60 * 5, // 5 minutes
+        sendMagicLink: async ({ email, url }) => {
+          await sendMagicLinkEmail({ to: email, url, expiresInMinutes: 5 });
+        },
+      }),
+    ],
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            // Best-effort: do not block signup/login flows on email delivery.
+            await sendWelcomeEmail({
+              to: user.email,
+              name: user.name || user.email,
+            }).catch(() => {});
+
+            // Bootstrap admin role based on env allowlist.
+            if (adminEmails.has(user.email.toLowerCase())) {
+              await db
+                .update(users)
+                .set({ role: 'admin', updatedAt: new Date() })
+                .where(eq(users.id, user.id));
+            }
+          },
+        },
+      },
+      session: {
+        create: {
+          after: async (session) => {
+            // Ensure allowlisted admins are upgraded even if they existed before roles were added.
+            const user = await db.query.users.findFirst({
+              where: (u, { eq }) => eq(u.id, session.userId),
+            });
+            if (!user) return;
+            if (!adminEmails.has(user.email.toLowerCase())) return;
+            if (user.role === 'admin') return;
+            await db
+              .update(users)
+              .set({ role: 'admin', updatedAt: new Date() })
+              .where(eq(users.id, user.id));
+          },
+        },
+      },
+    },
+  });
+}
+
+type AuthInstance = ReturnType<typeof initAuth>;
+
+let cachedAuth: AuthInstance | null = null;
 
 function resolveBaseURL(): string {
   return (
@@ -40,38 +137,18 @@ function resolveSocialProviders(): Record<string, { clientId: string; clientSecr
   return socialProviders;
 }
 
+function getAdminEmailAllowlist(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
 export function getAuth() {
-  if (cachedAuth) return cachedAuth;
-
-  const baseURL = resolveBaseURL();
-  const secret = requireSecret();
-  const socialProviders = resolveSocialProviders();
-
-  cachedAuth = betterAuth({
-    secret,
-    baseURL,
-    database: drizzleAdapter(db, {
-      provider: DB_PROVIDER === 'postgres' ? 'pg' : 'sqlite',
-      schema: {
-        user: users,
-        session: sessions,
-        account: accounts,
-        verification: verification,
-      },
-    }),
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: false, // Enable in production
-    },
-    ...(Object.keys(socialProviders).length ? { socialProviders } : {}),
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day
-    },
-    trustedOrigins: [baseURL],
-  });
-
+  if (!cachedAuth) cachedAuth = initAuth();
   return cachedAuth;
 }
 
-export type Session = ReturnType<typeof getAuth>['$Infer']['Session'];
+export type Session = AuthInstance['$Infer']['Session'];

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const isCI = !!process.env.CI;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+// Avoid accidental reuse of an unrelated dev server running on :3000.
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3100';
 const { port } = new URL(baseURL);
 const serverPort = port || '3000';
 
@@ -33,9 +33,10 @@ export default defineConfig({
       : []),
   ],
   webServer: {
-    command: isCI ? `PORT=${serverPort} pnpm start` : `PORT=${serverPort} pnpm dev`,
+    // Run against a production build for deterministic results (no dev overlay, no HMR races).
+    command: `NEXT_DIST_DIR=.next-playwright PORT=${serverPort} pnpm build && NEXT_DIST_DIR=.next-playwright PORT=${serverPort} pnpm start`,
     url: baseURL,
-    reuseExistingServer: !isCI,
-    timeout: 120 * 1000,
+    reuseExistingServer: false,
+    timeout: 240 * 1000,
   },
 });

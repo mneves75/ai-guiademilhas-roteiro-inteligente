@@ -1,5 +1,6 @@
 import { db, users, workspaces, subscriptions } from '@/db/client';
 import { and, count, desc, eq, gt, isNull } from 'drizzle-orm';
+import { STRIPE_PLANS } from '@/lib/stripe';
 
 /**
  * Admin role check - in production, check against a proper admin flag
@@ -25,6 +26,22 @@ export async function getSystemStats() {
     .from(subscriptions)
     .where(and(eq(subscriptions.status, 'active'), isNull(subscriptions.deletedAt)));
 
+  // Estimated MRR (best-effort: derives from known Stripe price IDs)
+  const subs = await db.query.subscriptions.findMany({
+    where: (s, { and, eq, isNull }) => and(eq(s.status, 'active'), isNull(s.deletedAt)),
+  });
+  const estimatedMrrCents = subs.reduce((sum, s) => {
+    const priceId = s.stripePriceId ?? '';
+    if (!priceId) return sum;
+    if (priceId === STRIPE_PLANS.pro.priceIds?.month)
+      return sum + (STRIPE_PLANS.pro.priceMonthlyCents ?? 0);
+    if (priceId === STRIPE_PLANS.pro.priceIds?.year) {
+      const yearly = STRIPE_PLANS.pro.priceYearlyCents ?? 0;
+      return sum + Math.round(yearly / 12);
+    }
+    return sum;
+  }, 0);
+
   // Users created in last 7 days
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -38,6 +55,7 @@ export async function getSystemStats() {
     totalWorkspaces: workspaceCount?.count ?? 0,
     activeSubscriptions: activeSubscriptions?.count ?? 0,
     newUsersLast7Days: newUsers?.count ?? 0,
+    estimatedMrrCents,
   };
 }
 
@@ -98,6 +116,38 @@ export async function getAdminWorkspaces(page = 1, pageSize = 20) {
 
   return {
     workspaces: workspacesList,
+    pagination: {
+      page,
+      pageSize,
+      total: totalCount?.count ?? 0,
+      totalPages: Math.ceil((totalCount?.count ?? 0) / pageSize),
+    },
+  };
+}
+
+/**
+ * Get all subscriptions with pagination for admin
+ */
+export async function getAdminSubscriptions(page = 1, pageSize = 20) {
+  const offset = (page - 1) * pageSize;
+
+  const subs = await db.query.subscriptions.findMany({
+    limit: pageSize,
+    offset,
+    orderBy: [desc(subscriptions.updatedAt)],
+    where: isNull(subscriptions.deletedAt),
+    with: {
+      workspace: true,
+    },
+  });
+
+  const [totalCount] = await db
+    .select({ count: count() })
+    .from(subscriptions)
+    .where(isNull(subscriptions.deletedAt));
+
+  return {
+    subscriptions: subs,
     pagination: {
       page,
       pageSize,

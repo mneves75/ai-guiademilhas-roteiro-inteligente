@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     planName: planConfig.name,
     status: subscription.status,
     features: planConfig.features,
-    price: planConfig.price,
+    priceMonthlyCents: planConfig.priceMonthlyCents,
     currentPeriodEnd: subscription.currentPeriodEnd,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     hasCustomer: !!subscription.customerId,

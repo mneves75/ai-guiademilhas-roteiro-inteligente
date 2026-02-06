@@ -1,9 +1,16 @@
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { isAdmin } from '@/lib/admin';
 import Link from 'next/link';
-import { Shield, Users, FolderKanban, BarChart3, Settings, ArrowLeft } from 'lucide-react';
+import {
+  Shield,
+  Users,
+  FolderKanban,
+  BarChart3,
+  Settings,
+  ArrowLeft,
+  CreditCard,
+} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +18,7 @@ const navigation = [
   { name: 'Overview', href: '/admin', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Workspaces', href: '/admin/workspaces', icon: FolderKanban },
+  { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -24,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/login');
   }
 
-  if (!isAdmin(session.user.email)) {
+  if (session.user.role !== 'admin') {
     redirect('/dashboard');
   }
 

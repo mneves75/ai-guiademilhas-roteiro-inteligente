@@ -1,5 +1,16 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Users, Eye } from 'lucide-react';
+import { useWorkspace } from '@/contexts/workspace-context';
+import type { PlanId } from '@/lib/plan-catalog';
+
+type SubscriptionResponse = {
+  plan: PlanId;
+};
 
 const stats = [
   { name: 'Total Views', value: '0', change: '+0%', icon: Eye },
@@ -9,6 +20,51 @@ const stats = [
 ];
 
 export default function AnalyticsPage() {
+  const { currentWorkspace } = useWorkspace();
+  const [plan, setPlan] = useState<PlanId>('free');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!currentWorkspace) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/stripe/subscription?workspaceId=${currentWorkspace.id}`);
+        if (res.ok) {
+          const data = (await res.json()) as SubscriptionResponse;
+          setPlan(data.plan);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [currentWorkspace]);
+
+  if (!loading && plan === 'free') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">Analytics are available on paid plans.</p>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Upgrade to unlock analytics</CardTitle>
+            <CardDescription>
+              Switch your workspace to Pro to access advanced analytics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/dashboard/billing">View plans</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -70,28 +126,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage by Feature</CardTitle>
-          <CardDescription>How your team uses different features.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {['Workspaces', 'Team Members', 'Invitations', 'Settings'].map((feature) => (
-              <div key={feature} className="flex items-center gap-4">
-                <div className="w-32 text-sm font-medium">{feature}</div>
-                <div className="flex-1">
-                  <div className="h-2 rounded-full bg-muted">
-                    <div className="h-2 rounded-full bg-primary" style={{ width: '0%' }} />
-                  </div>
-                </div>
-                <div className="w-12 text-right text-sm text-muted-foreground">0</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

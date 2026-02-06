@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getSystemStats, getRecentActivity } from '@/lib/admin';
-import { Users, FolderKanban, CreditCard, TrendingUp } from 'lucide-react';
+import { Users, FolderKanban, CreditCard, DollarSign, TrendingUp } from 'lucide-react';
 import type { User, Workspace } from '@/db/schema/types';
 
 export default async function AdminDashboardPage() {
@@ -27,6 +27,14 @@ export default async function AdminDashboardPage() {
       description: 'Active paid plans',
     },
     {
+      name: 'Est. MRR',
+      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+        (stats.estimatedMrrCents ?? 0) / 100
+      ),
+      icon: DollarSign,
+      description: 'Best-effort estimate',
+    },
+    {
       name: 'Growth',
       value: `${stats.newUsersLast7Days > 0 ? '+' : ''}${stats.newUsersLast7Days}`,
       icon: TrendingUp,
@@ -41,7 +49,7 @@ export default async function AdminDashboardPage() {
         <p className="text-muted-foreground">System overview and management tools.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {statCards.map((stat) => (
           <Card key={stat.name}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">

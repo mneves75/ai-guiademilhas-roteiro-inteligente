@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
+import { getWorkspaceById } from '@/db/queries/workspaces';
 import {
   createInvitation,
   getWorkspaceInvitations,
   revokeInvitation,
   hasExistingInvitation,
 } from '@/db/queries/invitations';
+import { sendInvitationEmail } from '@/lib/email-actions';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -82,8 +84,38 @@ export async function POST(request: NextRequest, context: RouteContext) {
     role,
     invitedByUserId: session.user.id,
   });
+  if (!invitation) {
+    return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 });
+  }
 
-  return NextResponse.json({ invitation }, { status: 201 });
+  const workspace = await getWorkspaceById(workspaceId);
+  if (!workspace) {
+    await revokeInvitation(invitation.id);
+    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+  }
+
+  const inviterName = session.user.name ?? session.user.email;
+  const emailResult = await sendInvitationEmail({
+    to: invitation.email,
+    inviterName,
+    workspaceName: workspace.name,
+    role: invitation.role,
+    token: invitation.token,
+    expiresAt: invitation.expiresAt,
+  });
+
+  if (!emailResult.success) {
+    await revokeInvitation(invitation.id);
+    return NextResponse.json(
+      { error: emailResult.error ?? 'Failed to send invitation email' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(
+    { invitation, email: { success: true, id: emailResult.id } },
+    { status: 201 }
+  );
 }
 
 /**

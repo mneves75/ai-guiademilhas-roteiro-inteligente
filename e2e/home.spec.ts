@@ -77,7 +77,8 @@ test.describe('Authentication Pages', () => {
   test('should have form inputs on login page', async ({ page }) => {
     await page.goto('/login');
 
-    const emailInput = page.getByLabel(/email/i);
+    // Login page also contains a magic-link email input; select the primary login input explicitly.
+    const emailInput = page.locator('#email');
     const passwordInput = page.getByLabel(/password/i);
 
     await expect(emailInput).toBeVisible();
@@ -128,7 +129,7 @@ test.describe('Accessibility', () => {
     await page.goto('/');
 
     // Navigation should be accessible
-    const nav = page.locator('nav, [role="navigation"]').first();
+    const nav = page.getByRole('navigation', { name: 'Primary' });
     await expect(nav).toBeVisible();
   });
 

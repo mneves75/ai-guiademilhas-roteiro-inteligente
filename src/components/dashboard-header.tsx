@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Menu, Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +25,28 @@ interface DashboardHeaderProps {
     email: string;
     image?: string | null;
   };
+  impersonatedBy?: string | null;
 }
 
-export function DashboardHeader({ user }: DashboardHeaderProps) {
+export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) {
   const router = useRouter();
+  const [stopping, setStopping] = useState(false);
 
   const handleSignOut = async () => {
     await authClient.signOut();
     router.push('/');
     router.refresh();
+  };
+
+  const handleStopImpersonating = async () => {
+    setStopping(true);
+    try {
+      await fetch('/api/auth/admin/stop-impersonating', { method: 'POST' });
+      router.push('/admin');
+      router.refresh();
+    } finally {
+      setStopping(false);
+    }
   };
 
   return (
@@ -55,12 +70,25 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {impersonatedBy && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleStopImpersonating}
+            disabled={stopping}
+            className="hidden sm:inline-flex"
+          >
+            {stopping ? 'Stopping…' : 'Stop impersonating'}
+          </Button>
+        )}
+
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
           <span className="sr-only">Notifications</span>
         </Button>
 
+        <LanguageSwitcher />
         <ThemeToggle />
 
         <DropdownMenu>

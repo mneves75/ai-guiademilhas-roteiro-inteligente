@@ -166,6 +166,7 @@ export const {
   workspaceMembers,
   workspaceInvitations,
   subscriptions,
+  stripeEvents,
   userRelations,
   workspaceRelations,
   workspaceMemberRelations,

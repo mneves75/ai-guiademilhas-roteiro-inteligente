@@ -13,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database tooling
   - Provider-specific drizzle-kit configs for Postgres/SQLite/D1
   - Multi-provider seed script plus a Drizzle-based seed assertion (`pnpm db:assert-seed`)
+- Authentication improvements
+  - Forgot/reset password pages and password reset email support
+  - Magic link (passwordless) sign-in with email delivery
+  - Development-only React Email preview page (`/emails/preview`)
+- Admin features
+  - Admin role gating for `/admin`
+  - User impersonation + "stop impersonating" action in the dashboard header
+  - Admin subscriptions page with estimated MRR (best-effort)
+- Billing & monetization
+  - Plan catalog with monthly/yearly pricing, plus a one-time payment option
+  - Stripe checkout now supports monthly/yearly intervals
+  - Stripe webhook idempotency via persisted event tracking (`stripe_events`)
+- Minimal i18n via locale cookie + language switcher (en, pt-BR)
+- Legal and marketing pages: `/pricing`, `/terms`, `/privacy`
+- Docker Compose for local Postgres + app, plus a production readiness checklist
 - Playwright E2E tests and CI-friendly `webServer` configuration
 - Landing page refactor: home page split into explicit components under `src/components/landing/`
 - shadcn-style UI primitives for the landing page (`Accordion`, `Sheet`)
@@ -28,10 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type-check now runs `next typegen` before `tsc` to keep typed routes consistent
 - CI updated to use pnpm 10 (lockfile v9 compatibility) and reproducible installs
 - Better Auth initialization is now lazy (`getAuth()`) to avoid build-time env evaluation
+- Playwright now defaults to an isolated Next.js `distDir` and runs against a production build for deterministic runs
 
 ### Fixed
 
 - Prevented build-time crashes from missing Stripe env by initializing Stripe at runtime call sites
+- Prevented build-time crashes from missing Resend env by initializing the Resend client lazily at send time
 - Fixed auth/env handling and reduced build-time failures by failing fast with clear messages
 - Prevented `pnpm build` from failing due to auth env checks by forcing authenticated layouts to be dynamic
 - Wrapped `useSearchParams()` usage behind `Suspense` to avoid CSR bailout warnings on prerender
