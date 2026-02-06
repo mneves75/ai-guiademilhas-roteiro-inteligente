@@ -41,7 +41,12 @@ export class LocalStorage implements StorageAdapter {
   }
 
   getUrl(key: string): string {
-    return `/api/files/${encodeURIComponent(key)}`;
+    const safePath = key
+      .split('/')
+      .filter(Boolean)
+      .map((seg) => encodeURIComponent(seg))
+      .join('/');
+    return `/api/files/${safePath}`;
   }
 }
 

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +56,10 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle menu</span>
       </Button>
+
+      <div className="hidden md:block">
+        <WorkspaceSwitcher />
+      </div>
 
       <div className="flex-1">
         <form>

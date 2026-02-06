@@ -9,6 +9,7 @@ import { getMDXComponents } from '@/components/mdx-components';
 import type { Metadata } from 'next';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
+import { JsonLd } from '@/components/json-ld';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -63,9 +64,24 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   const components = getMDXComponents();
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+  const canonical = `${url}/blog/${post.slug}`;
 
   return (
     <article className="container mx-auto max-w-3xl px-4 py-16">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.description,
+          datePublished: post.date,
+          author: { '@type': 'Person', name: post.author.name },
+          image: post.image ? [post.image] : undefined,
+          mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+          url: canonical,
+        }}
+      />
       <Link href="/blog">
         <Button variant="ghost" className="mb-8">
           <ArrowLeft className="mr-2 h-4 w-4" />

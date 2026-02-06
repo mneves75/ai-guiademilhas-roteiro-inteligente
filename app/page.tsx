@@ -8,10 +8,22 @@ import { FAQ } from '@/components/landing/faq';
 import { FinalCTA } from '@/components/landing/final-cta';
 import { Footer } from '@/components/landing/footer';
 import { RevealOnScroll } from '@/components/reveal-on-scroll';
+import { JsonLd } from '@/components/json-ld';
 
 export default function HomePage() {
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+  const appName = 'NextJS Bootstrapped Shipped';
+
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: appName,
+          url,
+        }}
+      />
       {/* Skip link for accessibility */}
       <a
         href="#main"

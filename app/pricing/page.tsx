@@ -5,12 +5,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { PLAN_CATALOG } from '@/lib/plan-catalog';
+import { JsonLd } from '@/components/json-ld';
 
 export default function PricingPage() {
   const plans = Object.values(PLAN_CATALOG);
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
 
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'Pricing',
+          url: `${url}/pricing`,
+        }}
+      />
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-10 px-4 py-12 sm:px-6">
         <div className="space-y-2 text-center">

@@ -5,6 +5,10 @@
  * by changing STORAGE_PROVIDER env var.
  */
 
+import { LocalStorage } from './local';
+import { R2Storage } from './r2';
+import { VercelBlobStorage } from './vercel-blob';
+
 export interface StorageAdapter {
   /** Upload a file, returns the storage key */
   upload(key: string, data: Buffer | ReadableStream): Promise<string>;
@@ -28,20 +32,14 @@ export function getStorage(): StorageAdapter {
 
   switch (STORAGE_PROVIDER) {
     case 'r2': {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { R2Storage } = require('./r2') as typeof import('./r2');
       _storage = new R2Storage();
       break;
     }
     case 'vercel-blob': {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { VercelBlobStorage } = require('./vercel-blob') as typeof import('./vercel-blob');
       _storage = new VercelBlobStorage();
       break;
     }
     default: {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { LocalStorage } = require('./local') as typeof import('./local');
       _storage = new LocalStorage();
       break;
     }

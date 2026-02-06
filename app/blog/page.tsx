@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Tag } from 'lucide-react';
 import type { Metadata } from 'next';
+import { JsonLd } from '@/components/json-ld';
 
 export const metadata: Metadata = {
   title: 'Blog | NextJS Bootstrapped Shipped',
@@ -21,9 +22,18 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   const posts = getAllPosts();
   const tags = getAllTags();
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-16">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Blog',
+          name: 'Blog',
+          url: `${url}/blog`,
+        }}
+      />
       <div className="mb-12 text-center">
         <h1 className="mb-4 text-4xl font-bold tracking-tight">Blog</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">

@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Stripe webhook idempotency via persisted event tracking (`stripe_events`)
 - Minimal i18n via locale cookie + language switcher (en, pt-BR)
 - Legal and marketing pages: `/pricing`, `/terms`, `/privacy`
+- Avatar upload with pluggable storage adapters (local, R2, Vercel Blob) + local file serving route (`/api/files/*`)
+- JSON-LD structured data for key pages (home, blog, pricing)
 - Docker Compose for local Postgres + app, plus a production readiness checklist
 - Playwright E2E tests and CI-friendly `webServer` configuration
 - Landing page refactor: home page split into explicit components under `src/components/landing/`

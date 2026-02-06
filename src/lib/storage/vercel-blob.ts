@@ -54,7 +54,6 @@ async function toBuffer(data: Buffer | ReadableStream): Promise<Buffer> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadVercelBlob(): Promise<any> {
   try {
-    // @ts-expect-error — optional dependency, install: bun add @vercel/blob
     return await import('@vercel/blob');
   } catch {
     throw new Error('Vercel Blob storage requires @vercel/blob. Install it: bun add @vercel/blob');

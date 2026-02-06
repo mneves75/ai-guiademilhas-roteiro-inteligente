@@ -93,7 +93,6 @@ async function toBuffer(data: Buffer | ReadableStream): Promise<Buffer> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadS3(): Promise<any> {
   try {
-    // @ts-expect-error — optional dependency, install: bun add @aws-sdk/client-s3
     return await import('@aws-sdk/client-s3');
   } catch {
     throw new Error(

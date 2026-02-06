@@ -14,6 +14,7 @@ const publicRoutes = [
   '/invite',
   '/api/auth',
   '/api/og',
+  '/api/files',
   '/api/invitations/accept',
   '/api/stripe/webhook',
 ];

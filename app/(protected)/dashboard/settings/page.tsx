@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +13,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { data: session, refetch } = authClient.useSession();
   const [name, setName] = useState(session?.user?.name ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +34,114 @@ export default function SettingsPage() {
     setSuccess('');
 
     try {
-      await authClient.updateUser({ name });
+      const result = await authClient.updateUser({ name });
+      if (result?.error) {
+        throw new Error(result.error.message ?? 'Failed to update profile');
+      }
       setSuccess('Profile updated successfully');
+      await refetch();
       router.refresh();
     } catch {
       setError('Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const avatarFallback = useMemo(() => {
+    if (!session) return '';
+    return (session.user.name ?? session.user.email).charAt(0).toUpperCase();
+  }, [session]);
+
+  const handleAvatarUpload = async (file: File) => {
+    setAvatarUploading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await fetch('/api/users/avatar', { method: 'POST', body: formData });
+      const uploadData = (await uploadRes.json().catch(() => ({}))) as {
+        url?: string;
+        error?: string;
+      };
+      if (!uploadRes.ok || !uploadData.url) {
+        throw new Error(uploadData.error ?? 'Failed to upload avatar');
+      }
+
+      const updateRes = await authClient.updateUser({ image: uploadData.url });
+      if (updateRes?.error) {
+        throw new Error(updateRes.error.message ?? 'Failed to update avatar');
+      }
+      await refetch();
+      setSuccess('Avatar updated successfully');
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to upload avatar');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarUploading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const updateRes = await authClient.updateUser({ image: null });
+      if (updateRes?.error) {
+        throw new Error(updateRes.error.message ?? 'Failed to remove avatar');
+      }
+      await refetch();
+      setSuccess('Avatar removed');
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to remove avatar');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    try {
+      if (!currentPassword || !newPassword) {
+        throw new Error('Current password and new password are required');
+      }
+      if (newPassword.length < 8) {
+        throw new Error('New password must be at least 8 characters');
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          revokeOtherSessions: true,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? 'Failed to change password');
+      }
+
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordSuccess('Password updated successfully');
+      await refetch();
+    } catch (e) {
+      setPasswordError(e instanceof Error ? e.message : 'Failed to change password');
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -96,15 +206,52 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-2xl font-bold">
-                  {(session.user.name ?? session.user.email).charAt(0).toUpperCase()}
+                <div className="relative h-20 w-20 overflow-hidden rounded-full bg-muted">
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt="Avatar"
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-2xl font-bold">
+                      {avatarFallback}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <Button variant="outline" disabled>
-                    Change Avatar
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex">
+                      <Input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        disabled={avatarUploading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void handleAvatarUpload(file);
+                          e.currentTarget.value = '';
+                        }}
+                      />
+                      <Button variant="outline" disabled={avatarUploading} asChild>
+                        <span>{avatarUploading ? 'Uploading...' : 'Upload Avatar'}</span>
+                      </Button>
+                    </label>
+                    {session.user.image && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={avatarUploading}
+                        onClick={() => void handleRemoveAvatar()}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Avatar upload coming soon. For now, we use your initials.
+                    PNG, JPG, WEBP, or GIF. Max 2MB.
                   </p>
                 </div>
               </div>
@@ -119,20 +266,42 @@ export default function SettingsPage() {
               <CardDescription>Change your password to keep your account secure.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleChangePassword}>
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" />
+                  <Input
+                    id="current-password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" />
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input id="confirm-password" type="password" />
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
                 </div>
-                <Button type="submit">Update Password</Button>
+                {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+                {passwordSuccess && <p className="text-sm text-green-600">{passwordSuccess}</p>}
+                <Button type="submit" disabled={passwordSaving}>
+                  {passwordSaving ? 'Updating...' : 'Update Password'}
+                </Button>
               </form>
             </CardContent>
           </Card>
