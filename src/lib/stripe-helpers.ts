@@ -1,4 +1,4 @@
-import { stripe, STRIPE_PLANS, type PlanId } from './stripe';
+import { getStripe, STRIPE_PLANS, type PlanId } from './stripe';
 import { db, subscriptions } from '@/db/client';
 import { eq } from 'drizzle-orm';
 
@@ -10,6 +10,8 @@ export async function getOrCreateStripeCustomer(
   email: string,
   name?: string
 ): Promise<string> {
+  const stripe = getStripe();
+
   // Check if customer already exists
   const subscription = await db.query.subscriptions.findFirst({
     where: (sub, { eq, isNull }) => eq(sub.workspaceId, workspaceId) && isNull(sub.deletedAt),
@@ -71,6 +73,7 @@ export async function createCheckoutSession({
   successUrl: string;
   cancelUrl: string;
 }) {
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
@@ -106,6 +109,7 @@ export async function createPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
+  const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,

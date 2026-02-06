@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 import { updateSubscriptionFromStripe } from '@/lib/stripe-helpers';
 import type Stripe from 'stripe';
 
@@ -8,6 +8,7 @@ import type Stripe from 'stripe';
  * Handle Stripe webhook events
  */
 export async function POST(request: NextRequest) {
+  const stripe = getStripe();
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
