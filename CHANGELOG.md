@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `pnpm db:smoke` (schema parity + sqlite smoke + local pg smoke) to make multi-DB verification a single command
 - Playwright E2E now provisions and seeds a deterministic DB by default (SQLite) during `webServer` startup
 - Added `pnpm verify` as a single-command local verification gate (lint + type-check + unit + build + db smokes + e2e)
+- Type-check is now deterministic by purging generated Next type dirs before `next typegen`
 
 ## [0.2.0] - 2026-02-06
 
