@@ -16,11 +16,11 @@ type Schema = typeof schema;
 export function createSqliteDb(): BetterSQLite3Database<Schema> {
   // Defer loading native deps until the provider is actually selected.
   // This avoids failing builds/environments that don't install optional native deps.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  /* eslint-disable @typescript-eslint/no-require-imports */
   const BetterSqlite3 = require('better-sqlite3') as unknown;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { drizzle } =
     require('drizzle-orm/better-sqlite3') as typeof import('drizzle-orm/better-sqlite3');
+  /* eslint-enable @typescript-eslint/no-require-imports */
 
   const dbPath = process.env.SQLITE_PATH ?? './data/app.db';
 
