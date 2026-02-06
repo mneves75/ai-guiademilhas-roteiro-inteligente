@@ -26,4 +26,14 @@ describe('db/errors', () => {
     ).toBe(true);
     expect(isUniqueConstraintError(new Error('some other failure'))).toBe(false);
   });
+
+  it('detects unique violations when the driver error is nested in cause', () => {
+    const driverErr = new Error('duplicate key value violates unique constraint');
+    (driverErr as unknown as { code: string }).code = '23505';
+
+    const wrapper = new Error('Failed query');
+    (wrapper as unknown as { cause: unknown }).cause = driverErr;
+
+    expect(isUniqueConstraintError(wrapper)).toBe(true);
+  });
 });

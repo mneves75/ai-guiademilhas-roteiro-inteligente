@@ -8,6 +8,27 @@
 - `pnpm build`
 - `pnpm test:e2e`
 
+## Database Smokes
+
+- SQLite (no external deps)
+
+```bash
+TMPDIR="$(mktemp -d)"
+export DB_PROVIDER=sqlite
+export SQLITE_PATH="$TMPDIR/app.db"
+
+pnpm db:push
+pnpm db:seed
+pnpm db:assert-seed
+pnpm db:portability-check
+```
+
+- Postgres (local, no Docker)
+
+```bash
+pnpm db:smoke:pg:local
+```
+
 ## Functional Smoke (Manual)
 
 - Auth

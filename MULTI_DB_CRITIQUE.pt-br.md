@@ -22,6 +22,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
 4. Migrations/seed funcionam por provider (ou falham com mensagem clara quando o ambiente nao suporta).
 5. Lint e typecheck passam em clone limpo (sem depender de artefatos locais).
 6. CI valida Postgres e SQLite com `push + seed + assert-seed`.
+7. Invariantes de producao usados pelo app (ex: idempotencia de webhook via unique constraint) passam em Postgres e SQLite.
 
 ## Principios (primeiros principios, nao framework lore)
 
@@ -43,6 +44,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
 
 - Importar o modulo nunca conecta.
 - O singleton nasce no primeiro uso real, e fica cacheado (por processo) para evitar reconnects em dev/HMR.
+- Isso e especialmente importante porque o App Router pode executar codigo de servidor durante build para renderizacao estatica (e nao apenas no runtime). Logo: conexao no import e uma bomba-relatorio (quebra build) e nao um "detalhe". (Ver refs do Next abaixo.)
 
 ### 3) Tooling isolado por provider (migrations/seed)
 
@@ -73,6 +75,7 @@ Sem fallback silencioso, sem conexao no import, e com tooling que nao "mistura" 
 - **Portabilidade (runtime)**: `pnpm db:portability-check` roda um conjunto pequeno de operacoes (insert/update/select) em Postgres e SQLite e e executado nos smokes do CI.
 - **Paridade de schema**: `pnpm db:schema-parity` falha se Postgres e SQLite divergirem em nome de tabela ou colunas (sem precisar de DB).
 - **Sem dependencia de `RETURNING`**: helpers de escrita re-selecionam apos writes e idempotencia critica (Stripe) e tratada via unique constraint.
+- **Idempotencia confiavel (Drizzle wrapper)**: deteccao de unique violation considera `Error.cause` (Drizzle costuma embrulhar o erro do driver), garantindo comportamento consistente em Postgres e SQLite.
 
 ## Trade-offs (o que esta "caro" e por que aceitavel)
 
@@ -124,6 +127,12 @@ pnpm build
 pnpm test:e2e:ci
 ```
 
+Checks DB "staticos" (sem DB rodando):
+
+```bash
+pnpm db:schema-parity
+```
+
 SQLite smoke (push + seed + assert):
 
 ```bash
@@ -140,15 +149,17 @@ pnpm db:portability-check
 Postgres smoke (push + seed + assert):
 
 ```bash
-docker compose up -d postgres
+# Opcao 1 (recomendado para dev/CI local): Postgres temporario via Homebrew (sem Docker)
+pnpm db:smoke:pg:local
 
-export DB_PROVIDER=postgres
-export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nextjs
-
-pnpm db:push:pg
-pnpm db:seed
-pnpm db:assert-seed
-pnpm db:portability-check
+# Opcao 2: Docker Compose
+# docker compose up -d postgres
+# export DB_PROVIDER=postgres
+# export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nextjs
+# pnpm db:push:pg
+# pnpm db:seed
+# pnpm db:assert-seed
+# pnpm db:portability-check
 ```
 
 ## O que eu faria melhor (prioridade por impacto/risco)
@@ -163,6 +174,8 @@ pnpm db:portability-check
 
 ## Referencias (o que guiou as decisoes)
 
+- Next.js (App Router) e renderizacao estatica no build (por que "conectar no import" quebra):
+  - https://nextjs.org/docs/app/deep-dive/caching#static-rendering-default
 - Next.js TypeScript e `next-env.d.ts` (geracao automatica) e `next typegen`/typed routes:
   - https://nextjs.org/docs/app/api-reference/config/typescript
   - https://nextjs.org/docs/app/building-your-application/configuring/typescript
@@ -171,6 +184,10 @@ pnpm db:portability-check
   - Neon HTTP (`drizzle-orm/neon-http`): https://orm.drizzle.team/docs/connect-neon
   - Cloudflare D1 (Workers): https://orm.drizzle.team/docs/connect-cloudflare-d1
   - D1 HTTP API com drizzle-kit (`driver: 'd1-http'`): https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
+  - INSERT / values / returning (dialeto e semantica): https://orm.drizzle.team/docs/insert
+- Stripe (webhooks entregam eventos possivelmente mais de uma vez; idempotencia e obrigatoria):
+  - https://docs.stripe.com/webhooks
+  - https://docs.stripe.com/webhooks#event-delivery
 - pnpm `approve-builds` / `onlyBuiltDependencies` (deps nativas como `better-sqlite3`): https://pnpm.io/cli/approve-builds
 - Env validation (padrao de mercado em apps TS/Next): T3 Env + Zod
   - https://env.t3.gg/docs/introduction
