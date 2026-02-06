@@ -29,6 +29,12 @@ pnpm db:portability-check
 pnpm db:smoke:pg:local
 ```
 
+- One command (schema parity + sqlite + postgres)
+
+```bash
+pnpm db:smoke
+```
+
 ## Functional Smoke (Manual)
 
 - Auth

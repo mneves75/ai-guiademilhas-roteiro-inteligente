@@ -162,6 +162,12 @@ pnpm db:smoke:pg:local
 # pnpm db:portability-check
 ```
 
+Um comando (paridade de schema + smokes sqlite + postgres):
+
+```bash
+pnpm db:smoke
+```
+
 ## O que eu faria melhor (prioridade por impacto/risco)
 
 1. **Env validation tipada mais ampla**: hoje DB vars criticas ja falham com mensagens consistentes; o proximo passo e aplicar o mesmo padrao para outros subsistemas (auth/email/stripe) sem reintroduzir efeitos colaterais no import.

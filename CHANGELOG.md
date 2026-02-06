@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed reliance on SQL `RETURNING` in app query helpers for stronger cross-dialect compatibility (re-select after writes; unique-violation detection for idempotency)
 - Fixed Postgres unique-violation detection by unwrapping Drizzle driver errors (`Error.cause`) for reliable webhook idempotency
 - Added a Docker-free local Postgres smoke runner (`pnpm db:smoke:pg:local`) for deterministic verification
+- Added `pnpm db:smoke` (schema parity + sqlite smoke + local pg smoke) to make multi-DB verification a single command
 
 ## [0.2.0] - 2026-02-06
 

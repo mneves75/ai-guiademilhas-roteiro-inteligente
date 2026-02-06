@@ -34,6 +34,8 @@
     "db:portability-check": "tsx ./src/db/portability-check.ts",
     "db:schema-parity": "tsx ./src/db/schema-parity.ts",
     "db:smoke:pg:local": "bash ./scripts/db-smoke-postgres-local.sh",
+    "db:smoke:sqlite": "bash ./scripts/db-smoke-sqlite.sh",
+    "db:smoke": "bash ./scripts/db-smoke.sh",
     "db:reset": "drizzle-kit push --force && tsx ./src/db/seed.ts"
   },
   "dependencies": {
