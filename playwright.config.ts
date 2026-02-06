@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -34,12 +36,10 @@ export default defineConfig({
       use: { ...devices['iPhone 12'] },
     },
   ],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: 'bun run dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-      },
+  webServer: {
+    command: isCI ? 'pnpm start -- -p 3000' : 'pnpm dev -- -p 3000',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !isCI,
+    timeout: 120 * 1000,
+  },
 });

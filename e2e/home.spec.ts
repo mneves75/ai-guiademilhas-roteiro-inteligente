@@ -59,8 +59,8 @@ test.describe('Authentication Pages', () => {
     await expect(page.getByRole('heading', { name: /sign in|login|welcome/i })).toBeVisible();
   });
 
-  test('should load the register page', async ({ page }) => {
-    await page.goto('/register');
+  test('should load the signup page', async ({ page }) => {
+    await page.goto('/signup');
     await expect(page.getByRole('heading', { name: /sign up|register|create/i })).toBeVisible();
   });
 
