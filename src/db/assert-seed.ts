@@ -37,10 +37,20 @@ async function main() {
     throw new Error('Seed assertions are not supported for DB_PROVIDER=d1 in this environment.');
   }
 
-  const actual = await getCounts();
+  let actual: Counts | undefined;
+  try {
+    actual = await getCounts();
+  } finally {
+    // Ensure the process exits in CI. postgres.js keeps sockets open unless ended.
+    const client = (db as unknown as { $client?: unknown }).$client as
+      | { end?: () => unknown; close?: () => unknown }
+      | undefined;
+    if (client?.end) await client.end();
+    if (client?.close) client.close();
+  }
 
   for (const key of Object.keys(EXPECTED) as Array<keyof Counts>) {
-    if (actual[key] !== EXPECTED[key]) {
+    if (!actual || actual[key] !== EXPECTED[key]) {
       throw new Error(
         `Unexpected seed counts for provider "${DB_PROVIDER}": ` +
           JSON.stringify({ expected: EXPECTED, actual })
