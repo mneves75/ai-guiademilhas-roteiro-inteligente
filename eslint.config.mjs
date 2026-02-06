@@ -81,6 +81,19 @@ export default [
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-types': 'off',
       '@typescript-eslint/no-require-imports': 'warn',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "TaggedTemplateExpression[tag.name='sql']",
+          message:
+            'Avoid drizzle-orm sql`` tagged templates in app code. Prefer the query builder for cross-dialect compatibility.',
+        },
+        {
+          selector: "ImportDeclaration[source.value='drizzle-orm'] ImportSpecifier[imported.name='sql']",
+          message:
+            'Avoid importing `sql` from drizzle-orm in app code. Prefer and()/eq()/isNull()/gt()/etc for cross-dialect compatibility.',
+        },
+      ],
     },
   },
 

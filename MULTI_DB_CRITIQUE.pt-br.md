@@ -34,6 +34,7 @@ Sem quebrar `next build`, sem "fallback silencioso", e com uma API de acesso a D
 - **Lazy init**: `db` e criado sob demanda (primeiro acesso). Isso elimina falhas de build por env faltando.
 - **Mensagens de erro orientadas a acao**: erros citam a variavel faltando e o provider em uso.
 - **Configuracoes separadas de drizzle-kit**: scripts e configs por provider evitam "migracao certa com config errada".
+- **Lint de portabilidade**: regra de ESLint bloqueia `sql``...`` (raw SQL) e o import de `sql` para reduzir drift para features PG-only.
 
 Esses pontos seguem o padrao que aparece em projetos grandes: validacao de config, inicializacao tardia, e tooling isolado por ambiente/dialeto.
 
@@ -79,9 +80,8 @@ CI=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 \
 
 ## Melhorias futuras (nao implementadas aqui)
 
-- Matriz de CI por provider (postgres + sqlite + d1)
-- Suite de integracao que roda o mesmo conjunto de queries em cada dialeto
-- Regras/lints para detectar uso de features PG-only em codigo que precisa ser portavel
+- Suite de integracao que roda o mesmo conjunto de queries em cada dialeto (especialmente quando DB_PROVIDER=d1 entrar no CI)
+- Regras/lints adicionais para detectar features PG-only mais sutis (ex: JSON ops, ARRAYs, CTEs com `RETURNING`, etc.)
 
 ## Referencias (para justificar decisoes especificas)
 

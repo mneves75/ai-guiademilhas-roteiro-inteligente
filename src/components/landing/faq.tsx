@@ -16,7 +16,7 @@ const faqItems = [
   {
     question: 'How do I get started?',
     answer:
-      'Clone the repository, copy .env.example to .env.local, fill in your API keys (Stripe, Resend, database URL), run bun install, then bun dev. The README walks you through each step in detail.',
+      'Clone the repository, copy .env.example to .env.local, fill in your API keys (Stripe, Resend, database URL), run pnpm install, then pnpm dev. The README walks you through each step in detail.',
   },
   {
     question: "Is it open source? What's the license?",

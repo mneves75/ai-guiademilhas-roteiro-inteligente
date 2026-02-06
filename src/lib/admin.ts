@@ -1,5 +1,5 @@
 import { db, users, workspaces, subscriptions } from '@/db/client';
-import { count, desc, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gt, isNull } from 'drizzle-orm';
 
 /**
  * Admin role check - in production, check against a proper admin flag
@@ -19,11 +19,11 @@ export async function getSystemStats() {
   const [workspaceCount] = await db
     .select({ count: count() })
     .from(workspaces)
-    .where(sql`${workspaces.deletedAt} IS NULL`);
+    .where(isNull(workspaces.deletedAt));
   const [activeSubscriptions] = await db
     .select({ count: count() })
     .from(subscriptions)
-    .where(sql`${subscriptions.status} = 'active' AND ${subscriptions.deletedAt} IS NULL`);
+    .where(and(eq(subscriptions.status, 'active'), isNull(subscriptions.deletedAt)));
 
   // Users created in last 7 days
   const sevenDaysAgo = new Date();
@@ -31,7 +31,7 @@ export async function getSystemStats() {
   const [newUsers] = await db
     .select({ count: count() })
     .from(users)
-    .where(sql`${users.createdAt} > ${sevenDaysAgo}`);
+    .where(gt(users.createdAt, sevenDaysAgo));
 
   return {
     totalUsers: userCount?.count ?? 0,
@@ -83,7 +83,7 @@ export async function getAdminWorkspaces(page = 1, pageSize = 20) {
     limit: pageSize,
     offset,
     orderBy: [desc(workspaces.createdAt)],
-    where: sql`${workspaces.deletedAt} IS NULL`,
+    where: isNull(workspaces.deletedAt),
     with: {
       owner: true,
       members: true,
@@ -94,7 +94,7 @@ export async function getAdminWorkspaces(page = 1, pageSize = 20) {
   const [totalCount] = await db
     .select({ count: count() })
     .from(workspaces)
-    .where(sql`${workspaces.deletedAt} IS NULL`);
+    .where(isNull(workspaces.deletedAt));
 
   return {
     workspaces: workspacesList,
@@ -121,7 +121,7 @@ export async function getRecentActivity(limit = 10) {
   const recentWorkspaces = await db.query.workspaces.findMany({
     limit,
     orderBy: [desc(workspaces.createdAt)],
-    where: sql`${workspaces.deletedAt} IS NULL`,
+    where: isNull(workspaces.deletedAt),
     with: {
       owner: true,
     },

@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Middleware route allowlist updated for public blog and required anonymous APIs (webhooks, auth, OG, invites)
 - Playwright E2E stability: port handling, baseURL-derived webServer port, and route path fixes (`/signup`)
 - Landing header now exposes an accessible primary navigation landmark (`aria-label="Primary"`)
+- Removed raw Drizzle `sql`...` usage in admin queries to keep cross-dialect portability
 
 ## [0.1.0] - 2026-02-05
 
