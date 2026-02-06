@@ -2,25 +2,31 @@ import * as pgSchema from './schema/postgres';
 import * as sqliteSchema from './schema/sqlite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { DbProvider } from './schema/types';
+import { createPostgresDb, createPostgresEdgeDb } from './adapters/postgres';
+import { createSqliteDb } from './adapters/sqlite';
 
 /**
- * Multi-database factory.
+ * Multi-database factory (Node + Edge).
  *
- * Selects the correct driver + schema based on DB_PROVIDER env var.
- * PG types are the compile-time canonical source. At runtime, the actual
- * dialect's tables and driver are used.
+ * What this module guarantees:
+ * - Single import location for `db`, `dbEdge`, and table exports.
+ * - Lazy initialization: importing the module never connects to a database.
  *
- * TRADE-OFF DOCUMENTADO:
- * O cast `as unknown as CanonicalDb` mente pro TypeScript — o db real pode ser
- * BetterSQLite3Database. Isso funciona porque a query API do Drizzle é
- * estruturalmente idêntica entre dialetos. Se você adicionar features PG-specific
- * (json operators, arrays, etc.), elas vão COMPILAR mas FALHAR no SQLite em runtime.
- * Regra: use apenas a API padrão do Drizzle (query, insert, update, delete, select).
+ * What it does NOT (and cannot) guarantee:
+ * - Full type-safety across dialects. We intentionally keep Postgres as the
+ *   "canonical" compile-time type surface and adapt the runtime driver+schema.
  *
- * LAZY INITIALIZATION:
- * db e dbEdge são Proxies que inicializam a conexão real no primeiro acesso.
- * Isso permite que `next build` importe este módulo sem precisar de DATABASE_URL,
- * já que a conexão só é criada quando uma query é efetivamente executada.
+ * First-principles rationale:
+ * - Correctness > convenience: we fail fast on unsupported runtime/provider
+ *   combos (ex: SQLite on Edge, D1 inside Next.js without a Worker env binding).
+ * - Build-time reliability: Next.js may import server modules during `next build`.
+ *   Lazy init keeps the build from crashing when `DATABASE_URL` isn't present,
+ *   unless code actually touches the DB at build time.
+ *
+ * Trade-off:
+ * - `as unknown as CanonicalDb` is a deliberate type lie. It keeps a stable API
+ *   surface for the app, but PG-specific SQL features may compile and fail at
+ *   runtime when DB_PROVIDER != postgres. Keep queries Drizzle-portable.
  */
 
 // PG schema types are the compile-time canonical source
@@ -43,16 +49,32 @@ export const DB_PROVIDER: DbProvider = resolveProvider();
 // Lazy singleton — connection created on first property access, not import
 // ---------------------------------------------------------------------------
 
-let _db: CanonicalDb | undefined;
-let _dbEdge: CanonicalDb | undefined;
+declare global {
+  var __db: CanonicalDb | undefined;
+  var __dbEdge: CanonicalDb | undefined;
+}
+
+const globalForDb = globalThis as typeof globalThis & {
+  __db?: CanonicalDb;
+  __dbEdge?: CanonicalDb;
+};
+
+let _db: CanonicalDb | undefined = globalForDb.__db;
+let _dbEdge: CanonicalDb | undefined = globalForDb.__dbEdge;
 
 function getDb(): CanonicalDb {
-  if (!_db) _db = createDb();
+  if (!_db) {
+    _db = createDb();
+    globalForDb.__db = _db;
+  }
   return _db;
 }
 
 function getDbEdge(): CanonicalDb {
-  if (!_dbEdge) _dbEdge = createEdgeDb();
+  if (!_dbEdge) {
+    _dbEdge = createEdgeDb();
+    globalForDb.__dbEdge = _dbEdge;
+  }
   return _dbEdge;
 }
 
@@ -62,7 +84,14 @@ function lazy(getter: () => CanonicalDb): CanonicalDb {
     get(_, prop) {
       // Prevent Proxy from being treated as a thenable
       if (prop === 'then') return undefined;
-      return Reflect.get(getter(), prop);
+
+      const target = getter();
+      const value = Reflect.get(target, prop, target);
+
+      // Some libraries call methods with `this` binding expectations.
+      if (typeof value === 'function') return value.bind(target);
+
+      return value;
     },
   });
 }
@@ -74,7 +103,6 @@ function lazy(getter: () => CanonicalDb): CanonicalDb {
 function createDb(): CanonicalDb {
   switch (DB_PROVIDER) {
     case 'sqlite': {
-      const { createSqliteDb } = require('./adapters/sqlite') as typeof import('./adapters/sqlite'); // eslint-disable-line @typescript-eslint/no-require-imports
       return createSqliteDb() as unknown as CanonicalDb;
     }
     case 'd1': {
@@ -84,8 +112,6 @@ function createDb(): CanonicalDb {
       );
     }
     default: {
-      const { createPostgresDb } =
-        require('./adapters/postgres') as typeof import('./adapters/postgres'); // eslint-disable-line @typescript-eslint/no-require-imports
       return createPostgresDb() as unknown as CanonicalDb;
     }
   }
@@ -94,13 +120,13 @@ function createDb(): CanonicalDb {
 function createEdgeDb(): CanonicalDb {
   switch (DB_PROVIDER) {
     case 'sqlite':
-      // SQLite é single-process — edge e node compartilham a mesma instância
-      return getDb();
+      throw new Error(
+        'SQLite provider is not supported in Edge runtime (better-sqlite3 is Node-only). ' +
+          'Use DB_PROVIDER=postgres for Edge routes, or avoid DB access in middleware/edge.'
+      );
     case 'd1':
       throw new Error('D1 edge db: use createD1Db(env.DB) directly.');
     default: {
-      const { createPostgresEdgeDb } =
-        require('./adapters/postgres') as typeof import('./adapters/postgres'); // eslint-disable-line @typescript-eslint/no-require-imports
       return createPostgresEdgeDb() as unknown as CanonicalDb;
     }
   }

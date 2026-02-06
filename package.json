@@ -21,10 +21,13 @@
     "db:generate": "drizzle-kit generate",
     "db:generate:pg": "drizzle-kit generate --config=drizzle.config.postgres.ts",
     "db:generate:sqlite": "drizzle-kit generate --config=drizzle.config.sqlite.ts",
+    "db:generate:d1": "drizzle-kit generate --config=drizzle.config.d1.ts",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:d1": "drizzle-kit migrate --config=drizzle.config.d1.ts",
     "db:push": "drizzle-kit push",
     "db:push:pg": "drizzle-kit push --config=drizzle.config.postgres.ts",
     "db:push:sqlite": "drizzle-kit push --config=drizzle.config.sqlite.ts",
+    "db:push:d1": "drizzle-kit push --config=drizzle.config.d1.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx ./src/db/seed.ts",
     "db:reset": "drizzle-kit push --force && tsx ./src/db/seed.ts"

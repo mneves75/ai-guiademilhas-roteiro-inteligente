@@ -71,7 +71,16 @@ await db.update(workspaces).set({ deletedAt: new Date() }).where(eq(workspaces.i
 - `db` - Node.js runtime (API routes, Server Actions)
 - `dbEdge` - Edge runtime (middleware, Vercel Edge)
 
-**Schema location**: `src/db/schema.ts` - Contains all tables with Zod schemas via drizzle-zod.
+**Schema location**:
+
+- Postgres schema: `src/db/schema/postgres.ts` (canonical types + drizzle-zod schemas)
+- SQLite/D1 schema: `src/db/schema/sqlite.ts` (D1 is SQLite)
+- Dialect-agnostic TS types: `src/db/schema/types.ts`
+
+**Seeding**:
+
+- Node (postgres/sqlite): `pnpm db:seed` (runs `src/db/seed.ts`)
+- D1 (Cloudflare): `wrangler d1 execute ... --file=src/db/seed.d1.sql`
 
 ### Multi-Tenancy
 

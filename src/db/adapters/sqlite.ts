@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3';
-import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import type { Database as BetterSqlite3Database } from 'better-sqlite3';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../schema/sqlite';
 import { mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
@@ -14,6 +14,14 @@ type Schema = typeof schema;
  * Auto-creates the database directory if it doesn't exist.
  */
 export function createSqliteDb(): BetterSQLite3Database<Schema> {
+  // Defer loading native deps until the provider is actually selected.
+  // This avoids failing builds/environments that don't install optional native deps.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const BetterSqlite3 = require('better-sqlite3') as unknown;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { drizzle } =
+    require('drizzle-orm/better-sqlite3') as typeof import('drizzle-orm/better-sqlite3');
+
   const dbPath = process.env.SQLITE_PATH ?? './data/app.db';
 
   // Ensure parent directory exists
@@ -22,7 +30,12 @@ export function createSqliteDb(): BetterSQLite3Database<Schema> {
     mkdirSync(dir, { recursive: true });
   }
 
-  const sqlite = new Database(dbPath);
+  const DatabaseCtor =
+    (BetterSqlite3 as { default?: new (...args: never[]) => unknown }).default ??
+    (BetterSqlite3 as new (...args: never[]) => unknown);
+  const sqlite = new (DatabaseCtor as unknown as new (path: string) => BetterSqlite3Database)(
+    dbPath
+  );
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
   sqlite.pragma('busy_timeout = 5000');
