@@ -40,7 +40,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: isCI ? `pnpm start -- -p ${serverPort}` : `pnpm dev -- -p ${serverPort}`,
+    // Next's CLI accepts an optional directory arg. Providing `.` avoids ambiguity where
+    // `-p` might be interpreted as the directory by the positional-arg parser.
+    command: isCI ? `pnpm start -- . -p ${serverPort}` : `pnpm dev -- . -p ${serverPort}`,
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: 120 * 1000,
