@@ -10,7 +10,7 @@ test.describe('Home Page', () => {
     await page.goto('/');
 
     // Check for main navigation elements
-    const loginLink = page.getByRole('link', { name: /sign in|login/i });
+    const loginLink = page.getByLabel('Primary').getByRole('link', { name: /sign in|login/i });
     await expect(loginLink).toBeVisible();
   });
 
