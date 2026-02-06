@@ -7,6 +7,7 @@
 - `pnpm test`
 - `pnpm build`
 - `pnpm test:e2e`
+- `pnpm verify` (one command: gates + db smoke + e2e)
 
 ## Database Smokes
 

@@ -29,7 +29,7 @@ function getDbSetupCommand(): string {
   const env = getDbEnv();
   if (dbProvider === 'sqlite') {
     // E2E should be deterministic and not depend on external services by default.
-    return `${env} pnpm db:push:sqlite && ${env} pnpm db:seed`;
+    return `mkdir -p .next-playwright && rm -f ${sqlitePath} && ${env} pnpm db:push:sqlite && ${env} pnpm db:seed`;
   }
   // For postgres runs, rely on the configured DATABASE_URL.
   return `${env} pnpm db:push:pg && ${env} pnpm db:seed`;
