@@ -187,7 +187,7 @@ pnpm test:e2e:ci
 ## Referencias (o que guiou as decisoes)
 
 - Next.js (App Router) e renderizacao estatica no build (por que "conectar no import" quebra):
-  - https://nextjs.org/docs/app/deep-dive/caching#static-rendering-default
+  - https://nextjs.org/docs/app/guides/caching
 - Next.js TypeScript e `next-env.d.ts` (geracao automatica) e `next typegen`/typed routes:
   - https://nextjs.org/docs/app/api-reference/config/typescript
   - https://nextjs.org/docs/app/building-your-application/configuring/typescript
@@ -199,7 +199,7 @@ pnpm test:e2e:ci
   - INSERT / values / returning (dialeto e semantica): https://orm.drizzle.team/docs/insert
 - Stripe (webhooks entregam eventos possivelmente mais de uma vez; idempotencia e obrigatoria):
   - https://docs.stripe.com/webhooks
-  - https://docs.stripe.com/webhooks#event-delivery
+  - https://docs.stripe.com/webhooks#automatic-retries
 - pnpm `approve-builds` / `onlyBuiltDependencies` (deps nativas como `better-sqlite3`): https://pnpm.io/cli/approve-builds
 - Env validation (padrao de mercado em apps TS/Next): T3 Env + Zod
   - https://env.t3.gg/docs/introduction
