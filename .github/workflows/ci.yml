@@ -190,7 +190,7 @@ jobs:
         env:
           DB_PROVIDER: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
-          BETTER_AUTH_SECRET: test-secret-key-for-ci
+          BETTER_AUTH_SECRET: test-secret-key-for-ci-32-chars-minimum
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Run E2E tests
@@ -198,7 +198,7 @@ jobs:
         env:
           DB_PROVIDER: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
-          BETTER_AUTH_SECRET: test-secret-key-for-ci
+          BETTER_AUTH_SECRET: test-secret-key-for-ci-32-chars-minimum
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Upload Playwright report
@@ -247,7 +247,7 @@ jobs:
         env:
           DB_PROVIDER: postgres
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
-          BETTER_AUTH_SECRET: test-secret-key-for-ci
+          BETTER_AUTH_SECRET: test-secret-key-for-ci-32-chars-minimum
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
       - name: Upload build artifacts
