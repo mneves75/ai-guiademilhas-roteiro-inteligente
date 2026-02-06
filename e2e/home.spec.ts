@@ -64,6 +64,16 @@ test.describe('Authentication Pages', () => {
     await expect(page.getByRole('heading', { name: /sign up|register|create/i })).toBeVisible();
   });
 
+  test('should load the forgot password page', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await expect(page.getByRole('heading', { name: /reset|redefinir/i })).toBeVisible();
+  });
+
+  test('should load the reset password page', async ({ page }) => {
+    await page.goto('/reset-password');
+    await expect(page.getByRole('heading', { name: /password|senha/i })).toBeVisible();
+  });
+
   test('should have form inputs on login page', async ({ page }) => {
     await page.goto('/login');
 
@@ -72,6 +82,13 @@ test.describe('Authentication Pages', () => {
 
     await expect(emailInput).toBeVisible();
     await expect(passwordInput).toBeVisible();
+  });
+});
+
+test.describe('Pricing', () => {
+  test('should load the pricing page', async ({ page }) => {
+    await page.goto('/pricing');
+    await expect(page.getByRole('heading', { name: /pricing|precos/i })).toBeVisible();
   });
 });
 

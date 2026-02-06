@@ -1,20 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
-const navLinks = [
-  { href: '#features', label: 'Features' },
-  { href: '#pricing', label: 'Pricing' },
-  { href: '#faq', label: 'FAQ' },
-  { href: 'https://github.com/mneves75/nextjs-bootstrapped-shipped', label: 'GitHub' },
-];
+import { getClientLocale } from '@/lib/locale-client';
+import type { Locale } from '@/lib/locale';
+import { m } from '@/lib/messages';
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [locale, setLocale] = useState<Locale>('en');
+
+  useEffect(() => {
+    setLocale(getClientLocale());
+  }, []);
+
+  const t = m(locale);
+  const navLinks = [
+    { href: '#features', label: t.nav.features },
+    { href: '#pricing', label: t.nav.pricing },
+    { href: '#faq', label: t.nav.faq },
+    { href: 'https://github.com/mneves75/nextjs-bootstrapped-shipped', label: t.nav.github },
+  ];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -44,12 +53,12 @@ export function MobileNav() {
           <div className="my-4 h-px bg-border" />
           <Button asChild variant="ghost" className="w-full justify-start">
             <Link href="/login" onClick={() => setOpen(false)}>
-              Sign In
+              {t.nav.signIn}
             </Link>
           </Button>
           <Button asChild className="w-full">
             <Link href="/signup" onClick={() => setOpen(false)}>
-              Get Started
+              {t.nav.getStarted}
             </Link>
           </Button>
         </nav>

@@ -3,8 +3,14 @@ import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MobileNav } from './mobile-nav';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
-export function Header() {
+export async function Header() {
+  const locale = await getRequestLocale();
+  const t = m(locale).nav;
+
   return (
     <header className="glass-header sticky top-0 z-50 w-full">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -17,29 +23,30 @@ export function Header() {
             href="#features"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            Features
+            {t.features}
           </Link>
           <Link
             href="#pricing"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            Pricing
+            {t.pricing}
           </Link>
           <Link
             href="#faq"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            FAQ
+            {t.faq}
           </Link>
           <Link
             href="https://github.com/mneves75/nextjs-bootstrapped-shipped"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            GitHub
+            {t.github}
           </Link>
         </nav>
 
         <nav aria-label="Primary" className="flex items-center gap-2">
+          <LanguageSwitcher />
           <ThemeToggle />
 
           <Button asChild variant="ghost" size="icon" className="sm:hidden">
@@ -49,11 +56,11 @@ export function Header() {
           </Button>
 
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/login">Sign In</Link>
+            <Link href="/login">{t.signIn}</Link>
           </Button>
 
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/signup">Get Started</Link>
+            <Link href="/signup">{t.getStarted}</Link>
           </Button>
 
           <MobileNav />
