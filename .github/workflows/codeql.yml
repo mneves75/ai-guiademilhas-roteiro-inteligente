@@ -1,6 +1,10 @@
-name: CodeQL (Scheduled)
+name: CodeQL
 
 on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
   workflow_dispatch: {}
   schedule:
     # Weekly on Sunday at 04:00 UTC

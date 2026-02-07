@@ -47,7 +47,7 @@ When using this boilerplate:
 3. **Authentication**
    - Enable MFA for admin accounts
    - Use secure session settings
-   - Implement rate limiting
+   - Implement rate limiting (use a shared store for hard guarantees in serverless)
 
 4. **Database**
    - Use parameterized queries (Drizzle handles this)
@@ -68,7 +68,7 @@ This boilerplate includes:
 - [x] Pre-commit hooks (prevents accidental secret commits)
 - [x] Dependency auditing in CI
 - [x] CSRF mitigation for state-changing API routes (Origin + Fetch Metadata checks)
-- [x] Best-effort rate limiting for auth endpoints (edge-memory; use a shared store for hard guarantees)
+- [x] Rate limiting for auth endpoints (edge-memory by default; optional Upstash Redis REST for hard multi-instance guarantees)
 - [x] Input validation for API routes (strict runtime checks)
 - [x] Secure headers baseline via `next.config.ts` (works on Vercel + self-host)
 

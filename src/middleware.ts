@@ -1,15 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { checkRateLimit } from '@/lib/security/rate-limit';
 
 // Only protect actual app pages here. API routes must always enforce authz in the handler.
 const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/admin'] as const;
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-
-type RateLimitEntry = { count: number; resetAt: number };
-
-const globalForRateLimit = globalThis as unknown as { __rateLimit?: Map<string, RateLimitEntry> };
-const rateLimitStore = globalForRateLimit.__rateLimit ?? new Map<string, RateLimitEntry>();
-globalForRateLimit.__rateLimit = rateLimitStore;
 
 function generateCspNonce(): string {
   // CSP nonce should be unpredictable and unique per request.
@@ -87,28 +82,17 @@ function tryParseOrigin(value: string | undefined): string | null {
   }
 }
 
-function checkRateLimit(
-  key: string,
-  max: number,
-  windowMs: number
-): { ok: true } | { ok: false; retryAfterSeconds: number } {
-  const now = Date.now();
-  const existing = rateLimitStore.get(key);
+function getRequestOriginForCsrf(request: NextRequest): string | null {
+  const origin = request.headers.get('origin');
+  if (origin) return origin;
 
-  if (!existing || now >= existing.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
-    return { ok: true };
+  const referer = request.headers.get('referer');
+  if (!referer) return null;
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return null;
   }
-
-  if (existing.count >= max) {
-    return {
-      ok: false,
-      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-    };
-  }
-
-  existing.count += 1;
-  return { ok: true };
 }
 
 export async function middleware(request: NextRequest) {
@@ -124,15 +108,20 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith('/api/auth') &&
     pathname !== '/api/stripe/webhook'
   ) {
-    // Prefer Fetch Metadata for modern browsers.
-    const fetchSite = request.headers.get('sec-fetch-site');
-    if (fetchSite === 'cross-site') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // CSRF is primarily relevant when the browser automatically attaches cookies.
+    // If there is no session cookie, endpoints should return 401 anyway.
+    const hasSessionCookie = hasBetterAuthSessionCookie(request);
+    if (hasSessionCookie) {
+      // Prefer Fetch Metadata for modern browsers.
+      const fetchSite = request.headers.get('sec-fetch-site');
+      if (fetchSite === 'cross-site') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
-    const origin = request.headers.get('origin');
-    if (!origin || !isAllowedOrigin(origin, request)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      const origin = getRequestOriginForCsrf(request);
+      if (!origin || !isAllowedOrigin(origin, request)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
   }
 
@@ -142,8 +131,12 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/auth') && request.method === 'POST') {
     const ip = getClientIp(request);
     if (ip !== 'unknown') {
-      const key = `auth:${ip}`;
-      const result = checkRateLimit(key, 30, 10 * 60 * 1000); // 30 requests / 10 minutes / IP
+      const result = await checkRateLimit({
+        namespace: 'auth',
+        identifier: ip,
+        max: 30,
+        windowMs: 10 * 60 * 1000, // 30 requests / 10 minutes / IP
+      });
       if (!result.ok) {
         return NextResponse.json(
           { error: 'Too Many Requests' },
