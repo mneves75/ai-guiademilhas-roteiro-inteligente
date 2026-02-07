@@ -1,5 +1,22 @@
 import type { StorageAdapter } from './index';
 
+type S3ClientConfig = {
+  region: string;
+  endpoint: string;
+  credentials: { accessKeyId: string; secretAccessKey: string };
+};
+
+type S3ClientCtor = new (config: S3ClientConfig) => {
+  send: (command: unknown) => Promise<unknown>;
+};
+
+type AwsS3Module = {
+  S3Client: S3ClientCtor;
+  PutObjectCommand: new (input: { Bucket: string; Key: string; Body: Buffer }) => unknown;
+  GetObjectCommand: new (input: { Bucket: string; Key: string }) => unknown;
+  DeleteObjectCommand: new (input: { Bucket: string; Key: string }) => unknown;
+};
+
 /**
  * Cloudflare R2 storage adapter (S3-compatible API).
  *
@@ -32,7 +49,9 @@ export class R2Storage implements StorageAdapter {
     const { S3Client, GetObjectCommand } = await loadS3();
     const client = this.createClient(S3Client);
 
-    const response = await client.send(new GetObjectCommand({ Bucket: this.bucketName, Key: key }));
+    const response = (await client.send(
+      new GetObjectCommand({ Bucket: this.bucketName, Key: key })
+    )) as { Body?: unknown };
 
     const stream = response.Body;
     if (!stream) throw new Error(`File not found: ${key}`);
@@ -59,8 +78,7 @@ export class R2Storage implements StorageAdapter {
     return `https://${this.bucketName}.${this.accountId}.r2.cloudflarestorage.com/${key}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private createClient(S3Client: any) {
+  private createClient(S3Client: S3ClientCtor) {
     return new S3Client({
       region: 'auto',
       endpoint: `https://${this.accountId}.r2.cloudflarestorage.com`,
@@ -88,15 +106,15 @@ async function toBuffer(data: Buffer | ReadableStream): Promise<Buffer> {
 /**
  * Dynamic import of @aws-sdk/client-s3
  * Only loaded when R2 storage is actually used.
- * Install: bun add @aws-sdk/client-s3
+ * Install: pnpm add @aws-sdk/client-s3
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadS3(): Promise<any> {
+async function loadS3(): Promise<AwsS3Module> {
   try {
-    return await import('@aws-sdk/client-s3');
+    // Keep this typed without requiring @aws-sdk/client-s3 at type-check time.
+    return (await import('@aws-sdk/client-s3')) as unknown as AwsS3Module;
   } catch {
     throw new Error(
-      'R2 storage requires @aws-sdk/client-s3. Install it: bun add @aws-sdk/client-s3'
+      'R2 storage requires @aws-sdk/client-s3. Install it: pnpm add @aws-sdk/client-s3'
     );
   }
 }

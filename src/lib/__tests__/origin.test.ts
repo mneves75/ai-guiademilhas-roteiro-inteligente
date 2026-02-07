@@ -1,0 +1,40 @@
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { resolveAppOrigin } from '@/lib/security/origin';
+
+describe('resolveAppOrigin', () => {
+  const oldEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env = { ...oldEnv };
+  });
+
+  afterEach(() => {
+    process.env = oldEnv;
+  });
+
+  it('prefers NEXT_PUBLIC_APP_URL (origin only)', () => {
+    process.env.NEXT_PUBLIC_APP_URL = 'https://example.com/some/path';
+    const request = { nextUrl: { origin: 'http://localhost:3000' } } as never;
+    expect(resolveAppOrigin(request)).toBe('https://example.com');
+  });
+
+  it('falls back to request origin in non-production', () => {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.BETTER_AUTH_BASE_URL;
+    delete process.env.BETTER_AUTH_URL;
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
+
+    const request = { nextUrl: { origin: 'http://localhost:3000' } } as never;
+    expect(resolveAppOrigin(request)).toBe('http://localhost:3000');
+  });
+
+  it('throws in production when env origin is missing', () => {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.BETTER_AUTH_BASE_URL;
+    delete process.env.BETTER_AUTH_URL;
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+
+    const request = { nextUrl: { origin: 'https://attacker.example' } } as never;
+    expect(() => resolveAppOrigin(request)).toThrow(/Missing NEXT_PUBLIC_APP_URL/);
+  });
+});

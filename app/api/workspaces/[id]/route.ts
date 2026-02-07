@@ -24,6 +24,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify membership
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -52,6 +55,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner/admin
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -59,10 +65,33 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
-  const { name, slug } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (slug && !/^[a-z0-9-]+$/.test(slug)) {
+  const name =
+    typeof body === 'object' && body !== null && 'name' in body
+      ? (body as { name?: unknown }).name
+      : undefined;
+  const slug =
+    typeof body === 'object' && body !== null && 'slug' in body
+      ? (body as { slug?: unknown }).slug
+      : undefined;
+
+  if (name !== undefined && typeof name !== 'string') {
+    return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
+  }
+  if (slug !== undefined && typeof slug !== 'string') {
+    return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
+  }
+
+  const trimmedName = typeof name === 'string' ? name.trim() : undefined;
+  const trimmedSlug = typeof slug === 'string' ? slug.trim() : undefined;
+
+  if (trimmedSlug && !/^[a-z0-9-]+$/.test(trimmedSlug)) {
     return NextResponse.json(
       { error: 'Slug must contain only lowercase letters, numbers, and hyphens' },
       { status: 400 }
@@ -70,7 +99,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const [updated] = await updateWorkspace(workspaceId, { name, slug });
+    const [updated] = await updateWorkspace(workspaceId, { name: trimmedName, slug: trimmedSlug });
     return NextResponse.json({ workspace: updated });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
@@ -93,6 +122,9 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);

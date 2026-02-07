@@ -3,6 +3,7 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getWorkspaceSubscription, createPortalSession } from '@/lib/stripe-helpers';
+import { resolveAppOrigin } from '@/lib/security/origin';
 
 /**
  * POST /api/stripe/portal
@@ -15,10 +16,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { workspaceId } = body as { workspaceId: number };
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!workspaceId) {
+  const workspaceId =
+    typeof body === 'object' && body !== null && 'workspaceId' in body
+      ? (body as { workspaceId?: unknown }).workspaceId
+      : undefined;
+
+  if (typeof workspaceId !== 'number' || !Number.isFinite(workspaceId) || workspaceId <= 0) {
     return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
   }
 
@@ -35,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const origin = request.headers.get('origin') ?? 'http://localhost:3000';
+    const origin = resolveAppOrigin(request);
     const portalSession = await createPortalSession({
       customerId: subscription.customerId,
       returnUrl: `${origin}/dashboard/billing`,

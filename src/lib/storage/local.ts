@@ -17,6 +17,7 @@ export class LocalStorage implements StorageAdapter {
   }
 
   async upload(key: string, data: Buffer | ReadableStream): Promise<string> {
+    assertSafeLocalStorageKey(key);
     const filePath = join(this.basePath, key);
     const dir = dirname(filePath);
     if (!existsSync(dir)) {
@@ -29,11 +30,13 @@ export class LocalStorage implements StorageAdapter {
   }
 
   async download(key: string): Promise<Buffer> {
+    assertSafeLocalStorageKey(key);
     const filePath = join(this.basePath, key);
     return readFileSync(filePath);
   }
 
   async delete(key: string): Promise<void> {
+    assertSafeLocalStorageKey(key);
     const filePath = join(this.basePath, key);
     if (existsSync(filePath)) {
       unlinkSync(filePath);
@@ -41,6 +44,7 @@ export class LocalStorage implements StorageAdapter {
   }
 
   getUrl(key: string): string {
+    assertSafeLocalStorageKey(key);
     const safePath = key
       .split('/')
       .filter(Boolean)
@@ -48,6 +52,19 @@ export class LocalStorage implements StorageAdapter {
       .join('/');
     return `/api/files/${safePath}`;
   }
+}
+
+function assertSafeLocalStorageKey(key: string): void {
+  if (!key) throw new Error('Invalid key');
+  // path.join(base, "/abs") discards base. Never allow absolute paths.
+  if (key.startsWith('/')) throw new Error('Invalid key');
+  if (/[\u0000-\u001f\u007f]/.test(key)) throw new Error('Invalid key');
+  if (key.includes('\\')) throw new Error('Invalid key');
+  if (key.includes(':')) throw new Error('Invalid key');
+  if (key.includes('?') || key.includes('#')) throw new Error('Invalid key');
+
+  const segments = key.split('/');
+  if (segments.some((seg) => seg === '..' || seg.includes('..'))) throw new Error('Invalid key');
 }
 
 /** Convert Buffer | ReadableStream to Buffer */

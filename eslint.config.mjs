@@ -13,6 +13,7 @@ const baseIgnores = [
   'dist/',
   'build/',
   '.vercel/',
+  '.scrap_bin/',
   'coverage/',
   'playwright-report/',
   'test-results/',
@@ -90,7 +91,8 @@ export default [
             'Avoid drizzle-orm sql`` tagged templates in app code. Prefer the query builder for cross-dialect compatibility.',
         },
         {
-          selector: "ImportDeclaration[source.value='drizzle-orm'] ImportSpecifier[imported.name='sql']",
+          selector:
+            "ImportDeclaration[source.value='drizzle-orm'] ImportSpecifier[imported.name='sql']",
           message:
             'Avoid importing `sql` from drizzle-orm in app code. Prefer and()/eq()/isNull()/gt()/etc for cross-dialect compatibility.',
         },

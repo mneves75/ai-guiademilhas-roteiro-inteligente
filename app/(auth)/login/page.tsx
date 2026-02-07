@@ -6,12 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from '@/lib/auth-client';
 import { m } from '@/lib/messages';
 import { normalizeLocale, type Locale } from '@/lib/locale';
+import { normalizeCallbackUrl } from '@/lib/security/redirect';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl =
-    searchParams.get('callbackUrl') ?? searchParams.get('redirect') ?? '/dashboard';
+  const rawCallbackUrl = searchParams.get('callbackUrl') ?? searchParams.get('redirect');
+  const callbackUrl = normalizeCallbackUrl(rawCallbackUrl);
 
   const [locale, setLocale] = useState<Locale>('en');
   const [email, setEmail] = useState('');

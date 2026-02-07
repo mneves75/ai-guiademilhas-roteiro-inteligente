@@ -15,11 +15,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { token } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const token =
+    typeof body === 'object' && body !== null && 'token' in body
+      ? (body as { token?: unknown }).token
+      : undefined;
 
   if (!token) {
     return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+  }
+
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token)) {
+    return NextResponse.json({ error: 'Invalid token format' }, { status: 400 });
   }
 
   // Validate invitation exists
@@ -34,13 +47,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Already a member of this workspace' }, { status: 409 });
   }
 
-  // Check email matches (optional - can be disabled for flexibility)
-  // if (invitation.email.toLowerCase() !== session.user.email.toLowerCase()) {
-  //   return NextResponse.json({ error: 'Invitation was sent to a different email' }, { status: 403 });
-  // }
+  // Enforce email binding: invitation token alone should not be enough to join a workspace.
+  if (invitation.email.toLowerCase() !== session.user.email.toLowerCase()) {
+    return NextResponse.json(
+      { error: 'Invitation was sent to a different email' },
+      { status: 403 }
+    );
+  }
 
-  const [member] = await acceptInvitation(token, session.user.id);
-  return NextResponse.json({ member, workspaceId: invitation.workspaceId });
+  try {
+    const [member] = await acceptInvitation(token, session.user.id);
+    return NextResponse.json({ member, workspaceId: invitation.workspaceId });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Invalid or expired invitation') {
+      return NextResponse.json({ error: 'Invalid or expired invitation' }, { status: 400 });
+    }
+
+    console.error('Accept invitation error:', error);
+    return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 });
+  }
 }
 
 /**
@@ -52,6 +77,10 @@ export async function GET(request: NextRequest) {
 
   if (!token) {
     return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+  }
+
+  if (!/^[a-f0-9]{64}$/i.test(token)) {
+    return NextResponse.json({ error: 'Invalid token format' }, { status: 400 });
   }
 
   const invitation = await getInvitationByToken(token);

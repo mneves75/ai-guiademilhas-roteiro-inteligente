@@ -6,7 +6,7 @@ import type { StorageAdapter } from './index';
  * Requires: @vercel/blob installed + BLOB_READ_WRITE_TOKEN env var
  * (auto-set by Vercel when Blob store is connected)
  *
- * Install: bun add @vercel/blob
+ * Install: pnpm add @vercel/blob
  */
 export class VercelBlobStorage implements StorageAdapter {
   async upload(key: string, data: Buffer | ReadableStream): Promise<string> {
@@ -17,6 +17,11 @@ export class VercelBlobStorage implements StorageAdapter {
   }
 
   async download(key: string): Promise<Buffer> {
+    // `key` is expected to be the public blob URL returned by `put(...)`.
+    // Never treat it as an arbitrary URL to fetch.
+    if (!isAllowedBlobUrl(key)) {
+      throw new Error('Invalid Vercel Blob URL');
+    }
     const response = await fetch(key);
     if (!response.ok) throw new Error(`Failed to download: ${key}`);
     const arrayBuffer = await response.arrayBuffer();
@@ -31,6 +36,19 @@ export class VercelBlobStorage implements StorageAdapter {
   getUrl(key: string): string {
     // Vercel Blob URLs are already public URLs returned from upload
     return key;
+  }
+}
+
+function isAllowedBlobUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:') return false;
+    const host = url.hostname.toLowerCase();
+    return (
+      host.endsWith('.blob.vercel-storage.com') || host.endsWith('.public.blob.vercel-storage.com')
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -51,11 +69,16 @@ async function toBuffer(data: Buffer | ReadableStream): Promise<Buffer> {
  * Dynamic import of @vercel/blob
  * Only loaded when Vercel Blob storage is actually used.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadVercelBlob(): Promise<any> {
+type VercelBlobModule = {
+  put: (key: string, body: Buffer, options: { access: 'public' }) => Promise<{ url: string }>;
+  del: (urlOrKey: string) => Promise<void>;
+};
+
+async function loadVercelBlob(): Promise<VercelBlobModule> {
   try {
-    return await import('@vercel/blob');
+    // Keep this typed without requiring @vercel/blob at type-check time.
+    return (await import('@vercel/blob')) as unknown as VercelBlobModule;
   } catch {
-    throw new Error('Vercel Blob storage requires @vercel/blob. Install it: bun add @vercel/blob');
+    throw new Error('Vercel Blob storage requires @vercel/blob. Install it: pnpm add @vercel/blob');
   }
 }

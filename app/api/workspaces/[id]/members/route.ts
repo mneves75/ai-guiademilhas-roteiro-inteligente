@@ -3,10 +3,12 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import {
   getWorkspaceMembers,
+  getWorkspaceById,
   verifyWorkspaceMember,
   updateMemberRole,
   softDeleteWorkspaceMember,
 } from '@/db/queries/workspaces';
+import { isWorkspaceMemberRole } from '@/lib/security/workspace-roles';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,6 +25,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify membership
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -47,6 +52,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner/admin
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -54,20 +62,48 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
-  const { userId, role } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!userId || !role) {
+  const userId =
+    typeof body === 'object' && body !== null && 'userId' in body
+      ? (body as { userId?: unknown }).userId
+      : undefined;
+  const role =
+    typeof body === 'object' && body !== null && 'role' in body
+      ? (body as { role?: unknown }).role
+      : undefined;
+
+  if (typeof userId !== 'string' || !userId || !isWorkspaceMemberRole(role)) {
     return NextResponse.json({ error: 'userId and role are required' }, { status: 400 });
   }
 
-  // Prevent changing owner role (unless you're the owner)
-  if (role === 'owner' && membership.role !== 'owner') {
-    return NextResponse.json({ error: 'Only owner can transfer ownership' }, { status: 403 });
+  // Keep ownership a single source of truth (workspaces.ownerUserId).
+  // If you want ownership transfer, implement an explicit endpoint that updates ownerUserId + roles atomically.
+  if (role === 'owner') {
+    return NextResponse.json(
+      { error: 'Ownership transfer is not supported via role updates' },
+      { status: 400 }
+    );
   }
 
-  // Prevent demoting yourself if you're the owner
-  if (userId === session.user.id && membership.role === 'owner' && role !== 'owner') {
+  const workspace = await getWorkspaceById(workspaceId);
+  if (!workspace) {
+    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+  }
+  if (userId === workspace.ownerUserId) {
+    return NextResponse.json(
+      { error: 'Cannot change the workspace owner role. Transfer ownership first.' },
+      { status: 400 }
+    );
+  }
+
+  // Keep the owner stable (ownerUserId). Owners shouldn't be able to demote themselves via roles.
+  if (userId === session.user.id && membership.role === 'owner') {
     return NextResponse.json({ error: 'Cannot demote yourself as owner' }, { status: 400 });
   }
 
@@ -88,11 +124,23 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
-  const body = await request.json();
-  const { userId } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!userId) {
+  const userId =
+    typeof body === 'object' && body !== null && 'userId' in body
+      ? (body as { userId?: unknown }).userId
+      : undefined;
+
+  if (typeof userId !== 'string' || !userId) {
     return NextResponse.json({ error: 'userId is required' }, { status: 400 });
   }
 
@@ -101,10 +149,22 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Not a member of this workspace' }, { status: 403 });
   }
 
+  const workspace = await getWorkspaceById(workspaceId);
+  if (!workspace) {
+    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+  }
+
+  if (userId === workspace.ownerUserId) {
+    return NextResponse.json(
+      { error: 'Cannot remove the workspace owner. Transfer ownership first.' },
+      { status: 400 }
+    );
+  }
+
   // Self-leave is always allowed (except for owner)
   const isSelfLeave = userId === session.user.id;
   if (isSelfLeave) {
-    if (membership.role === 'owner') {
+    if (workspace.ownerUserId === session.user.id || membership.role === 'owner') {
       return NextResponse.json(
         { error: 'Owner cannot leave. Transfer ownership first.' },
         { status: 400 }

@@ -26,7 +26,7 @@ function initAuth() {
     }),
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false, // Enable in production
+      requireEmailVerification: process.env.ENABLE_EMAIL_VERIFICATION === 'true',
       sendResetPassword: async ({ user, url }) => {
         await sendPasswordResetEmail({
           to: user.email,
@@ -102,12 +102,29 @@ type AuthInstance = ReturnType<typeof initAuth>;
 let cachedAuth: AuthInstance | null = null;
 
 function resolveBaseURL(): string {
-  return (
+  const fromEnv =
     process.env.BETTER_AUTH_BASE_URL ??
     process.env.BETTER_AUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    'http://localhost:3000'
-  );
+    process.env.NEXT_PUBLIC_APP_URL;
+
+  if (fromEnv) {
+    try {
+      return new URL(fromEnv).origin;
+    } catch {
+      throw new Error(
+        'Invalid BETTER_AUTH_BASE_URL / BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL value.'
+      );
+    }
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Missing BETTER_AUTH_BASE_URL (or BETTER_AUTH_URL / NEXT_PUBLIC_APP_URL). ' +
+        'Refusing to guess base URL in production.'
+    );
+  }
+
+  return 'http://localhost:3000';
 }
 
 function requireSecret(): string {
@@ -115,6 +132,11 @@ function requireSecret(): string {
   if (!secret) {
     throw new Error(
       'Missing BETTER_AUTH_SECRET. Set it in .env.local (see .env.example) before running the app.'
+    );
+  }
+  if (secret.length < 32) {
+    throw new Error(
+      'BETTER_AUTH_SECRET is too short. Use a 32+ character random value (see .env.example).'
     );
   }
   return secret;

@@ -10,6 +10,7 @@ import {
   hasExistingInvitation,
 } from '@/db/queries/invitations';
 import { sendInvitationEmail } from '@/lib/email-actions';
+import { isInviteRole } from '@/lib/security/workspace-roles';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -26,6 +27,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner/admin
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -50,6 +54,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner/admin
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -57,20 +64,38 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
-  const { email, role = 'member' } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!email) {
+  const email =
+    typeof body === 'object' && body !== null && 'email' in body
+      ? (body as { email?: unknown }).email
+      : undefined;
+  const role =
+    typeof body === 'object' && body !== null && 'role' in body
+      ? (body as { role?: unknown }).role
+      : 'member';
+
+  if (typeof email !== 'string' || !email.trim()) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
   // Validate email format
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
     return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
   }
 
+  if (!isInviteRole(role)) {
+    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+  }
+
   // Check for existing invitation
-  const exists = await hasExistingInvitation(workspaceId, email);
+  const exists = await hasExistingInvitation(workspaceId, normalizedEmail);
   if (exists) {
     return NextResponse.json(
       { error: 'Invitation already pending for this email' },
@@ -80,7 +105,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const [invitation] = await createInvitation({
     workspaceId,
-    email,
+    email: normalizedEmail,
     role,
     invitedByUserId: session.user.id,
   });
@@ -131,6 +156,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const workspaceId = Number(id);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
+  }
 
   // Verify owner/admin
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
@@ -138,10 +166,19 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json();
-  const { invitationId } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!invitationId) {
+  const invitationId =
+    typeof body === 'object' && body !== null && 'invitationId' in body
+      ? (body as { invitationId?: unknown }).invitationId
+      : undefined;
+
+  if (typeof invitationId !== 'number' || !Number.isFinite(invitationId) || invitationId <= 0) {
     return NextResponse.json({ error: 'invitationId is required' }, { status: 400 });
   }
 

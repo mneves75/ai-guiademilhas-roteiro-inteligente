@@ -1,7 +1,8 @@
 import { db, workspaceInvitations, workspaceMembers } from '@/db/client';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gt, isNull } from 'drizzle-orm';
 import { withSoftDeleteFilter } from './base';
 import crypto from 'crypto';
+import { isUniqueConstraintError } from '@/db/errors';
 
 /**
  * Generate secure invitation token
@@ -102,39 +103,63 @@ export async function getInvitationsForEmail(email: string) {
  * Accept invitation and add user to workspace
  */
 export async function acceptInvitation(token: string, userId: string) {
-  const invitation = await getInvitationByToken(token);
-  if (!invitation) {
-    throw new Error('Invalid or expired invitation');
-  }
+  const now = new Date();
 
-  // Mark invitation as accepted
-  await db
-    .update(workspaceInvitations)
-    .set({
-      acceptedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(workspaceInvitations.token, token));
-
-  // Add user to workspace
-  await db.insert(workspaceMembers).values({
-    workspaceId: invitation.workspaceId,
-    userId,
-    role: invitation.role,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  return db
-    .select()
-    .from(workspaceMembers)
-    .where(
-      and(
-        eq(workspaceMembers.workspaceId, invitation.workspaceId),
-        eq(workspaceMembers.userId, userId)
+  // Make invitation acceptance atomic (prevents TOCTOU against revoke/expiry/acceptedAt).
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(workspaceInvitations)
+      .set({
+        acceptedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(workspaceInvitations.token, token),
+          gt(workspaceInvitations.expiresAt, now),
+          isNull(workspaceInvitations.acceptedAt),
+          withSoftDeleteFilter(workspaceInvitations)
+        )
       )
-    )
-    .limit(1);
+      .returning({
+        workspaceId: workspaceInvitations.workspaceId,
+        role: workspaceInvitations.role,
+      });
+
+    if (!updated) {
+      throw new Error('Invalid or expired invitation');
+    }
+
+    try {
+      await tx.insert(workspaceMembers).values({
+        workspaceId: updated.workspaceId,
+        userId,
+        role: updated.role,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } catch (err) {
+      // Idempotency: if concurrent accept inserted membership first, treat as success.
+      if (!isUniqueConstraintError(err)) throw err;
+    }
+
+    const members = await tx
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, updated.workspaceId),
+          eq(workspaceMembers.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!members[0]) {
+      throw new Error('Failed to create membership');
+    }
+
+    return members;
+  });
 }
 
 /**

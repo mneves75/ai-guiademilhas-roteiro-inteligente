@@ -48,6 +48,9 @@ jobs:
       - name: Type check
         run: pnpm type-check
 
+      - name: Dependency audit (prod)
+        run: pnpm audit --prod
+
   test:
     name: Unit Tests + DB Smokes
     runs-on: ubuntu-latest

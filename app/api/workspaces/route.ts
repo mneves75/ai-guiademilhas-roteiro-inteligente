@@ -35,15 +35,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { name, slug } = body;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!name || !slug) {
+  const name =
+    typeof body === 'object' && body !== null && 'name' in body
+      ? (body as { name?: unknown }).name
+      : undefined;
+  const slug =
+    typeof body === 'object' && body !== null && 'slug' in body
+      ? (body as { slug?: unknown }).slug
+      : undefined;
+
+  if (typeof name !== 'string' || typeof slug !== 'string') {
+    return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
+  }
+
+  const trimmedName = name.trim();
+  const trimmedSlug = slug.trim();
+  if (!trimmedName || !trimmedSlug) {
     return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
   }
 
   // Validate slug format
-  if (!/^[a-z0-9-]+$/.test(slug)) {
+  if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
     return NextResponse.json(
       { error: 'Slug must contain only lowercase letters, numbers, and hyphens' },
       { status: 400 }
@@ -53,8 +72,8 @@ export async function POST(request: NextRequest) {
   try {
     // Create workspace
     const result = await createWorkspace({
-      name,
-      slug,
+      name: trimmedName,
+      slug: trimmedSlug,
       ownerUserId: session.user.id,
     });
     const workspace = result[0];

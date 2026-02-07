@@ -9,8 +9,22 @@ const MIME_BY_EXT: Record<string, string> = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
 };
+
+const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER ?? 'local';
+
+// Only expose a very small subset of the storage key space publicly.
+const DEFAULT_PUBLIC_PREFIXES = ['avatars/', 'uploads/'];
+const PUBLIC_PREFIXES = (process.env.STORAGE_PUBLIC_PREFIXES ?? '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter(Boolean)
+  .map((p) => (p.endsWith('/') ? p : `${p}/`));
+
+function isAllowedPublicKey(key: string): boolean {
+  const prefixes = PUBLIC_PREFIXES.length ? PUBLIC_PREFIXES : DEFAULT_PUBLIC_PREFIXES;
+  return prefixes.some((p) => key.startsWith(p));
+}
 
 function getExt(path: string): string {
   const idx = path.lastIndexOf('.');
@@ -20,14 +34,25 @@ function getExt(path: string): string {
 
 function isSafeKey(key: string): boolean {
   // Prevent path traversal for the local filesystem adapter.
-  return !key.split('/').some((seg) => seg === '..' || seg.includes('..') || seg.includes('\\'));
+  if (/[\u0000-\u001f\u007f]/.test(key)) return false;
+  if (key.includes('\\')) return false;
+  if (key.includes(':')) return false;
+  if (key.includes('?') || key.includes('#')) return false;
+
+  return !key.split('/').some((seg) => seg === '..' || seg.includes('..'));
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
+  // Security boundary: this route is only needed for local filesystem storage.
+  // For cloud storage providers, serve files via their public URLs instead.
+  if (STORAGE_PROVIDER !== 'local') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const { key: keyParts } = await context.params;
   const key = keyParts.join('/');
 
-  if (!key || !isSafeKey(key)) {
+  if (!key || !isSafeKey(key) || !isAllowedPublicKey(key)) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
   }
 
@@ -41,6 +66,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       status: 200,
       headers: {
         'Content-Type': MIME_BY_EXT[ext] ?? 'application/octet-stream',
+        'X-Content-Type-Options': 'nosniff',
         // Avatars and uploads are immutable by key (we include a UUID in file names).
         'Cache-Control': 'public, max-age=31536000, immutable',
       },

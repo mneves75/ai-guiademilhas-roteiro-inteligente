@@ -16,18 +16,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const workspaceId = request.nextUrl.searchParams.get('workspaceId');
-  if (!workspaceId) {
+  const workspaceIdParam = request.nextUrl.searchParams.get('workspaceId');
+  if (!workspaceIdParam) {
     return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
   }
 
+  const workspaceId = Number(workspaceIdParam);
+  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+    return NextResponse.json({ error: 'Invalid workspaceId' }, { status: 400 });
+  }
+
   // Verify user is member of workspace
-  const membership = await verifyWorkspaceMember(Number(workspaceId), session.user.id);
+  const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
   if (!membership) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const subscription = await getWorkspaceSubscription(Number(workspaceId));
+  const subscription = await getWorkspaceSubscription(workspaceId);
   const planConfig = STRIPE_PLANS[subscription.plan];
 
   return NextResponse.json({

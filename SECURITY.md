@@ -67,10 +67,10 @@ This boilerplate includes:
 - [x] ESLint security rules
 - [x] Pre-commit hooks (prevents accidental secret commits)
 - [x] Dependency auditing in CI
-- [ ] CSRF protection (Phase 3)
-- [ ] Rate limiting (Phase 3)
-- [ ] Input validation (Phase 3)
-- [ ] Secure headers (Phase 12)
+- [x] CSRF mitigation for state-changing API routes (Origin + Fetch Metadata checks)
+- [x] Best-effort rate limiting for auth endpoints (edge-memory; use a shared store for hard guarantees)
+- [x] Input validation for API routes (strict runtime checks)
+- [x] Secure headers baseline via `next.config.ts` (works on Vercel + self-host)
 
 ## Acknowledgments
 
