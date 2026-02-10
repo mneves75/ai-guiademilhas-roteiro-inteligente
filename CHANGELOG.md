@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (none)
 
+## [0.4.2] - 2026-02-10
+
+### Added
+
+- Stronger SEO E2E coverage: asserts locale-stable `rel=canonical` and `hreflang` alternates on the home page
+
 ## [0.4.1] - 2026-02-10
 
 ### Fixed
@@ -169,7 +175,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - pnpm as package manager
   - GitHub repository with best practices docs
 
-[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.2.0...v0.3.0
