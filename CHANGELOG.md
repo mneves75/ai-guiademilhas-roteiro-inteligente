@@ -13,11 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional site verification env vars for SEO (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`)
 - Noindex metadata for sensitive routes (dashboard and invite flows)
 - New unit coverage for SEO routes (sitemap, robots, RSS)
+- Server Action to switch locale by setting an `httpOnly` locale cookie (no client `document.cookie` writes)
+- New pt-BR technical blog posts to establish topical authority (auth, SEO, E2E, Stripe, multi-tenancy)
 
 ### Changed
 
 - `sitemap.xml` now includes only indexable public pages plus blog posts and tag pages (and excludes auth pages)
-- `robots.txt` now blocks crawling the development-only email preview route
+- `robots.txt` is now minimal (only disallows `/api/`); sensitive surfaces are controlled via `noindex` metadata + `X-Robots-Tag`
+- Locale resolution is memoized per request and propagated without client-side locale state (refresh-driven consistency)
 
 ### Fixed
 

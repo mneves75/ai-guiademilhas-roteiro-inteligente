@@ -1,122 +1,210 @@
-# SEO: Solucao Elegante (Bootstrapped) para Este Repo
+# SEO: Solucao Elegante (10/10) Para Este Repo (Bootstrapped)
 
 Atualizado: 2026-02-10
 
-## 0) Escopo (o que estamos otimizando)
+Este documento e deliberadamente "hostil a wishful thinking": define invariantes, criterios pass/fail e o que falta para 10/10 com evidencia.
 
-- Produto: boilerplate/starter kit open-source de Next.js 16 para SaaS (auth, Stripe, multi-tenancy, admin, blog).
-- Publico-alvo (ICP): devs/founders/agencias que querem shippar SaaS rapido, com defaults de producao.
-- Restricao: sem ads. O unico combustivel e tempo + distribuicao + reputacao.
+## 0) Definicao de Done (pass/fail)
 
-Se o ICP nao for esse, tudo abaixo muda (keywords, paginas, prova, distribuicao).
+So e 10/10 quando:
+
+- (Indexacao) Search Console configurado e `sitemap.xml` submetido; coverage sem URLs privadas indexadas.
+- (Tecnico) Sitemap limpo, canonical consistente, `noindex` aplicado a superficies sensiveis, RSS publicado e descobrivel.
+- (Crescimento) 1 pilar + 6-12 satelites com prova executavel; distribuicao repetivel; 1 KPI organico instrumentado.
 
 ## 1) Primeiros principios (Carmack review)
 
-SEO e um sistema com 4 invariantes. Se qualquer um falhar, “otimizacao” vira ruido.
+SEO e um sistema com invariantes. Se qualquer um falhar, o resto vira ruido.
 
-1. **Valor**: voce precisa ser a melhor resposta para uma intencao real (nao “conteudo para rankear”).
-2. **Descoberta**: bots e humanos precisam achar o conteudo (links internos + externos + RSS + sitemap).
-3. **Indexacao correta**: paginas certas entram no indice; paginas erradas ficam fora.
-4. **Loop de melhoria**: medir (Search Console) -> ajustar backlog -> publicar -> repetir.
+1. Valor: a pagina precisa ser a melhor resposta para uma intencao real.
+2. Descoberta: bots e humanos precisam encontrar (links internos, RSS, sitemap, links externos).
+3. Indexacao correta: entra no indice so o que deve ranquear; o resto fica fora por default.
+4. Loop: medir -> priorizar -> publicar -> repetir.
 
-O “elegante” aqui e reduzir trabalho manual por meio de invariantes verificaveis no repo.
+## 1.1) O que este repo e (features que viram SEO)
 
-## 2) O que precisa para 10/10 (criterios verificaveis)
+Este app nao e um "conteudo site". E um produto dev-tooling (boilerplate). Entao SEO precisa mapear features para intencoes tecnicas.
 
-**10/10 = (tecnico) + (conteudo) + (distribuicao) + (medicao)**, tudo fechado por evidencias.
+Features observaveis no repo (resumo):
 
-Tecnico (pass/fail):
+- Auth completo (Better Auth): email/senha, OAuth, magic link, reset.
+- Billing (Stripe): subscriptions + portal + webhooks.
+- Multi-tenancy: workspaces, membros, convites, roles.
+- Admin: usuarios, workspaces, subscriptions.
+- Blog MDX + tags + OG + JSON-LD.
+- Qualidade operacional: lint/type-check/unit/e2e/build e docs de seguranca/ops.
 
-- Sitemap contem apenas paginas publicas que voce quer ranquear (sem auth/privado).
-- Canonical consistente em paginas publicas.
-- `noindex` aplicado a areas privadas/sensiveis (dashboard/admin/invite, preview).
-- OG/Twitter metadata por pagina para melhorar CTR/shares.
+Traduza isso para paginas que o ICP busca:
+
+- "nextjs saas boilerplate" / "nextjs starter kit"
+- "nextjs multi tenant" / "workspaces rbac nextjs"
+- "stripe subscriptions nextjs webhook idempotency"
+- "better auth nextjs" / "magic link nextjs"
+
+## 1.2) Mercado e competidores (o que voce enfrenta)
+
+O mercado se divide em 3 classes:
+
+1. Kits pagos com marketing forte: vendem "ship fast" com LP agressiva.
+2. Starters open-source: volume alto, qualidade varia, ganha por comunidade.
+3. Referencias/exemplos: confiaveis, mas incompletos como produto final.
+
+Exemplos por classe (nao-exaustivo):
+
+- Kits pagos: Makerkit, ShipFast.
+- Open-source: Open SaaS e outros "nextjs saas starter" repos.
+- Referencias: exemplos oficiais/educacionais e repos "payments/auth" focados em 1 feature.
+
+Sem ads, voce nao vence por "promessa". Vence por:
+
+- prova tecnica (codigo, diffs, testes, benchmarks)
+- comparativos honestos (tradeoffs, limites, migracoes)
+- conteudo que vira referencia citavel (links naturais)
+
+## 1.3) Estrategia SEO sem budget (baseline + 1 foco)
+
+Baseline (primeiras coisas que voce PRECISA fazer):
+
+- Search Console + sitemap submission + rotina semanal.
+- Garantir que nada privado indexa (noindex + X-Robots-Tag; sitemap limpo).
+- Canonical e metadados consistentes nas paginas publicas chave.
 - RSS publicado e descobrivel.
-- CWV aceitavel (LCP/INP/CLS) em landing + blog + pricing.
 
-Conteudo (pass/fail):
+Maior leverage (90% do tempo):
 
-- 1 pagina pilar excelente (a melhor da internet para 1 termo-alvo).
-- 6-12 artigos satelites que:
-  - resolvem problemas concretos,
-  - tem prova (codigo, configuracoes, diffs, testes, tradeoffs),
-  - linkam entre si (cluster).
+- motor de conteudo tecnico comparativo com prova executavel
+  - 60% escrever (1 artigo padrao-ouro/semana)
+  - 20% distribuicao (1-2 canais por artigo)
+  - 10% atualizar artigos com dados reais
 
-Distribuicao (pass/fail):
+Os outros 10%: tecnico/medicao (Search Console, CWV, correcoes de indexacao).
 
-- Cada artigo tem pelo menos 1 canal de distribuicao “first-class” (HN/Reddit/communities/newsletters) sem spam.
-- Existe um mecanismo repetivel de conquistar links (comparativos, benchmarks, checklists, templates reutilizaveis).
+## 1.4) Cluster inicial (implementado no blog)
 
-Medicao (pass/fail):
+Pilar:
 
-- Search Console configurado e acompanhado semanalmente.
-- 1 KPI de conversao org (ex.: stars/clones, signup, “copy to repo”) instrumentado (PostHog ja existe).
+- `/blog/nextjs-saas-boilerplate-10-10`
 
-## 3) Critica do estado atual (primeiros principios)
+Satelites:
+
+- `/blog/multi-tenancy-workspaces-rbac-nextjs`
+- `/blog/stripe-subscriptions-webhooks-idempotentes-nextjs`
+- `/blog/better-auth-nextjs-app-router-sem-csr-bailout`
+- `/blog/seo-tecnico-nextjs-sitemap-robots-canonical-rss`
+- `/blog/playwright-e2e-deterministico-nextjs-standalone`
+- `/blog/headers-de-seguranca-nextjs-noindex-x-robots-tag`
+
+## 2) O que precisa para 10/10 (criterios objetivos)
+
+### 2.1 Tecnico (repo)
+
+- Sitemap:
+  - inclui apenas paginas publicas rankaveis (sem auth/privado/sensivel)
+  - nao depende de `priority/changefreq` (o Google ignora)
+- Canonical:
+  - 1 canonical por pagina publica relevante (evita duplicacao e canibalizacao por URL drift)
+- Noindex (defesa em profundidade):
+  - `metadata.robots` em layouts privados/sensiveis
+  - `X-Robots-Tag: noindex, nofollow` nas mesmas rotas (header e mais "duro" que meta)
+  - robots.txt tratado como hint de crawl, nao como garantia de noindex
+- RSS:
+  - `/rss.xml` existe, e e descobrivel via autodiscovery
+- Performance:
+  - CWV aceitavel em landing, blog e pricing (o resto nao importa se ninguem chega la)
+
+### 2.2 Conteudo (crescimento real)
+
+- Pilar:
+  - 1 pagina que seria aprovada por um reviewer tecnico hostil
+  - define escopo, tradeoffs, e prova (codigo/config/testes) do que este boilerplate resolve melhor que alternativas
+- Satelites (6-12):
+  - cada artigo resolve 1 problema real, com prova executavel
+  - links internos: satelite -> pilar e satelite -> 2-3 satelites relevantes
+
+Checklist minimo de "prova" por artigo:
+
+- snippet/arquivo que roda
+- um tradeoff real
+- uma falha comum e como detectar (logs, headers, testes, edge cases)
+- "last updated" verdadeiro (versoes e compat)
+
+### 2.3 Distribuicao (bootstrapped)
+
+- Cada artigo precisa gerar pelo menos 1 asset citavel:
+  - comparativo honesto (X vs Y)
+  - checklist
+  - benchmark reproduzivel
+  - template reutilizavel
+- Sem spam: distribuicao deve ser util por si so, sem pedir upvote.
+
+### 2.4 Medicao (sem isso nao existe 10/10)
+
+- Search Console:
+  - sitemap submetido
+  - queries e paginas revisadas semanalmente
+- KPI organico (escolha 1):
+  - stars/clones
+  - signup
+  - click para docs/quickstart
+- Loop semanal:
+  - impressao alta + clique baixo -> ajustar title/description e snippet
+  - queda -> atualizar conteudo (versoes, gotchas, tradeoffs)
+
+## 3) Implementacao elegante (invariantes em codigo)
+
+O objetivo e reduzir regressao por arquitetura: um unico lugar decide a origem publica, e todo SEO deriva disso.
+
+Implementado:
+
+- Origem canonica centralizada:
+  - `src/lib/seo/base-url.ts` (`resolvePublicOrigin()`)
+- Rotas de SEO usam a origem canonica:
+  - `app/sitemap.ts`, `app/robots.ts`, `app/rss.xml/route.ts`, `app/layout.tsx`
+- `robots.txt` minimalista (anti-padrao evitado):
+  - `app/robots.ts` bloqueia apenas `/api/`
+  - superficies sensiveis usam `noindex` via meta + `X-Robots-Tag` (permitindo crawling para ver o `noindex`)
+- Noindex por default em superficies sensiveis:
+  - `app/(protected)/dashboard/layout.tsx`, `app/(protected)/admin/layout.tsx`, `app/invite/layout.tsx`, `app/emails/preview/page.tsx`
+  - `next.config.ts` aplica `X-Robots-Tag` em `/dashboard/*`, `/admin/*`, `/invite/*`, `/emails/preview`
+- Teste de regressao:
+  - `src/lib/__tests__/seo-routes.vitest.ts`
+
+## 4) Critica do estado atual
 
 O que esta bom:
 
-- A base tecnica existe (App Router, metadata global, blog, robots/sitemap).
-- Ja ha cultura de “verificabilidade” (lint/type-check/test/build, docs de critic/solucao elegante).
+- Baseline tecnico esta enforced (sitemap limpo + canonical + noindex + RSS) e protegido por teste.
 
-O que nao e 10/10 ainda:
+O que impede 10/10 hoje:
 
-- Sem dados reais de Search Console: nao existe feedback loop (hoje a estrategia e hipotese).
-- Conteudo e raso em volume (2 posts): nao sustenta topical authority.
-- Tags podem virar thin content se escalarem sem criterio (por isso nao devem ser tratadas como “pagina-alvo” por default).
+- Sem dados reais (Search Console + tempo), a estrategia nao fecha loop.
+- Conteudo em volume/cluster ainda e insuficiente (2 posts nao constroem autoridade).
 
-## 4) Baseline: primeiras coisas criticas (NEED)
+## 5) Alocacao de tempo (unica resposta honesta)
 
-1. Configurar Search Console + sitemap submission.
-2. Garantir indexacao correta: sitemap limpo + `noindex` em rotas privadas/sensiveis.
-3. Canonical/OG/Twitter consistentes nas paginas publicas.
-4. RSS do blog.
-5. Um backlog de conteudo guiado por intencao (queries) e nao por “temas legais”.
+Sem ads, o maior leverage e conteudo + distribuicao + loop:
 
-## 5) O maior leverage (90% do seu tempo)
+- 90%: motor de conteudo tecnico comparativo com prova executavel
+  - 60% escrever (1 artigo padrao-ouro/semana)
+  - 20% distribuicao (1-2 canais por artigo)
+  - 10% atualizar artigos com dados reais
+- 10%: tecnico/medicao (Search Console, CWV, correcoes de indexacao)
 
-**Motor de conteudo tecnico comparativo com prova executavel.**
+## 6) Falhas previsiveis (e como evitar)
 
-Alocacao:
+- Thin content (tags/categorias):
+  - so indexar tags quando houver massa critica + texto unico por tag
+- Cannibalizacao:
+  - 1 pagina por intencao; o resto vira satelite, nao concorrente
+- Vazamento de indexacao:
+  - confiar em `noindex` (meta + header) + auditoria via Search Console, nao em disallow
+- i18n por cookie (mesma URL muda por locale):
+  - se o conteudo diferir por idioma, o ideal e URL por idioma (ex.: /pt-br/...)
 
-- 60%: escrever (1 artigo “padrão-ouro” por semana).
-- 20%: distribuicao (1 post/thread por canal por artigo; responder perguntas tecnicas onde o ICP esta).
-- 10%: atualizar artigos antigos com dados reais (ex.: compat, versoes, gotchas, benchmarks).
-- 10%: tecnico/medicao (Search Console, CWV, correcoes de indexacao).
+## 7) Referencias (fontes primarias)
 
-Se voce so puder fazer 1 coisa: escrever o pilar + 4 satelites com comparativos e diffs reais.
-
-## 6) Landscape/competidores (como vencer sem budget)
-
-Competidores existem em 3 classes:
-
-- Kits pagos com marketing forte e LP agressiva.
-- Starters open-source (muito volume; qualidade varia).
-- Exemplos “reference” (bons, mas incompletos como produto).
-
-Sem ads, sua vantagem defensavel vem de:
-
-- prova (tests, segurança, ops, multi-DB real),
-- comparativos honestos,
-- guias que viram referencia citavel.
-
-## 7) “Implementar a solucao elegante” no repo (invariantes em codigo)
-
-Esta solucao vira 10/10 quando o repo impede regressao por default:
-
-- Um unico resolvedor de origem publica para URLs canonicas (evita bugs quando `NEXT_PUBLIC_APP_URL` tem path).
-- Sitemap/robots/rss gerados a partir dessa origem.
-- Testes unitarios garantindo que sitemap nao inclua auth e que rss/robots continuem validos.
-
-## 8) O que posso fazer melhor (autocritica)
-
-- Eu nao consigo provar resultados de SEO sem dados reais (Search Console + tempo).
-- Melhoraria o plano com:
-  - lista inicial de queries (seed) por intencao,
-  - mapping pilar/satelites por cluster,
-  - criterio objetivo de publicar tags (ex.: minimo de posts por tag).
-
-## 9) Proximos passos (minimos)
-
-1. Me diga qual e o ICP real (founders? agencias? devs juniors/seniors?) e 1 “dor” principal.
-2. Eu devolvo: 1 pilar + 8 titulos satelites (com outline e CTAs) e a arquitetura de links internos.
+- Google: robots.txt (limites do disallow; URL pode aparecer mesmo bloqueada). https://developers.google.com/search/docs/crawling-indexing/robots/intro
+- Google: noindex (via meta tag ou response header). https://developers.google.com/search/docs/crawling-indexing/block-indexing
+- Google: sitemap (Google ignora priority/changefreq; lastmod precisa ser confiavel). https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
+- Next.js: Metadata API (App Router). https://nextjs.org/docs/app/api-reference/functions/generate-metadata
+- RSS: autodiscovery. https://www.rssboard.org/rss-autodiscovery

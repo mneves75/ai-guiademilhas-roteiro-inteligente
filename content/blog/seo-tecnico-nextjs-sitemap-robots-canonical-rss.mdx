@@ -1,0 +1,44 @@
+---
+title: 'SEO tecnico em Next.js App Router: sitemap, robots, canonical e RSS (sem atalhos)'
+description: 'Como tratar SEO como invariantes verificaveis em Next.js 16: noindex correto, sitemap limpo, canonical consistente e RSS autodiscovery.'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['seo', 'nextjs', 'architecture', 'rss']
+published: true
+---
+
+SEO tecnico e facil de superestimar. O que importa e simples: indexar o que deve rankear e nao indexar o que e sensivel. O resto vem depois.
+
+## Invariantes (pass/fail)
+
+1. Sitemap so lista paginas publicas rankaveis (nada de login/signup/dashboard/admin).
+2. `noindex` e aplicado como meta e (opcionalmente) como header `X-Robots-Tag`.
+3. `robots.txt` e um hint de crawl, nao um mecanismo de segredo/noindex.
+4. Canonical e consistente e deriva de uma origem unica (evita bug de canonical com host/path errado).
+5. RSS existe e e descobrivel com `link rel="alternate" type="application/rss+xml"`.
+
+## Onde olhar no repo
+
+- Origem unica: `src/lib/seo/base-url.ts`
+- Sitemap: `app/sitemap.ts`
+- Robots: `app/robots.ts`
+- RSS: `app/rss.xml/route.ts`
+- Metadata root: `app/layout.tsx`
+- Headers `X-Robots-Tag`: `next.config.ts`
+- Testes: `src/lib/__tests__/seo-routes.vitest.ts` e `e2e/home.e2e.ts`
+
+## Por que robots.txt nao e "noindex"
+
+Um `Disallow` impede crawl, nao garante que a URL nao apareca no indice. Se voce quer "fora do indice", use `noindex` (meta ou response header).
+
+O repo usa `X-Robots-Tag: noindex, nofollow` como reforco para rotas sensiveis, e deixa o `robots.txt` minimalista.
+
+## RSS autodiscovery (o baseline bootstrapped)
+
+Sem ads, RSS e um canal barato de distribuicao e sindicacao. O repo publica `/rss.xml` e anuncia via `alternates.types` no metadata root.
+
+## O que falta (fora do repo)
+
+Search Console + tempo. Sem isso, voce nao tem loop.
+

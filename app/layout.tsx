@@ -113,7 +113,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
-        <LocaleProvider initialLocale={locale}>
+        <LocaleProvider locale={locale}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

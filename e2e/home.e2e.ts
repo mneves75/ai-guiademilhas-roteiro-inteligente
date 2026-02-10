@@ -120,6 +120,10 @@ test.describe('SEO', () => {
     // Check OpenGraph tags
     const ogTitle = page.locator('meta[property="og:title"]');
     await expect(ogTitle).toHaveAttribute('content', /.+/);
+
+    // RSS autodiscovery should exist (from root metadata alternates)
+    const rssAlternate = page.locator('link[rel="alternate"][type="application/rss+xml"]');
+    await expect(rssAlternate).toHaveCount(1);
   });
 
   test('should have robots.txt', async ({ request }) => {
@@ -127,11 +131,34 @@ test.describe('SEO', () => {
     // to avoid `waitUntil: 'load'` semantics and reduce cross-browser flakiness.
     const response = await request.get('/robots.txt');
     expect(response.status()).toBe(200);
+    const body = await response.text();
+    expect(body).toContain('Sitemap:');
   });
 
   test('should have sitemap.xml', async ({ request }) => {
     const response = await request.get('/sitemap.xml');
     expect(response.status()).toBe(200);
+    const body = await response.text();
+    // Should not advertise auth surfaces in the sitemap.
+    expect(body).not.toContain('/login');
+    expect(body).not.toContain('/signup');
+  });
+
+  test('should have rss.xml', async ({ request }) => {
+    const response = await request.get('/rss.xml');
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('application/rss+xml');
+    const body = await response.text();
+    expect(body).toContain('<rss');
+    expect(body).toContain('<channel>');
+    expect(body).toContain('<item>');
+  });
+
+  test('sensitive routes should send X-Robots-Tag noindex', async ({ request }) => {
+    const response = await request.get('/dashboard', { maxRedirects: 0 });
+    expect(response.status()).toBeGreaterThanOrEqual(300);
+    expect(response.status()).toBeLessThan(400);
+    expect(response.headers()['x-robots-tag']).toMatch(/noindex/i);
   });
 });
 

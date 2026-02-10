@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
 import {
   Select,
   SelectContent,
@@ -8,29 +9,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { setClientLocale } from '@/lib/locale-client';
 import type { Locale } from '@/lib/locale';
 import { useLocale } from '@/contexts/locale-context';
+import { setLocaleAction } from '@/lib/locale-actions';
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
-  'pt-BR': 'pt-BR',
+  'pt-BR': 'Português (Brasil)',
 };
 
 export function LanguageSwitcher() {
   const router = useRouter();
-  const { locale: value, setLocale } = useLocale();
+  const { locale } = useLocale();
+  const [isPending, startTransition] = useTransition();
+  const [optimisticLocale, setOptimisticLocale] = useState<Locale | null>(null);
+
+  // Clear optimistic state once the server-driven locale catches up (after router.refresh()).
+  useEffect(() => {
+    if (optimisticLocale && optimisticLocale === locale) setOptimisticLocale(null);
+  }, [locale, optimisticLocale]);
 
   function onChange(next: string) {
-    const locale = next as Locale;
-    setLocale(locale);
-    setClientLocale(locale);
-    router.refresh();
+    const nextLocale = next as Locale;
+    if (nextLocale === locale) return;
+
+    setOptimisticLocale(nextLocale);
+    startTransition(async () => {
+      await setLocaleAction(nextLocale);
+      router.refresh();
+    });
   }
 
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 w-[96px]">
+    <Select value={optimisticLocale ?? locale} onValueChange={onChange} disabled={isPending}>
+      <SelectTrigger
+        className="h-9 w-[140px]"
+        aria-label={locale === 'pt-BR' ? 'Idioma' : 'Language'}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

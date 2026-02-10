@@ -9,7 +9,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/dashboard/', '/admin/', '/invite/', '/emails/preview'],
+        // robots.txt e uma dica de crawl, nao uma garantia de nao indexacao.
+        // Para rotas sensiveis/privadas, preferimos `noindex` via meta + headers `X-Robots-Tag`.
+        disallow: ['/api/'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

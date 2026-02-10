@@ -19,6 +19,7 @@ describe('SEO routes', () => {
     expect(urls).not.toContain('http://localhost:3000/signup');
 
     expect(urls.some((u) => u.includes('/blog/getting-started'))).toBe(true);
+    expect(urls.some((u) => u.includes('/blog/tag/'))).toBe(true);
   });
 
   it('robots disallows sensitive sections', () => {
@@ -28,9 +29,9 @@ describe('SEO routes', () => {
     const disallowList = Array.isArray(disallow) ? disallow : [disallow];
 
     expect(disallowList).toContain('/api/');
-    expect(disallowList).toContain('/dashboard/');
-    expect(disallowList).toContain('/admin/');
-    expect(disallowList).toContain('/invite/');
+    expect(disallowList).not.toContain('/dashboard/');
+    expect(disallowList).not.toContain('/admin/');
+    expect(disallowList).not.toContain('/invite/');
   });
 
   it('rss is valid xml and includes items', async () => {

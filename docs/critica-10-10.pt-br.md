@@ -11,7 +11,7 @@ Se um fluxo critico (auth) falha em E2E por "timing", o problema nao e o teste: 
 Invariantes desejadas:
 
 - Parametros de URL (callbackUrl, token) devem ser normalizados no server e vir como props estaveis para o client.
-- Locale nao pode depender de `useEffect`/DOM para existir no primeiro render.
+- Locale nao pode depender de `useEffect`/DOM para existir no primeiro render, nem de estado local que possa divergir do server.
 - Validacao nao pode depender do tooltip do HTML5 (varia por browser/idioma); deve ser deterministica e controlada.
 - UI nunca deve vazar mensagens internas do backend (por ex. strings de validacao).
 - "Fix" nao pode ser "aumentar timeout" ou "waitForTimeout": isso so mascara a classe de falha.
@@ -39,6 +39,9 @@ Invariantes desejadas:
 - DAST-lite via Playwright com `@dast` (headers, no-store, CSP nonce, redirects).
 - `/.well-known/security.txt` (RFC 9116) real + `/security` page + teste E2E.
 - Isolamento de builds E2E (distDir separado) sem quebrar standalone runtime.
+- i18n/locale: locale resolvido no server e propagado sem estado client-side:
+  - Troca de idioma via Server Action (cookie `httpOnly`), seguida de `router.refresh()`.
+  - `getRequestLocale()` memoizado por request (`react/cache`) para consistencia e evitar leituras repetidas.
 
 Comandos:
 

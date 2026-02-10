@@ -1,9 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import dns from 'node:dns';
 import path from 'node:path';
 
 // Some runners set NO_COLOR while Playwright forces colors; this combination emits noisy warnings.
 // Drop NO_COLOR for E2E to keep logs clean and deterministic.
 delete process.env.NO_COLOR;
+
+// Stabilize `localhost` resolution across platforms (avoid ::1 vs 127.0.0.1 flakiness).
+dns.setDefaultResultOrder('ipv4first');
 
 // Avoid accidental reuse of an unrelated dev server running on :3000.
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3100';

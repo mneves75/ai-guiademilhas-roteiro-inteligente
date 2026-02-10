@@ -1,4 +1,4 @@
-import { getAllPosts } from '@/lib/blog';
+import { getAllPosts, getAllTags, getPostsByTag } from '@/lib/blog';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
 import type { MetadataRoute } from 'next';
 
@@ -9,33 +9,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      changeFrequency: 'weekly',
-      priority: 1,
     },
     {
       url: `${baseUrl}/blog`,
-      changeFrequency: 'daily',
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/pricing`,
-      changeFrequency: 'monthly',
-      priority: 0.9,
     },
     {
       url: `${baseUrl}/security`,
-      changeFrequency: 'yearly',
-      priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
-      changeFrequency: 'yearly',
-      priority: 0.2,
     },
     {
       url: `${baseUrl}/terms`,
-      changeFrequency: 'yearly',
-      priority: 0.2,
     },
   ];
 
@@ -44,9 +32,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.date),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  // Tag pages: only include tags that have enough content to avoid thin pages.
+  const tagPages: MetadataRoute.Sitemap = getAllTags()
+    .filter((tag) => getPostsByTag(tag).length >= 2)
+    .map((tag) => ({
+      url: `${baseUrl}/blog/tag/${encodeURIComponent(tag)}`,
+    }));
+
+  return [...staticPages, ...blogPages, ...tagPages];
 }
