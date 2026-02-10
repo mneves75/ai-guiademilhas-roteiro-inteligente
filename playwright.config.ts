@@ -72,17 +72,24 @@ function getWebServerEnv(): Record<string, string> {
 }
 
 function getDbSetupCommand(): string {
+  // Keep E2E deterministic: wipe the isolated distDir so partial/corrupt artifacts can't cause flaky
+  // `next build` failures (we've seen missing `_buildManifest.js.tmp.*` writes otherwise).
+  const wipeDistDir =
+    `node -e "const fs=require('fs');` +
+    `const p=process.env.NEXT_DIST_DIR||'.next-playwright/dist';` +
+    `fs.rmSync(p,{recursive:true,force:true});"`;
+
   if (dbProvider === 'sqlite') {
     // E2E should be deterministic and not depend on external services by default.
     return (
-      `node -e "const fs=require('fs');` +
+      `${wipeDistDir} && node -e "const fs=require('fs');` +
       `fs.mkdirSync('.next-playwright',{recursive:true});` +
       `fs.rmSync(process.env.SQLITE_PATH,{force:true});"` +
       ` && pnpm db:push:sqlite && pnpm db:seed`
     );
   }
   // For postgres runs, rely on the configured DATABASE_URL.
-  return `pnpm db:push:pg && pnpm db:seed`;
+  return `${wipeDistDir} && pnpm db:push:pg && pnpm db:seed`;
 }
 
 // Default E2E should be deterministic without requiring every browser engine

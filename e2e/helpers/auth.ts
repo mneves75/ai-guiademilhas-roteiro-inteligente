@@ -25,11 +25,11 @@ export async function signUpAndReachWorkspaces(
   await page.goto(`/signup?callbackUrl=${callbackParam}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('form[data-testid="signup-form"]')).toBeVisible();
 
-  await page.getByLabel(/full name/i).fill(name);
+  await page.getByLabel(/full name|nome completo/i).fill(name);
   await page.getByLabel(/email address|email/i).fill(email);
-  await page.getByLabel(/^password$/i).fill(password);
+  await page.getByLabel(/^(password|senha)$/i).fill(password);
 
-  await page.getByRole('button', { name: /create/i }).click();
+  await page.getByRole('button', { name: /create account|criar conta/i }).click();
   await expect(page).toHaveURL(/\/dashboard\/workspaces/, { timeout: 15_000 });
   await expect(
     page.getByRole('heading', { level: 1, name: 'Workspaces', exact: true })

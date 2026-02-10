@@ -15,16 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New unit coverage for SEO routes (sitemap, robots, RSS)
 - Server Action to switch locale by setting an `httpOnly` locale cookie (no client `document.cookie` writes)
 - New pt-BR technical blog posts to establish topical authority (auth, SEO, E2E, Stripe, multi-tenancy)
+- Wide Playwright smoke that exercises key public + protected screens in pt-BR (chromium-only)
 
 ### Changed
 
 - `sitemap.xml` now includes only indexable public pages plus blog posts and tag pages (and excludes auth pages)
 - `robots.txt` is now minimal (only disallows `/api/`); sensitive surfaces are controlled via `noindex` metadata + `X-Robots-Tag`
 - Locale resolution is memoized per request and propagated without client-side locale state (refresh-driven consistency)
+- `PW_FULL=1 pnpm test:e2e` now builds/starts outside Playwright's `webServer` to reduce peak memory and avoid `exit 137`
 
 ### Fixed
 
 - Completed pt-BR translations across the main UI surfaces (marketing, blog, dashboard, admin)
+- Signup page no longer hardcodes an English conjunction (uses localized `common.and`)
 
 ## [0.3.0] - 2026-02-10
 

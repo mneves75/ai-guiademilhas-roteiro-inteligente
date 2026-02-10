@@ -200,7 +200,7 @@ export default function SignupForm({
           <Link href="/terms" className="text-blue-600 hover:text-blue-500">
             {t.termsOfService}
           </Link>{' '}
-          and{' '}
+          {m(locale).common.and}{' '}
           <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
             {t.privacyPolicy}
           </Link>

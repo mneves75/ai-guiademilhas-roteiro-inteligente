@@ -10,13 +10,11 @@ test.describe('Protected Routes', () => {
 
   test('dashboard renders pt-BR when locale cookie is set', async ({ page }, testInfo) => {
     const baseURL = testInfo.project.use.baseURL as string;
-    const { hostname } = new URL(baseURL);
     await page.context().addCookies([
       {
         name: 'shipped_locale',
         value: 'pt-BR',
-        domain: hostname,
-        path: '/',
+        url: baseURL,
         httpOnly: true,
         sameSite: 'Lax',
       },
