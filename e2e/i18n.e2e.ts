@@ -11,8 +11,19 @@ test.describe('i18n', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('link', { name: 'Começar a construir' })).toBeVisible();
 
+    // Cross-screen sanity: server-rendered pages should pick up locale from the cookie.
+    await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
+    await expect(
+      page.getByRole('heading', { name: /(pricing|precos|pre\u00e7os)/i })
+    ).toBeVisible();
+
+    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
+    await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
+
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
-    await expect(page.getByRole('link', { name: 'Começar a construir' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
   });
 });

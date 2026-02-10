@@ -105,7 +105,9 @@ test.describe('Authentication Pages', () => {
 test.describe('Pricing', () => {
   test('should load the pricing page', async ({ page }) => {
     await gotoPage(page, '/pricing');
-    await expect(page.getByRole('heading', { name: /pricing|precos/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /(pricing|precos|pre\u00e7os)/i })
+    ).toBeVisible();
   });
 });
 

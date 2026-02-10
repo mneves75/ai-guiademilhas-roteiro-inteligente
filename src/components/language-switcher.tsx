@@ -35,8 +35,13 @@ export function LanguageSwitcher() {
 
     setOptimisticLocale(nextLocale);
     startTransition(async () => {
-      await setLocaleAction(nextLocale);
-      router.refresh();
+      try {
+        await setLocaleAction(nextLocale);
+        router.refresh();
+      } catch {
+        // Network/runtime failures should not leave the control stuck in an optimistic state.
+        setOptimisticLocale(null);
+      }
     });
   }
 

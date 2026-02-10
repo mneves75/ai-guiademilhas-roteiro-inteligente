@@ -1,6 +1,6 @@
-# Solucao Elegante: Auth Estavel + E2E Deterministico (Next.js App Router)
+# Solucao Elegante: Invariantes Para Auth, i18n e E2E Deterministico (Next.js App Router)
 
-Atualizado: 2026-02-09
+Atualizado: 2026-02-10
 
 ## Contexto
 
@@ -12,7 +12,7 @@ Isso e uma classe de bug: **estado de UI dependente de comportamento temporal** 
 
 1. **Invariavel > timing**: um formulario so e confiavel se o estado preenchido nao puder ser "perdido" por re-render/remount entre o fill e o submit.
 2. **Parse de query nao pertence ao client**: `callbackUrl`, `token` e similares sao entrada nao confiavel; devem ser normalizados no server e tratados como dados, nao como dependencia de hidratacao.
-3. **Sem estados intermediarios**: locale e parametros de URL devem existir no primeiro render (Server Component), nao "corrigidos depois" via `useEffect`.
+3. **Sem estados intermediarios**: locale e parametros de URL devem existir no primeiro render (Server Component), nao "corrigidos depois" via `useEffect` e nem por estado client-side divergente do server.
 4. **Validacao deterministica**: nao depender de tooltip HTML5 para validacao (varia por browser/locale); preferir `noValidate` + mensagens por-campo controladas.
 5. **Nao vazar mensagens internas**: erro cru tipo `[body.email] ...` nao deve aparecer na UI.
 6. **Testes nao devem exigir codigo de producao ad-hoc**: inserir marcadores de hidratacao ou flags runtime para satisfazer E2E e acoplamento e cria divida.
@@ -57,7 +57,9 @@ Arquivos:
 
 Notas:
 
-- `initialLocale` vem do server (cookie) e entra como prop; nao existe "flash" de idioma.
+- Locale vem do server (cookie / Accept-Language) e entra como dado do primeiro render:
+  - `getRequestLocale()` memoizado por request (`react/cache`) para consistencia.
+  - Troca de idioma via Server Action que seta cookie `httpOnly` e faz `router.refresh()` (sem `document.cookie`).
 - Formularios usam `noValidate` e validacao controlada; erros aparecem por campo com `aria-*`.
 
 ### 1.1) Erros de auth (sem vazamento + testavel)
@@ -91,6 +93,12 @@ Arquivos:
 ### 4) Consistencia de idioma (pt-BR/en)
 
 Removidas strings hardcoded em auth; centralizadas em `src/lib/messages.ts`.
+
+O que torna isso "elegante" (nao so "funciona"):
+
+- A UI nunca precisa "descobrir" locale no client.
+- A mudanca de locale e aplicada pelo server (cookie httpOnly), entao toda a arvore fica consistente apos refresh.
+- Existe teste E2E de i18n cruzando telas publicas (`/`, `/pricing`, `/blog`).
 
 ## Evidencia (gates)
 
