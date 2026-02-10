@@ -131,9 +131,25 @@ test.describe('SEO', () => {
     const ogTitle = page.locator('meta[property="og:title"]');
     await expect(ogTitle).toHaveAttribute('content', /.+/);
 
+    // Canonical must match the locale-stable public URL.
+    const canonical = page.locator('link[rel="canonical"]').first();
+    await expect(canonical).toHaveAttribute('href', /\/en\/?$/);
+
+    // hreflang should be present for pages that exist in both locales.
+    await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="alternate"][hreflang="en-US"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="alternate"][hreflang="pt-BR"]')).toHaveCount(1);
+
     // RSS autodiscovery should exist (from root metadata alternates)
     const rssAlternate = page.locator('link[rel="alternate"][type="application/rss+xml"]');
     await expect(rssAlternate).toHaveCount(1);
+  });
+
+  test('should render locale-stable canonicals in pt-BR', async ({ page }) => {
+    await gotoPage(page, '/pt-br');
+
+    const canonical = page.locator('link[rel="canonical"]').first();
+    await expect(canonical).toHaveAttribute('href', /\/pt-br\/?$/);
   });
 
   test('should have robots.txt', async ({ request }) => {
