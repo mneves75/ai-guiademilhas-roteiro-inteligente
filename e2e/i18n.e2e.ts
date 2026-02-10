@@ -1,12 +1,24 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('i18n', () => {
-  test('switches to pt-BR and persists via cookie', async ({ page }) => {
-    await page.goto('/');
+  test('switches to pt-BR and persists via cookie', async ({ page }, testInfo) => {
+    const isMobile = testInfo.project.name.includes('mobile');
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     const switcher = page.getByRole('combobox', { name: /Language|Idioma/ });
-    await switcher.click();
-    await page.getByRole('option', { name: 'Português (Brasil)' }).click();
+    if (isMobile) await switcher.tap();
+    else await switcher.click();
+
+    const optionByRole = page.getByRole('option', { name: 'Português (Brasil)' });
+    const optionByAttr = page
+      .locator('[role="option"]')
+      .filter({ hasText: 'Português (Brasil)' })
+      .first();
+    const option = (await optionByRole.count()) > 0 ? optionByRole : optionByAttr;
+    await expect(option).toBeVisible();
+    if (isMobile) await option.tap();
+    else await option.click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('link', { name: 'Começar a construir' })).toBeVisible();
