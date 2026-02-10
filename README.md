@@ -12,7 +12,8 @@ A modern, full-featured Next.js 16 boilerplate for shipping production apps fast
 - **Admin Dashboard** - User list/details, subscriptions, revenue, impersonation
 - **Email System** - Resend + React Email templates + dev preview
 - **Geist + shadcn/ui** - Design system and UI primitives
-- **I18N** - Cookie-based locale + language switcher (en, pt-BR)
+- **I18N (SEO-safe)** - Locale-prefixed public URLs (`/en/*`, `/pt-br/*`) + cookie preference + language switcher
+- **SEO Baseline** - Sitemap, robots, RSS autodiscovery, canonical + `hreflang` alternates enforced
 - **Storage** - Avatar uploads with adapters (local, R2, Vercel Blob)
 - **Full CI/CD** - GitHub Actions + Vercel previews
 
@@ -27,7 +28,7 @@ cd nextjs-bootstrapped-shipped
 ./init.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your app.
+Open [http://localhost:3000](http://localhost:3000) to see your app (redirects to `/en` by default).
 
 ## Usage
 

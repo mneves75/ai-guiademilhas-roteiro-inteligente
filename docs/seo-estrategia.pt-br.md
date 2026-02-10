@@ -203,8 +203,8 @@ Sem ads, o maior leverage e conteudo + distribuicao + loop:
   - 1 pagina por intencao; o resto vira satelite, nao concorrente
 - Vazamento de indexacao:
   - confiar em `noindex` (meta + header) + auditoria via Search Console, nao em disallow
-- i18n por cookie (mesma URL muda por locale):
-  - se o conteudo diferir por idioma, o ideal e URL por idioma (ex.: /pt-br/...)
+- i18n por cookie (anti-padrao: mesma URL muda por locale):
+  - evitado aqui: as URLs publicas sao estaveis por idioma (`/en/*`, `/pt-br/*`) com canonical + `hreflang`.
 
 ## 7) Referencias (fontes primarias)
 

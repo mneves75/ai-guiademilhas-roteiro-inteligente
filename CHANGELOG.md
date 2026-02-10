@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- (none)
+
+### Changed
+
+- (none)
+
+### Fixed
+
+- (none)
+
+## [0.4.0] - 2026-02-10
+
+### Added
+
 - RSS feed for the blog at `/rss.xml`
 - Optional site verification env vars for SEO (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`)
 - Noindex metadata for sensitive routes (dashboard and invite flows)
@@ -148,7 +162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - pnpm as package manager
   - GitHub repository with best practices docs
 
-[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/releases/tag/v0.1.0
