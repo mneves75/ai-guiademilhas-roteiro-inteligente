@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { authClient } from '@/lib/auth-client';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
+import { publicPathname } from '@/lib/locale-routing';
 
 type InviteInfo = {
   workspace: { name: string; slug: string };
@@ -21,6 +22,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   const router = useRouter();
   const { locale } = useLocale();
   const t = m(locale);
+  const homePath = publicPathname(locale, '/');
   const roleLabel = (role: string) => {
     if (role === 'owner') return t.roles.owner;
     if (role === 'admin') return t.roles.admin;
@@ -100,7 +102,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/">{t.invite.goHome}</Link>
+              <Link href={homePath}>{t.invite.goHome}</Link>
             </Button>
           </CardContent>
         </Card>

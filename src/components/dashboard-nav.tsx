@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
+import { publicPathname } from '@/lib/locale-routing';
 
 interface DashboardNavProps {
   user: {
@@ -28,6 +29,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
   const pathname = usePathname();
   const { locale } = useLocale();
   const t = m(locale);
+  const homePath = publicPathname(locale, '/');
 
   const navigation = [
     { name: t.dashboard.nav.overview, href: '/dashboard', icon: LayoutDashboard },
@@ -42,7 +44,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
   return (
     <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
       <div className="flex h-14 items-center border-b px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
+        <Link href={homePath} className="flex items-center gap-2 font-semibold">
           <span>Shipped</span>
         </Link>
       </div>

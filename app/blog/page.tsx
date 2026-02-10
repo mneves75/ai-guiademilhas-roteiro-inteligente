@@ -10,35 +10,41 @@ import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { toIntlLocale } from '@/lib/intl';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
-export const metadata: Metadata = {
-  title: 'Blog',
-  description:
-    'Articles, tutorials, and updates about building production-ready Next.js applications.',
-  alternates: { canonical: '/blog' },
-  openGraph: {
-    title: 'Blog',
-    description:
-      'Articles, tutorials, and updates about building production-ready Next.js applications.',
-    type: 'website',
-    url: '/blog',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Blog',
-    description:
-      'Articles, tutorials, and updates about building production-ready Next.js applications.',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).blog;
+  const canonical = publicPathname(locale, '/blog');
+
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: publicAlternates(locale, '/blog'),
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      type: 'website',
+      url: canonical,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.title,
+      description: t.description,
+    },
+  };
+}
 
 export default async function BlogPage() {
   const locale = await getRequestLocale();
   const t = m(locale);
   const intlLocale = toIntlLocale(locale);
 
-  const posts = getAllPosts();
-  const tags = getAllTags();
+  const posts = getAllPosts().filter((p) => p.locale === locale);
+  const tags = getAllTags({ locale });
   const url = resolvePublicOrigin();
+  const blogPath = publicPathname(locale, '/blog');
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-16">
@@ -47,7 +53,7 @@ export default async function BlogPage() {
           '@context': 'https://schema.org',
           '@type': 'Blog',
           name: 'Blog',
-          url: `${url}/blog`,
+          url: `${url}${blogPath}`,
         }}
       />
       <div className="mb-12 text-center">
@@ -58,11 +64,11 @@ export default async function BlogPage() {
       {tags.length > 0 && (
         <div className="mb-8 flex flex-wrap justify-center gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/blog">{t.blog.allPosts}</Link>
+            <Link href={blogPath}>{t.blog.allPosts}</Link>
           </Button>
           {tags.map((tag) => (
             <Button key={tag} asChild variant="ghost" size="sm">
-              <Link href={`/blog/tag/${tag}`}>
+              <Link href={publicPathname(locale, `/blog/tag/${encodeURIComponent(tag)}`)}>
                 <Tag className="mr-1 h-3 w-3" />
                 {tag}
               </Link>
@@ -80,7 +86,11 @@ export default async function BlogPage() {
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} className="block h-full">
+            <Link
+              key={post.slug}
+              href={publicPathname(locale, `/blog/${post.slug}`)}
+              className="block h-full"
+            >
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {post.image && (
                   <div className="relative aspect-video overflow-hidden rounded-t-lg">

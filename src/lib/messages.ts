@@ -100,6 +100,11 @@ const EN_MESSAGES = {
   landing: {
     skipToContent: 'Skip to content',
     mobileNavAriaOpen: 'Open navigation menu',
+    meta: {
+      title: 'NextJS Bootstrapped Shipped',
+      description:
+        'Open-source Next.js 16 boilerplate for shipping production-ready apps fast. Authentication, payments, multi-tenancy, and more included.',
+    },
     hero: {
       badgeOpenSource: 'Open Source',
       headlinePrefix: 'Ship your SaaS in ',
@@ -943,6 +948,11 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
   landing: {
     skipToContent: 'Pular para o conteúdo',
     mobileNavAriaOpen: 'Abrir menu de navegação',
+    meta: {
+      title: 'NextJS Bootstrapped Shipped',
+      description:
+        'Boilerplate open-source de Next.js 16 para lançar apps prontos para produção com rapidez. Autenticação, pagamentos, multi-tenancy e mais.',
+    },
     hero: {
       badgeOpenSource: 'Open Source',
       headlinePrefix: 'Lance seu SaaS em ',

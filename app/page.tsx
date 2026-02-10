@@ -14,12 +14,44 @@ import { JsonLd } from '@/components/json-ld';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
+import type { Metadata } from 'next';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).landing.meta;
+  const canonical = publicPathname(locale, '/');
+
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: {
+      ...publicAlternates(locale, '/'),
+      types: {
+        'application/rss+xml': '/rss.xml',
+      },
+    },
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      type: 'website',
+      url: canonical,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.title,
+      description: t.description,
+    },
+  };
+}
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
   const t = m(locale);
   const url = resolvePublicOrigin();
   const appName = 'NextJS Bootstrapped Shipped';
+  const canonicalPath = publicPathname(locale, '/');
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -28,7 +60,7 @@ export default async function HomePage() {
           '@context': 'https://schema.org',
           '@type': 'WebSite',
           name: appName,
-          url,
+          url: `${url}${canonicalPath}`,
         }}
       />
       {/* Skip link for accessibility */}

@@ -8,18 +8,28 @@ describe('SEO routes', () => {
     const entries = sitemap();
     const urls = entries.map((e) => e.url);
 
-    expect(urls).toContain('http://localhost:3000');
-    expect(urls).toContain('http://localhost:3000/blog');
-    expect(urls).toContain('http://localhost:3000/pricing');
-    expect(urls).toContain('http://localhost:3000/privacy');
-    expect(urls).toContain('http://localhost:3000/terms');
-    expect(urls).toContain('http://localhost:3000/security');
+    expect(urls).toContain('http://localhost:3000/en');
+    expect(urls).toContain('http://localhost:3000/en/blog');
+    expect(urls).toContain('http://localhost:3000/en/pricing');
+    expect(urls).toContain('http://localhost:3000/en/privacy');
+    expect(urls).toContain('http://localhost:3000/en/terms');
+    expect(urls).toContain('http://localhost:3000/en/security');
+
+    expect(urls).toContain('http://localhost:3000/pt-br');
+    expect(urls).toContain('http://localhost:3000/pt-br/blog');
+    expect(urls).toContain('http://localhost:3000/pt-br/pricing');
+    expect(urls).toContain('http://localhost:3000/pt-br/privacy');
+    expect(urls).toContain('http://localhost:3000/pt-br/terms');
+    expect(urls).toContain('http://localhost:3000/pt-br/security');
 
     expect(urls).not.toContain('http://localhost:3000/login');
     expect(urls).not.toContain('http://localhost:3000/signup');
 
-    expect(urls.some((u) => u.includes('/blog/getting-started'))).toBe(true);
-    expect(urls.some((u) => u.includes('/blog/tag/'))).toBe(true);
+    expect(urls.some((u) => u.includes('/en/blog/getting-started'))).toBe(true);
+    expect(urls.some((u) => u.includes('/pt-br/blog/nextjs-saas-boilerplate-10-10'))).toBe(true);
+
+    expect(urls.some((u) => u.includes('/en/blog/tag/'))).toBe(true);
+    expect(urls.some((u) => u.includes('/pt-br/blog/tag/'))).toBe(true);
   });
 
   it('robots disallows sensitive sections', () => {
@@ -43,6 +53,6 @@ describe('SEO routes', () => {
     expect(body).toContain('<rss');
     expect(body).toContain('<channel>');
     expect(body).toContain('<item>');
-    expect(body).toContain('/blog/getting-started');
+    expect(body).toContain('/en/blog/getting-started');
   });
 });

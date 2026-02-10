@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/security/rate-limit';
 import { getOrCreateRequestId } from '@/lib/request-id';
+import { normalizeLocale, type Locale, LOCALE_COOKIE } from '@/lib/locale';
+import { publicPathname, stripPublicLocalePrefix } from '@/lib/locale-routing';
 import {
   incAuthRateLimited,
   incBlockedRequest,
@@ -13,9 +15,87 @@ const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/admin'] as const;
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
+const PUBLIC_LOCALIZED_PREFIXES = [
+  '/',
+  '/pricing',
+  '/blog',
+  '/privacy',
+  '/terms',
+  '/security',
+] as const;
+
 function withRequestId(response: NextResponse, requestId: string): NextResponse {
   response.headers.set('x-request-id', requestId);
   return response;
+}
+
+function localeFromAcceptLanguage(value: string | null): Locale | null {
+  if (!value) return null;
+
+  let best: { locale: Locale; q: number } | null = null;
+  for (const rawPart of value.split(',')) {
+    const part = rawPart.trim();
+    if (!part) continue;
+
+    const [tagRaw, ...params] = part.split(';').map((s) => s.trim());
+    const tag = (tagRaw ?? '').toLowerCase();
+
+    const normalized = (() => {
+      if (tag === 'en' || tag.startsWith('en-') || tag.startsWith('en_')) return 'en' as const;
+      if (tag === 'pt' || tag === 'pt-br' || tag === 'pt_br') return 'pt-BR' as const;
+      return null;
+    })();
+    if (!normalized) continue;
+
+    let q = 1;
+    for (const p of params) {
+      if (p.startsWith('q=')) {
+        const n = Number.parseFloat(p.slice(2));
+        if (Number.isFinite(n)) q = n;
+      }
+    }
+    if (!best || q > best.q) best = { locale: normalized, q };
+  }
+
+  return best?.locale ?? null;
+}
+
+function getPreferredLocale(request: NextRequest): Locale {
+  const fromCookie = request.cookies.get(LOCALE_COOKIE)?.value;
+  if (fromCookie) return normalizeLocale(fromCookie);
+
+  const fromHeader = localeFromAcceptLanguage(request.headers.get('accept-language'));
+  return fromHeader ?? 'en';
+}
+
+function isPublicLocalizedPath(pathname: string): boolean {
+  if (pathname === '/') return true;
+  if (pathname.startsWith('/blog/')) return true;
+  return (PUBLIC_LOCALIZED_PREFIXES as readonly string[]).some((p) => pathname === p);
+}
+
+function isNeverLocalizedPath(pathname: string): boolean {
+  return (
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/rss.xml' ||
+    pathname === '/health' ||
+    pathname.startsWith('/health/') ||
+    pathname === '/metrics' ||
+    pathname.startsWith('/metrics/') ||
+    pathname === '/api' ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/emails/') ||
+    pathname.startsWith('/invite/') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/.well-known/')
+  );
 }
 
 function generateCspNonce(): string {
@@ -110,8 +190,55 @@ function getRequestOriginForCsrf(request: NextRequest): string | null {
 export async function proxy(request: NextRequest) {
   const startedAt = Date.now();
   const requestId = getOrCreateRequestId(request);
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   const isApi = pathname === '/api' || pathname.startsWith('/api/');
+
+  // ---------------------------------------------------------------------------
+  // Locale-stable public URLs (SEO): `/en/...` and `/pt-br/...`
+  // - Keep auth/protected/api/infra paths unprefixed.
+  // - Rewrite locale-prefixed public pages to the underlying App Router routes.
+  // - Redirect legacy unprefixed public pages to the locale-prefixed canonical URL.
+  // ---------------------------------------------------------------------------
+  const prefixed = stripPublicLocalePrefix(pathname);
+  if (prefixed) {
+    if (isNeverLocalizedPath(prefixed.restPathname)) {
+      // Strip locale prefixes on non-public surfaces (defense-in-depth).
+      const dest = new URL(`${prefixed.restPathname}${search}`, request.url);
+      const res = NextResponse.redirect(dest, 308);
+      if (
+        prefixed.restPathname.startsWith('/dashboard') ||
+        prefixed.restPathname.startsWith('/admin') ||
+        prefixed.restPathname.startsWith('/invite') ||
+        prefixed.restPathname === '/emails/preview'
+      ) {
+        res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      }
+      res.headers.set('Cache-Control', 'no-store, max-age=0');
+      return withRequestId(res, requestId);
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-request-id', requestId);
+    requestHeaders.set('x-shipped-locale', prefixed.locale);
+    requestHeaders.set('x-shipped-public-pathname', pathname);
+
+    const dest = request.nextUrl.clone();
+    dest.pathname = prefixed.restPathname;
+    const res = NextResponse.rewrite(dest, { request: { headers: requestHeaders } });
+    res.headers.set('x-request-id', requestId);
+    observeProxyLatencyMs('public_rewrite', Date.now() - startedAt);
+    return res;
+  }
+
+  if (!isNeverLocalizedPath(pathname) && isPublicLocalizedPath(pathname)) {
+    const locale = getPreferredLocale(request);
+    const destPath = publicPathname(locale, pathname);
+    const dest = new URL(`${destPath}${search}`, request.url);
+    const res = NextResponse.redirect(dest, 308);
+    res.headers.set('Vary', 'Accept-Language, Cookie');
+    res.headers.set('Cache-Control', 'no-store, max-age=0');
+    return withRequestId(res, requestId);
+  }
 
   // ---------------------------------------------------------------------------
   // CSRF / cross-site protections (state-changing API routes)
@@ -201,6 +328,7 @@ export async function proxy(request: NextRequest) {
     const cspHeader = buildProtectedCsp(nonce);
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-request-id', requestId);
+    requestHeaders.set('x-shipped-locale', getPreferredLocale(request));
     requestHeaders.set('x-nonce', nonce);
     requestHeaders.set('Content-Security-Policy', cspHeader);
 
@@ -217,6 +345,7 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-request-id', requestId);
+  requestHeaders.set('x-shipped-locale', getPreferredLocale(request));
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('x-request-id', requestId);
   return response;

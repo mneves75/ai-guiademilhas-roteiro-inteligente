@@ -1,4 +1,5 @@
 import { getAllPosts } from '@/lib/blog';
+import { publicPathname } from '@/lib/locale-routing';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
 
 function escapeXml(input: string): string {
@@ -17,7 +18,7 @@ export function GET() {
 
   const items = posts
     .map((post) => {
-      const link = `${baseUrl}/blog/${post.slug}`;
+      const link = `${baseUrl}${publicPathname(post.locale, `/blog/${post.slug}`)}`;
       const pubDate = new Date(post.date).toUTCString();
 
       const categories = post.tags.map((tag) => `<category>${escapeXml(tag)}</category>`).join('');
@@ -45,7 +46,7 @@ export function GET() {
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
     '<channel>',
     '<title>NextJS Bootstrapped Shipped Blog</title>',
-    `<link>${escapeXml(`${baseUrl}/blog`)}</link>`,
+    `<link>${escapeXml(`${baseUrl}/en/blog`)}</link>`,
     '<description>Articles, tutorials, and updates about building production-ready Next.js applications.</description>',
     '<language>en-US</language>',
     `<lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>`,

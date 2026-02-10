@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPostBySlug, getAllSlugs } from '@/lib/blog';
+import { getPostBySlug } from '@/lib/blog';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
@@ -15,19 +15,17 @@ import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { toIntlLocale } from '@/lib/intl';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
+import { publicPathname } from '@/lib/locale-routing';
+import { publicAlternates } from '@/lib/seo/public-alternates';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const slugs = getAllSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const locale = await getRequestLocale();
+  const post = getPostBySlug(slug, { locale });
 
   if (!post) {
     return {
@@ -36,13 +34,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const url = resolvePublicOrigin();
-  const canonical = `/blog/${post.slug}`;
+  const canonical = publicPathname(locale, `/blog/${post.slug}`);
 
   return {
     title: `${post.title} | Blog`,
     description: post.description,
     authors: [{ name: post.author.name }],
-    alternates: { canonical },
+    alternates: publicAlternates(locale, `/blog/${post.slug}`),
     openGraph: {
       title: post.title,
       description: post.description,
@@ -68,7 +66,7 @@ export default async function BlogPostPage({ params }: Props) {
   const locale = await getRequestLocale();
   const t = m(locale);
   const intlLocale = toIntlLocale(locale);
-  const post = getPostBySlug(slug);
+  const post = getPostBySlug(slug, { locale });
 
   if (!post) {
     notFound();
@@ -81,7 +79,8 @@ export default async function BlogPostPage({ params }: Props) {
     ),
   });
   const url = resolvePublicOrigin();
-  const canonical = `${url}/blog/${post.slug}`;
+  const blogPath = publicPathname(locale, '/blog');
+  const canonical = `${url}${publicPathname(locale, `/blog/${post.slug}`)}`;
 
   return (
     <article className="container mx-auto max-w-3xl px-4 py-16">
@@ -99,7 +98,7 @@ export default async function BlogPostPage({ params }: Props) {
         }}
       />
       <Button asChild variant="ghost" className="mb-8">
-        <Link href="/blog">
+        <Link href={blogPath}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.blog.backToBlog}
         </Link>
@@ -114,7 +113,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         <div className="mb-4 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
-            <Link key={tag} href={`/blog/tag/${tag}`}>
+            <Link key={tag} href={publicPathname(locale, `/blog/tag/${encodeURIComponent(tag)}`)}>
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary hover:bg-primary/20">
                 <Tag className="h-3 w-3" />
                 {tag}
@@ -178,7 +177,7 @@ export default async function BlogPostPage({ params }: Props) {
       <footer className="mt-12 border-t pt-8">
         <div className="flex items-center justify-between">
           <Button asChild variant="outline">
-            <Link href="/blog">
+            <Link href={blogPath}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t.blog.allPosts}
             </Link>

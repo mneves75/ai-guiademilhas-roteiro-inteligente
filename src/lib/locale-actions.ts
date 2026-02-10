@@ -13,7 +13,14 @@ function shouldUseSecureCookies(): boolean {
   if (!raw) return process.env.NODE_ENV === 'production';
 
   try {
-    return new URL(raw).protocol === 'https:';
+    const url = new URL(raw);
+    const hostname = url.hostname.toLowerCase();
+
+    // Avoid setting `Secure` cookies on localhost, even in production builds (e.g. Playwright / preview envs).
+    // Browsers won't persist Secure cookies over plain HTTP.
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+
+    return url.protocol === 'https:';
   } catch {
     return process.env.NODE_ENV === 'production';
   }

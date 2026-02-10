@@ -10,11 +10,13 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
+import { publicPathname } from '@/lib/locale-routing';
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const { locale } = useLocale();
   const t = m(locale).nav;
+  const homePath = publicPathname(locale, '/');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -31,7 +33,7 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href={homePath} className="flex items-center space-x-2">
           <span className="text-lg font-bold">Shipped</span>
         </Link>
 

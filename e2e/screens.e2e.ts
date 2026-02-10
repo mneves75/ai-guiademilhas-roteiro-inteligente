@@ -24,23 +24,23 @@ test.describe('Screens Smoke', () => {
     ]);
 
     // Public screens.
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('link', { name: 'Começar a construir' })).toBeVisible();
 
-    await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br/pricing', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(
       page.getByRole('heading', { name: /(pricing|precos|pre\u00e7os)/i })
     ).toBeVisible();
 
-    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br/blog', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
 
     // Follow the first post link to validate dynamic blog pages render.
     const firstPost = page
-      .locator('a[href^="/blog/"]:not([href^="/blog/tag/"]):not([href="/blog"])')
+      .locator('a[href^="/pt-br/blog/"]:not([href^="/pt-br/blog/tag/"]):not([href="/pt-br/blog"])')
       .first();
     if ((await firstPost.count()) > 0) {
       await firstPost.click({ timeout: 15_000 });
@@ -48,15 +48,15 @@ test.describe('Screens Smoke', () => {
       await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     }
 
-    await page.goto('/terms', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br/terms', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('heading', { name: /termos/i })).toBeVisible();
 
-    await page.goto('/privacy', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br/privacy', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(page.getByRole('heading', { name: /privacidade/i })).toBeVisible();
 
-    await page.goto('/security', { waitUntil: 'domcontentloaded' });
+    await page.goto('/pt-br/security', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
     await expect(
       page.getByRole('heading', { level: 1, name: /pol[ií]tica de seguran[cç]a|security policy/i })

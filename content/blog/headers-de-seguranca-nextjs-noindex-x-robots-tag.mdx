@@ -1,6 +1,7 @@
 ---
 title: 'Headers em Next.js: baseline de seguranca e noindex em superficies sensiveis'
 description: 'Como aplicar headers baseline (nosniff, frame-ancestors, HSTS correto) e reforcar noindex com X-Robots-Tag em rotas privadas.'
+locale: 'pt-BR'
 date: '2026-02-10'
 author:
   name: 'Shipped Team'
@@ -34,4 +35,3 @@ Motivo: o header aparece mesmo em respostas nao-HTML (redirects, etc) e e difici
 ## Teste (DAST-lite)
 
 Veja `e2e/security-headers.e2e.ts` e `e2e/home.e2e.ts` (assert de `X-Robots-Tag`).
-

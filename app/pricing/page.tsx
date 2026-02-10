@@ -10,28 +10,37 @@ import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { getLocalizedPlans } from '@/lib/plan-catalog-localized';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
-export const metadata: Metadata = {
-  title: 'Pricing',
-  description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
-  alternates: { canonical: '/pricing' },
-  openGraph: {
-    title: 'Pricing',
-    description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
-    url: '/pricing',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Pricing',
-    description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).pricingPage;
+  const canonical = publicPathname(locale, '/pricing');
+
+  return {
+    title: t.title,
+    description: t.subtitle,
+    alternates: publicAlternates(locale, '/pricing'),
+    openGraph: {
+      title: t.title,
+      description: t.subtitle,
+      url: canonical,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.title,
+      description: t.subtitle,
+    },
+  };
+}
 
 export default async function PricingPage() {
   const locale = await getRequestLocale();
   const t = m(locale);
   const plans = getLocalizedPlans(locale);
   const url = resolvePublicOrigin();
+  const pricingPath = publicPathname(locale, '/pricing');
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -40,7 +49,7 @@ export default async function PricingPage() {
           '@context': 'https://schema.org',
           '@type': 'WebPage',
           name: t.pricingPage.title,
-          url: `${url}/pricing`,
+          url: `${url}${pricingPath}`,
         }}
       />
       <Header />

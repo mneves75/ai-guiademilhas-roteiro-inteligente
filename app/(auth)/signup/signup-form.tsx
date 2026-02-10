@@ -8,6 +8,7 @@ import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
 import { isValidEmail } from '@/lib/validation/email';
 import { mapSignUpError } from '@/lib/auth/ui-errors';
+import { publicPathname } from '@/lib/locale-routing';
 
 export default function SignupForm({
   callbackUrl,
@@ -31,6 +32,8 @@ export default function SignupForm({
   const [loading, setLoading] = useState(false);
 
   const t = m(locale).auth;
+  const termsPath = publicPathname(locale, '/terms');
+  const privacyPath = publicPathname(locale, '/privacy');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -197,11 +200,11 @@ export default function SignupForm({
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-400">
           {t.bySigningUp}{' '}
-          <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+          <Link href={termsPath} className="text-blue-600 hover:text-blue-500">
             {t.termsOfService}
           </Link>{' '}
           {m(locale).common.and}{' '}
-          <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+          <Link href={privacyPath} className="text-blue-600 hover:text-blue-500">
             {t.privacyPolicy}
           </Link>
         </p>

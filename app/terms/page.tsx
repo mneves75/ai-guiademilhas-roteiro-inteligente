@@ -1,17 +1,25 @@
 import type { Metadata } from 'next';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
-export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'Terms of service for NextJS Bootstrapped Shipped.',
-  alternates: { canonical: '/terms' },
-  openGraph: {
-    title: 'Terms of Service',
-    description: 'Terms of service for NextJS Bootstrapped Shipped.',
-    url: '/terms',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).legal;
+  const canonical = publicPathname(locale, '/terms');
+
+  return {
+    title: t.termsTitle,
+    description: t.boilerplate,
+    alternates: publicAlternates(locale, '/terms'),
+    openGraph: {
+      title: t.termsTitle,
+      description: t.boilerplate,
+      url: canonical,
+    },
+  };
+}
 
 export default async function TermsPage() {
   const locale = await getRequestLocale();

@@ -18,12 +18,6 @@ const BING_SITE_VERIFICATION = process.env.BING_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  alternates: {
-    canonical: '/',
-    types: {
-      'application/rss+xml': '/rss.xml',
-    },
-  },
   verification: {
     ...(GOOGLE_SITE_VERIFICATION ? { google: GOOGLE_SITE_VERIFICATION } : {}),
     ...(BING_SITE_VERIFICATION
@@ -56,7 +50,6 @@ export const metadata: Metadata = {
   creator: 'Shipped Team',
   openGraph: {
     type: 'website',
-    locale: 'en_US',
     url: APP_URL,
     siteName: APP_NAME,
     title: APP_NAME,

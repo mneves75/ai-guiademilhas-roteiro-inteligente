@@ -1,6 +1,7 @@
 ---
 title: 'Playwright E2E deterministico em Next.js (standalone): o que realmente reduz flakiness'
 description: 'E2E em Next.js falha por timing, reuse de build dir e dependencia externa. Aqui esta o minimo para tornar o suite deterministico.'
+locale: 'pt-BR'
 date: '2026-02-10'
 author:
   name: 'Shipped Team'
@@ -37,4 +38,3 @@ Veja `e2e/protected.e2e.ts`.
 ## Bonus: asserts de SEO e headers sem navegar
 
 Arquivos como `robots.txt` e `sitemap.xml` nao sao HTML. Use `request.get()` e valide status/body, como em `e2e/home.e2e.ts`.
-

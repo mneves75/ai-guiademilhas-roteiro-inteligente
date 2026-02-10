@@ -1,17 +1,25 @@
 import type { Metadata } from 'next';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
-export const metadata: Metadata = {
-  title: 'Security Policy',
-  description: 'How to report security vulnerabilities responsibly.',
-  alternates: { canonical: '/security' },
-  openGraph: {
-    title: 'Security Policy',
-    description: 'How to report security vulnerabilities responsibly.',
-    url: '/security',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).securityPolicy;
+  const canonical = publicPathname(locale, '/security');
+
+  return {
+    title: t.title,
+    description: t.intro,
+    alternates: publicAlternates(locale, '/security'),
+    openGraph: {
+      title: t.title,
+      description: t.intro,
+      url: canonical,
+    },
+  };
+}
 
 function resolveContactEmail() {
   return process.env.SECURITY_CONTACT_EMAIL?.trim() || 'marcusneves2004@yahoo.com.br';

@@ -1,17 +1,25 @@
 import type { Metadata } from 'next';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description: 'Privacy policy for NextJS Bootstrapped Shipped.',
-  alternates: { canonical: '/privacy' },
-  openGraph: {
-    title: 'Privacy Policy',
-    description: 'Privacy policy for NextJS Bootstrapped Shipped.',
-    url: '/privacy',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const t = m(locale).legal;
+  const canonical = publicPathname(locale, '/privacy');
+
+  return {
+    title: t.privacyTitle,
+    description: t.boilerplate,
+    alternates: publicAlternates(locale, '/privacy'),
+    openGraph: {
+      title: t.privacyTitle,
+      description: t.boilerplate,
+      url: canonical,
+    },
+  };
+}
 
 export default async function PrivacyPage() {
   const locale = await getRequestLocale();

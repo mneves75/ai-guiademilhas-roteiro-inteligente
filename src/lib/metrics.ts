@@ -82,7 +82,7 @@ export function incProtectedRedirect() {
 }
 
 export function observeProxyLatencyMs(
-  outcome: 'blocked' | 'rate_limited' | 'redirect' | 'protected',
+  outcome: 'blocked' | 'rate_limited' | 'redirect' | 'protected' | 'public_rewrite',
   ms: number
 ) {
   getAppMetrics().proxyLatencyMs.observe({ outcome }, ms);

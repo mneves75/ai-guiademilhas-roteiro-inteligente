@@ -17,12 +17,12 @@ async function gotoPage(page: Page, url: string) {
 
 test.describe('Home Page', () => {
   test('should load the home page', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
     await expect(page).toHaveTitle(/NextJS Bootstrapped Shipped/);
   });
 
   test('should have navigation links', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
 
     // Check for main navigation elements
     const primaryNav = page.getByRole('navigation', { name: 'Primary' });
@@ -31,7 +31,7 @@ test.describe('Home Page', () => {
   });
 
   test('should be responsive', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
 
     // Desktop viewport
     await page.setViewportSize({ width: 1280, height: 720 });
@@ -45,12 +45,12 @@ test.describe('Home Page', () => {
 
 test.describe('Blog Page', () => {
   test('should load the blog page', async ({ page }) => {
-    await gotoPage(page, '/blog');
+    await gotoPage(page, '/en/blog');
     await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
   });
 
   test('should display blog posts', async ({ page }) => {
-    await gotoPage(page, '/blog');
+    await gotoPage(page, '/en/blog');
 
     // Should have at least one blog post card or empty state
     const content = page.locator('main');
@@ -58,10 +58,10 @@ test.describe('Blog Page', () => {
   });
 
   test('should navigate to a blog post', async ({ page }) => {
-    await gotoPage(page, '/blog');
+    await gotoPage(page, '/en/blog');
 
     // Click on a blog post link if available
-    const postLink = page.locator('main a[href^="/blog/"]:not([href^="/blog/tag/"])').first();
+    const postLink = page.locator('main a[href^="/en/blog/"]:not([href^="/en/blog/tag/"])').first();
     if (await postLink.isVisible()) {
       await postLink.click();
       await expect(page.getByRole('link', { name: /back to blog/i })).toBeVisible();
@@ -104,7 +104,7 @@ test.describe('Authentication Pages', () => {
 
 test.describe('Pricing', () => {
   test('should load the pricing page', async ({ page }) => {
-    await gotoPage(page, '/pricing');
+    await gotoPage(page, '/en/pricing');
     await expect(
       page.getByRole('heading', { name: /(pricing|precos|pre\u00e7os)/i })
     ).toBeVisible();
@@ -113,7 +113,7 @@ test.describe('Pricing', () => {
 
 test.describe('SEO', () => {
   test('should have proper meta tags on home page', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
 
     // Check meta description
     const metaDescription = page.locator('meta[name="description"]');
@@ -166,14 +166,14 @@ test.describe('SEO', () => {
 
 test.describe('Accessibility', () => {
   test('should have proper heading hierarchy on home page', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
 
     const h1 = page.locator('h1').first();
     await expect(h1).toBeVisible();
   });
 
   test('should have proper ARIA labels', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
 
     // Navigation should be accessible
     const nav = page.getByRole('navigation', { name: 'Primary' });
@@ -181,7 +181,7 @@ test.describe('Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    await gotoPage(page, '/');
+    await gotoPage(page, '/en');
     await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
 
     // Tab through interactive elements

@@ -38,11 +38,14 @@ function localeFromAcceptLanguage(value: string | null): Locale | null {
 }
 
 export const getRequestLocale = cache(async (): Promise<Locale> => {
+  const h = await headers();
+  const fromProxy = h.get('x-shipped-locale');
+  if (fromProxy) return normalizeLocale(fromProxy);
+
   const c = await cookies();
   const fromCookie = c.get(LOCALE_COOKIE)?.value;
   if (fromCookie) return normalizeLocale(fromCookie);
 
-  const h = await headers();
   const fromHeader = localeFromAcceptLanguage(h.get('accept-language'));
   return fromHeader ?? 'en';
 });

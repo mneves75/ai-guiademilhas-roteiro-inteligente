@@ -2,10 +2,14 @@ import Link from 'next/link';
 import { Github, Twitter } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { publicPathname } from '@/lib/locale-routing';
 
 export async function Footer() {
   const locale = await getRequestLocale();
   const t = m(locale).landing.footer;
+  const blogPath = publicPathname(locale, '/blog');
+  const privacyPath = publicPathname(locale, '/privacy');
+  const termsPath = publicPathname(locale, '/terms');
 
   const footerLinks = {
     [t.groups.product]: [
@@ -15,15 +19,15 @@ export async function Footer() {
     ],
     [t.groups.resources]: [
       { label: t.links.github, href: 'https://github.com/mneves75/nextjs-bootstrapped-shipped' },
-      { label: t.links.blog, href: '/blog' },
+      { label: t.links.blog, href: blogPath },
       {
         label: t.links.documentation,
         href: 'https://github.com/mneves75/nextjs-bootstrapped-shipped#readme',
       },
     ],
     [t.groups.legal]: [
-      { label: t.links.privacy, href: '/privacy' },
-      { label: t.links.terms, href: '/terms' },
+      { label: t.links.privacy, href: privacyPath },
+      { label: t.links.terms, href: termsPath },
     ],
   } as const;
 

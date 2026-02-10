@@ -5,37 +5,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { toIntlLocale } from '@/lib/intl';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { publicPathname } from '@/lib/locale-routing';
 
 interface Props {
   params: Promise<{ tag: string }>;
 }
 
-export async function generateStaticParams() {
-  const tags = getAllTags();
-  return tags.map((tag) => ({ tag }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag } = await params;
-  const canonical = `/blog/tag/${tag}`;
+  const locale = await getRequestLocale();
+  const safeTag = encodeURIComponent(tag);
+  const canonical = publicPathname(locale, `/blog/tag/${safeTag}`);
 
   return {
-    title: `Posts tagged "${tag}" | Blog`,
-    description: `Browse all articles tagged with "${tag}".`,
-    alternates: { canonical },
+    title: locale === 'pt-BR' ? `Posts com tag "${tag}" | Blog` : `Posts tagged "${tag}" | Blog`,
+    description:
+      locale === 'pt-BR'
+        ? `Veja todos os artigos com a tag "${tag}".`
+        : `Browse all articles tagged with "${tag}".`,
+    alternates: publicAlternates(locale, `/blog/tag/${safeTag}`),
     openGraph: {
-      title: `Posts tagged "${tag}"`,
-      description: `Browse all articles tagged with "${tag}".`,
+      title: locale === 'pt-BR' ? `Posts com tag "${tag}"` : `Posts tagged "${tag}"`,
+      description:
+        locale === 'pt-BR'
+          ? `Veja todos os artigos com a tag "${tag}".`
+          : `Browse all articles tagged with "${tag}".`,
       url: canonical,
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Posts tagged "${tag}"`,
-      description: `Browse all articles tagged with "${tag}".`,
+      title: locale === 'pt-BR' ? `Posts com tag "${tag}"` : `Posts tagged "${tag}"`,
+      description:
+        locale === 'pt-BR'
+          ? `Veja todos os artigos com a tag "${tag}".`
+          : `Browse all articles tagged with "${tag}".`,
     },
   };
 }
@@ -45,13 +54,16 @@ export default async function TagPage({ params }: Props) {
   const locale = await getRequestLocale();
   const t = m(locale);
   const intlLocale = toIntlLocale(locale);
-  const posts = getPostsByTag(tag);
-  const allTags = getAllTags();
+  const posts = getPostsByTag(tag, { locale });
+  const allTags = getAllTags({ locale });
+  const blogPath = publicPathname(locale, '/blog');
+
+  if (!allTags.includes(tag)) notFound();
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-16">
       <Button asChild variant="ghost" className="mb-8">
-        <Link href="/blog">
+        <Link href={blogPath}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.blog.backToBlog}
         </Link>
@@ -67,11 +79,13 @@ export default async function TagPage({ params }: Props) {
 
       <div className="mb-8 flex flex-wrap gap-2">
         <Button asChild variant="outline" size="sm">
-          <Link href="/blog">{t.blog.allPosts}</Link>
+          <Link href={blogPath}>{t.blog.allPosts}</Link>
         </Button>
         {allTags.map((tagValue) => (
           <Button key={tagValue} asChild variant={tagValue === tag ? 'default' : 'ghost'} size="sm">
-            <Link href={`/blog/tag/${tagValue}`}>{tagValue}</Link>
+            <Link href={publicPathname(locale, `/blog/tag/${encodeURIComponent(tagValue)}`)}>
+              {tagValue}
+            </Link>
           </Button>
         ))}
       </div>
@@ -85,7 +99,11 @@ export default async function TagPage({ params }: Props) {
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} className="block h-full">
+            <Link
+              key={post.slug}
+              href={publicPathname(locale, `/blog/${post.slug}`)}
+              className="block h-full"
+            >
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {post.image && (
                   <div className="relative aspect-video overflow-hidden rounded-t-lg">
