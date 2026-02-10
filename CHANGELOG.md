@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (none)
 
+## [0.4.3] - 2026-02-10
+
+### Changed
+
+- Public locale redirects now default to `/en` unless the user explicitly chose a locale (cookie), avoiding Accept-Language based redirects
+
 ## [0.4.2] - 2026-02-10
 
 ### Added
@@ -175,7 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - pnpm as package manager
   - GitHub repository with best practices docs
 
-[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.3.0...v0.4.0

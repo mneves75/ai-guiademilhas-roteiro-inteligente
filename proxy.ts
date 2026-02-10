@@ -29,43 +29,13 @@ function withRequestId(response: NextResponse, requestId: string): NextResponse 
   return response;
 }
 
-function localeFromAcceptLanguage(value: string | null): Locale | null {
-  if (!value) return null;
-
-  let best: { locale: Locale; q: number } | null = null;
-  for (const rawPart of value.split(',')) {
-    const part = rawPart.trim();
-    if (!part) continue;
-
-    const [tagRaw, ...params] = part.split(';').map((s) => s.trim());
-    const tag = (tagRaw ?? '').toLowerCase();
-
-    const normalized = (() => {
-      if (tag === 'en' || tag.startsWith('en-') || tag.startsWith('en_')) return 'en' as const;
-      if (tag === 'pt' || tag === 'pt-br' || tag === 'pt_br') return 'pt-BR' as const;
-      return null;
-    })();
-    if (!normalized) continue;
-
-    let q = 1;
-    for (const p of params) {
-      if (p.startsWith('q=')) {
-        const n = Number.parseFloat(p.slice(2));
-        if (Number.isFinite(n)) q = n;
-      }
-    }
-    if (!best || q > best.q) best = { locale: normalized, q };
-  }
-
-  return best?.locale ?? null;
-}
-
 function getPreferredLocale(request: NextRequest): Locale {
   const fromCookie = request.cookies.get(LOCALE_COOKIE)?.value;
   if (fromCookie) return normalizeLocale(fromCookie);
 
-  const fromHeader = localeFromAcceptLanguage(request.headers.get('accept-language'));
-  return fromHeader ?? 'en';
+  // SEO + determinism: do not redirect based on inferred language. Default to English unless
+  // the user explicitly chose a locale (cookie) or visited a locale-prefixed URL.
+  return 'en';
 }
 
 function isPublicLocalizedPath(pathname: string): boolean {
@@ -235,7 +205,6 @@ export async function proxy(request: NextRequest) {
     const destPath = publicPathname(locale, pathname);
     const dest = new URL(`${destPath}${search}`, request.url);
     const res = NextResponse.redirect(dest, 308);
-    res.headers.set('Vary', 'Accept-Language, Cookie');
     res.headers.set('Cache-Control', 'no-store, max-age=0');
     return withRequestId(res, requestId);
   }
