@@ -1,3 +1,5 @@
+import 'server-only';
+
 import * as pgSchema from './schema/postgres';
 import * as sqliteSchema from './schema/sqlite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';

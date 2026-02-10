@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug or unexpected behavior
-title: "[Bug]: "
-labels: ["bug", "triage"]
+title: '[Bug]: '
+labels: ['bug', 'triage']
 body:
   - type: markdown
     attributes:
@@ -63,13 +63,13 @@ body:
     attributes:
       label: Node.js Version
       description: Run `node --version`
-      placeholder: "v20.x.x"
+      placeholder: 'v20.x.x'
 
   - type: input
     id: os
     attributes:
       label: Operating System
-      placeholder: "macOS 14, Windows 11, Ubuntu 22.04"
+      placeholder: 'macOS 14, Windows 11, Ubuntu 22.04'
 
   - type: textarea
     id: logs

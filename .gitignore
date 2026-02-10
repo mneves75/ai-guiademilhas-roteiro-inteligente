@@ -11,6 +11,7 @@
 # next.js
 /.next/
 /.next-playwright/
+/.next-manual/
 /out/
 
 # production
@@ -72,6 +73,9 @@ firebase-debug.log*
 
 # vercel
 .vercel
+
+# observability
+/observability/**/secrets/
 
 # IDEs
 .idea/

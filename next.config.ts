@@ -6,13 +6,26 @@ const repoRoot = dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Required for Docker/standalone deployments (see Dockerfile).
+  output: 'standalone',
   // Allow parallel dev servers (e.g. Playwright) without fighting for .next/dev/lock.
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   async headers() {
+    const originFromEnv =
+      process.env.NEXT_PUBLIC_APP_URL ??
+      process.env.BETTER_AUTH_BASE_URL ??
+      process.env.BETTER_AUTH_URL ??
+      '';
+    const isHttps = originFromEnv.startsWith('https://');
+
     const securityHeaders = [
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-Frame-Options', value: 'DENY' },
+      // HSTS only makes sense on HTTPS and should not be emitted on local HTTP dev.
+      ...(process.env.NODE_ENV === 'production' && isHttps
+        ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }]
+        : []),
       // Helps isolate browsing contexts while still allowing OAuth-style popups.
       { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
       // Opt into agent clustering (defense-in-depth against some cross-origin side channels).
@@ -63,7 +76,7 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['better-sqlite3'],
-  // Avoid Turbopack picking an incorrect monorepo root when multiple lockfiles exist.
+  // Pin Turbopack root to repo root for deterministic builds.
   turbopack: {
     root: repoRoot,
   },

@@ -1,4 +1,4 @@
-# Revisao de Seguranca (Next.js 16 / React 19) - 2026-02-07
+# Revisao de Seguranca (Next.js 16 / React 19) - Atualizado em 2026-02-09
 
 Repo: `/Users/mneves/dev/nextjs-bootstrapped-shipped`
 
@@ -18,6 +18,10 @@ Status (gates locais):
 - `pnpm test`: OK
 - `pnpm build`: OK
 - `pnpm audit --prod`: OK (sem vulnerabilidades conhecidas)
+- `PW_FULL=1 pnpm test:e2e`: OK (matriz completa Playwright)
+- `gitleaks git --redact`: OK (sem leaks no historico)
+- DAST-lite: OK (headers/cookies basicos validados por E2E em `e2e/security-headers.e2e.ts`)
+  - Execucao externa (preview/staging): `.github/workflows/dast.yml` (workflow_dispatch)
 
 ## 1) Metodologia (padrao de industria) e referencias
 
@@ -30,13 +34,17 @@ Eu tratei o problema como "engenharia de seguranca", nao como uma lista aleatori
 
 Links (fontes primarias / alta confianca):
 
-- OWASP Top 10 (2025): https://owasp.org/www-project-top-ten/
-- OWASP ASVS (5.0): https://owasp.org/www-project-application-security-verification-standard/
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- OWASP ASVS: https://owasp.org/www-project-application-security-verification-standard/
 - NIST SSDF (SP 800-218): https://csrc.nist.gov/projects/ssdf
 - OWASP Cheat Sheets (CSRF, SSRF, etc): https://cheatsheetseries.owasp.org/
 - Next.js CSP nonce (App Router): https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
 - React Developer Tools: https://react.dev/learn/react-developer-tools
 - Upstash Redis REST (Pipeline): https://upstash.com/docs/redis/features/restapi
+
+Notas:
+
+- Para reduzir risco de CSR bailout e flakiness de hidracao, as paginas de auth leem `searchParams` no Server Component e passam `callbackUrl`/`token` como prop para o Client Component do formulario (evitando `useSearchParams()` no topo da pagina).
 
 ## 2) Modelo de ameacas (primeiros principios)
 
@@ -44,7 +52,7 @@ Trust boundaries principais:
 
 ```mermaid
 flowchart LR
-  U["Usuario (Browser)"] -->|HTTPS| N["Next.js (RSC + Route Handlers + Middleware)"]
+  U["Usuario (Browser)"] -->|HTTPS| N["Next.js (RSC + Route Handlers + Proxy)"]
   N --> DB["DB (Drizzle: Postgres/SQLite/D1)"]
   N --> S["Stripe API"]
   N --> E["Email (Resend)"]
@@ -80,14 +88,14 @@ Formato:
 
 - Impacto: phishing pos-login e bounce para dominio atacante.
 - Evidencia:
-  - Normalizacao: `src/lib/security/redirect.ts:1-50`
+  - Normalizacao: `src/lib/security/redirect.ts`
   - Login usa valor normalizado: `app/(auth)/login/page.tsx` (import + `normalizeCallbackUrl(...)`)
   - Signup idem: `app/(auth)/signup/page.tsx` (import + `normalizeCallbackUrl(...)`)
 - Mudanca aplicada:
   - `normalizeCallbackUrl()` aceita apenas paths internos (`/...`) e rejeita protocolos, `//`, backslashes e caracteres de controle.
 - Validacao:
   - Abrir `/login?callbackUrl=https://evil.tld` e confirmar fallback interno.
-  - Teste: `src/lib/__tests__/security-redirect.test.ts`.
+  - Teste: `src/lib/__tests__/security-redirect.vitest.ts`.
 
 ### [C-002] SSRF / exfiltracao via arquivos (RESOLVIDO por desenho)
 
@@ -105,27 +113,27 @@ Formato:
 ### [H-003] Path traversal no storage local (RESOLVIDO + TESTADO)
 
 - Impacto: `path.join(base, "/abs")` descarta base e permite escapar do diretorio.
-- Evidencia: `src/lib/storage/local.ts:57-68`
+  - Evidencia: `src/lib/storage/local.ts`
 - Mudanca aplicada:
   - Bloqueio explicito de keys absolutas e de traversal.
 - Validacao:
-  - Teste: `src/lib/__tests__/storage-local.test.ts`.
+  - Teste: `src/lib/__tests__/storage-local.vitest.ts`.
 
 ### [H-004] XSS via JSON-LD (`dangerouslySetInnerHTML`) (RESOLVIDO)
 
 - Impacto: payload com `</script>` pode quebrar contexto e executar HTML/JS.
 - Evidencia:
-  - Escape seguro: `src/lib/security/safe-json.ts:1-17`
+  - Escape seguro: `src/lib/security/safe-json.ts`
   - Uso no componente: `src/components/json-ld.tsx:1-17`
 - Mudanca aplicada:
   - Serializacao segura para `<script type="application/ld+json">`.
 - Validacao:
-  - Teste: `src/lib/__tests__/safe-json.test.ts`.
+  - Teste: `src/lib/__tests__/safe-json.vitest.ts`.
 
 ### [H-005] CSRF em rotas de mutacao `/api/*` cookie-auth (MITIGADO com hardening)
 
 - Impacto: requests cross-site conseguirem mutar estado quando o browser envia cookies automaticamente.
-- Evidencia: `src/middleware.ts:105-126`
+- Evidencia: `proxy.ts`
 - Mudanca aplicada:
   - Fetch Metadata (`sec-fetch-site=cross-site`) bloqueia cross-site quando presente.
   - Origin allowlist: valida `Origin` (ou `Referer` como fallback) contra origem canonica.
@@ -136,10 +144,10 @@ Formato:
 
 - Impacto: brute force e abuso de endpoints de auth.
 - Evidencia:
-  - Middleware chama rate limit: `src/middleware.ts:131-150`
+  - Proxy chama rate limit: `proxy.ts`
   - Implementacao: `src/lib/security/rate-limit.ts:1-124`
 - Mudanca aplicada:
-  - Default: best-effort em memoria (Edge instance).
+  - Default: best-effort em memoria (processo/instancia).
   - Se `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` estiverem setados: contador distribuido (fixed window).
   - Identificador (ex: IP) e hashed antes de ir para o store (minimizacao de PII).
 - Config (opcional): `.env.example` (Upstash).
@@ -147,7 +155,7 @@ Formato:
 ### [M-007] CSP estrita com nonce em rotas protegidas (IMPLEMENTADO)
 
 - Objetivo: reduzir impacto de XSS em paginas com dados sensiveis.
-- Evidencia: `src/middleware.ts:160-185`
+- Evidencia: `proxy.ts`
 - Mudanca aplicada:
   - Para `/dashboard/*` e `/admin/*`, gera nonce por request e injeta CSP estrita com `strict-dynamic`.
   - Injeta CSP no request (para Next aplicar nonce automaticamente) e no response (para o browser).
@@ -159,6 +167,20 @@ Formato:
 - Mudanca aplicada:
   - `nosniff`, `referrer-policy`, `X-Frame-Options`, `COOP`, `Permissions-Policy`.
   - CSP minimalista global (clickjacking + base-uri + object-src + form-action) para nao quebrar runtime/SSG.
+
+### [L-013] `/.well-known/security.txt` (RFC 9116) (IMPLEMENTADO + TESTADO)
+
+- Objetivo: publicar metadados de divulgacao responsavel (contato/policy/canonical/expires) de forma padrao.
+- Evidencia:
+  - Route: `app/.well-known/security.txt/route.ts`
+  - Policy page: `app/security/page.tsx`
+  - E2E (DAST-lite): `e2e/security-txt.e2e.ts`
+- Mudanca aplicada:
+  - Remove placeholders e gera `Expires` + `Canonical` por request.
+  - URLs configuraveis via `.env` (`SECURITY_CONTACT_EMAIL`, etc.).
+  - Fail-fast em producao (origem publica): exige `https://` e exige `SECURITY_CONTACT_EMAIL`/`SECURITY_CONTACT_URL`.
+- Validacao:
+  - `pnpm exec playwright test --project=chromium --grep @dast`
 
 ### [M-009] Stripe return URLs com origem canonica (RESOLVIDO)
 

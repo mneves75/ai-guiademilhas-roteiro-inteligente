@@ -1,4 +1,8 @@
+import 'server-only';
+
 import { Resend } from 'resend';
+import { logger } from '@/lib/logger';
+import { captureException } from '@/lib/telemetry/sentry';
 
 export const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Shipped <noreply@shipped.dev>';
 
@@ -42,13 +46,21 @@ export async function sendEmail({
     });
 
     if (error) {
-      console.error('Email send error:', error);
+      logger.warn(
+        { event: 'email.send_failed', provider: 'resend', errorMessage: error.message },
+        'Email send failed'
+      );
+      captureException(error, { event: 'email.send_failed', provider: 'resend' });
       return { success: false, error: error.message };
     }
 
     return { success: true, id: data?.id };
   } catch (err) {
-    console.error('Email send exception:', err);
+    logger.error(
+      { event: 'email.send_exception', provider: 'resend', err },
+      'Email send exception'
+    );
+    captureException(err, { event: 'email.send_exception', provider: 'resend' });
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error',

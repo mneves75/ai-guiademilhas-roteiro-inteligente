@@ -1,0 +1,40 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --config.expand-env
+      - --web.enable-lifecycle
+    ports:
+      - '9090:9090'
+    environment:
+      # Target do app (host:port) visto a partir do container.
+      # No macOS/Windows, `host.docker.internal` aponta para o host.
+      APP_METRICS_TARGET: ${APP_METRICS_TARGET:-host.docker.internal:3000}
+      # Token para Authorization: Bearer <token> no /metrics (opcional em dev).
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../grafana/alerts/security-alerts.yaml:/etc/prometheus/rules/security-alerts.yaml:ro
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    ports:
+      - '9093:9093'
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    ports:
+      - '3001:3000'
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/dashboards:/var/lib/grafana/dashboards:ro
+

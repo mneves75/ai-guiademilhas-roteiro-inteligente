@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { db, users, workspaces, subscriptions } from '@/db/client';
 import { and, count, desc, eq, gt, isNull } from 'drizzle-orm';
 import { STRIPE_PLANS } from '@/lib/stripe';

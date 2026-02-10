@@ -5,9 +5,12 @@
  * by changing STORAGE_PROVIDER env var.
  */
 
+import 'server-only';
+
 import { LocalStorage } from './local';
 import { R2Storage } from './r2';
 import { VercelBlobStorage } from './vercel-blob';
+import { z } from 'zod';
 
 export interface StorageAdapter {
   /** Upload a file, returns the storage key */
@@ -22,8 +25,22 @@ export interface StorageAdapter {
 
 export type StorageProvider = 'local' | 'r2' | 'vercel-blob';
 
-const STORAGE_PROVIDER: StorageProvider =
-  (process.env.STORAGE_PROVIDER as StorageProvider | undefined) ?? 'local';
+const storageProviderSchema = z.enum(['local', 'r2', 'vercel-blob']);
+
+function resolveStorageProvider(raw: string | undefined): StorageProvider {
+  const value = raw ?? 'local';
+  const parsed = storageProviderSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(
+      `STORAGE_PROVIDER="${value}" is invalid. Accepted values: local | r2 | vercel-blob`
+    );
+  }
+  return parsed.data;
+}
+
+export const STORAGE_PROVIDER: StorageProvider = resolveStorageProvider(
+  process.env.STORAGE_PROVIDER
+);
 
 let _storage: StorageAdapter | undefined;
 

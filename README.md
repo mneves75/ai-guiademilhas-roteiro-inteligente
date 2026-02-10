@@ -32,6 +32,16 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) to see your app.
 
+## Usage
+
+```bash
+# Run the full local quality gate (lint, type-check, unit tests, build, DB smoke, E2E)
+pnpm verify
+
+# Health checks (useful for Docker / load balancers)
+curl -s http://localhost:3000/health
+```
+
 ## Tech Stack
 
 | Category   | Technology                   |
@@ -61,6 +71,11 @@ pnpm format        # Format with Prettier
 ```
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
+
+## Health
+
+- `GET /health` - liveness probe for load balancers/uptime checks
+- `GET /api/health` - same payload (backwards-compatible)
 
 ## Project Status
 

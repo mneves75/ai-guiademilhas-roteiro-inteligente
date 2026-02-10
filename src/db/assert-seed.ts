@@ -59,7 +59,7 @@ async function main() {
   }
 
   // Keep output stable and CI-friendly.
-  console.log(`Seed counts OK (${DB_PROVIDER}): ${JSON.stringify(actual)}`);
+  console.info(`Seed counts OK (${DB_PROVIDER}): ${JSON.stringify(actual)}`);
 }
 
 main()

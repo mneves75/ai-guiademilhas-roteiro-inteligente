@@ -3,16 +3,33 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { getUserWorkspaces, createWorkspace, addWorkspaceMember } from '@/db/queries/workspaces';
 import { isUniqueConstraintError } from '@/db/errors';
+import { withApiLogging } from '@/lib/logging';
+import { conflict, unauthorized } from '@/lib/http';
+import { readJsonBodyAs } from '@/lib/http-body';
+import { auditFromRequest } from '@/audit';
+import { z } from 'zod';
+
+const createWorkspaceSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(80)
+      .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
+  })
+  .strict();
 
 /**
  * GET /api/workspaces
  * List all workspaces for current user
  */
-export async function GET() {
+export const GET = withApiLogging('api.workspaces.list', async (_request: NextRequest) => {
   const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw unauthorized();
   }
 
   const memberships = await getUserWorkspaces(session.user.id);
@@ -22,64 +39,32 @@ export async function GET() {
   }));
 
   return NextResponse.json({ workspaces });
-}
+});
 
 /**
  * POST /api/workspaces
  * Create a new workspace
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiLogging('api.workspaces.create', async (request: NextRequest) => {
   const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw unauthorized();
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const name =
-    typeof body === 'object' && body !== null && 'name' in body
-      ? (body as { name?: unknown }).name
-      : undefined;
-  const slug =
-    typeof body === 'object' && body !== null && 'slug' in body
-      ? (body as { slug?: unknown }).slug
-      : undefined;
-
-  if (typeof name !== 'string' || typeof slug !== 'string') {
-    return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
-  }
-
-  const trimmedName = name.trim();
-  const trimmedSlug = slug.trim();
-  if (!trimmedName || !trimmedSlug) {
-    return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 });
-  }
-
-  // Validate slug format
-  if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
-    return NextResponse.json(
-      { error: 'Slug must contain only lowercase letters, numbers, and hyphens' },
-      { status: 400 }
-    );
-  }
+  const { name, slug } = await readJsonBodyAs(request, createWorkspaceSchema);
 
   try {
     // Create workspace
     const result = await createWorkspace({
-      name: trimmedName,
-      slug: trimmedSlug,
+      name,
+      slug,
       ownerUserId: session.user.id,
     });
     const workspace = result[0];
 
     if (!workspace) {
-      return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
+      throw new Error('createWorkspace returned no workspace');
     }
 
     // Add creator as owner member
@@ -89,12 +74,21 @@ export async function POST(request: NextRequest) {
       role: 'owner',
     });
 
+    auditFromRequest(request, {
+      action: 'workspace.create',
+      actor: {
+        userId: String(session.user.id),
+      },
+      target: { type: 'workspace', id: workspace.id },
+      metadata: { slug: workspace.slug },
+    });
+
     return NextResponse.json({ workspace }, { status: 201 });
   } catch (error) {
     // Handle unique constraint violation
     if (isUniqueConstraintError(error)) {
-      return NextResponse.json({ error: 'Slug already taken' }, { status: 409 });
+      throw conflict('Slug already taken', error);
     }
     throw error;
   }
-}
+});

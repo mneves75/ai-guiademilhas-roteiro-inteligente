@@ -1,6 +1,24 @@
+import 'server-only';
+
 import { getOneTimePriceId, getStripe, STRIPE_PLANS, type PlanId } from './stripe';
 import { db, subscriptions } from '@/db/client';
 import { eq } from 'drizzle-orm';
+
+export class StripeMetadataError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StripeMetadataError';
+  }
+}
+
+export function parseWorkspaceIdFromStripeMetadata(metadata: { workspaceId?: string }): number {
+  const raw = metadata.workspaceId;
+  const id = raw ? Number.parseInt(raw, 10) : Number.NaN;
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new StripeMetadataError('Missing or invalid workspaceId in Stripe metadata');
+  }
+  return id;
+}
 
 /**
  * Create or get Stripe customer for a workspace
@@ -199,14 +217,7 @@ export async function updateSubscriptionFromStripe(stripeSubscription: {
   cancel_at_period_end: boolean;
   metadata: { workspaceId?: string };
 }) {
-  const workspaceId = stripeSubscription.metadata.workspaceId
-    ? parseInt(stripeSubscription.metadata.workspaceId)
-    : null;
-
-  if (!workspaceId) {
-    console.error('No workspaceId in subscription metadata');
-    return;
-  }
+  const workspaceId = parseWorkspaceIdFromStripeMetadata(stripeSubscription.metadata);
 
   const priceId = stripeSubscription.items.data[0]?.price.id;
 

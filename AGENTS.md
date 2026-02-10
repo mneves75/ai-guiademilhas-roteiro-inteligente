@@ -1,51 +1,78 @@
-# Repository Guidelines
+# Diretrizes Para Agentes (AGENTS.md)
 
-## Project Structure & Module Organization
+Este repositório é um app Next.js (App Router) com TypeScript em modo estrito, testes unitários com Vitest e E2E com Playwright. O objetivo deste arquivo é reduzir ambiguidade e manter mudanças seguras, pequenas e verificáveis.
 
-- `app/`: Next.js App Router routes, layouts, and route groups like `(auth)` and `(protected)`.
-- `src/`: Shared code: `components/`, `lib/`, `contexts/`, `db/` (Drizzle schema + queries), `emails/`.
-- `content/blog/`: MDX blog posts with frontmatter.
-- `public/`: Static assets (e.g., `public/manifest.json`).
-- `e2e/`: Playwright end-to-end tests (`*.spec.ts`).
-- `src/lib/__tests__/`: Vitest unit tests (`*.test.ts`).
+## Estrutura Do Projeto
 
-## Build, Test, and Development Commands
+- `app/`: Rotas do App Router, layouts, route groups como `(auth)` e `(protected)`, e endpoints em `app/api/**`.
+- `src/`: Código compartilhado.
+- `src/components/`: Componentes de UI.
+- `src/lib/`: Lógica de domínio (auth, Stripe, storage, utilitários, etc).
+- `src/db/`: Drizzle (schema, seed, checks de portabilidade/paridade).
+- `src/emails/`: Templates de email.
+- `content/blog/`: Posts MDX com frontmatter.
+- `public/`: Assets estáticos.
+- `e2e/`: Testes E2E do Playwright (`*.e2e.ts`).
+- `src/lib/__tests__/`: Testes unitários do Vitest (`*.vitest.ts`).
+- `scripts/`: Scripts operacionais (standalone start, readiness, smoke tests de DB).
+- `docs/` e `grafana/`: Documentação e observabilidade local.
+- `instrumentation.ts`, `app/health/`, `app/metrics/`: Instrumentação/health/metrics (quando presentes).
 
-Use `pnpm` (preferred by repo docs and lockfile).
+## Comandos (pnpm)
 
-- `pnpm dev`: Run the local dev server at `http://localhost:3000`.
-- `pnpm build`: Production build.
-- `pnpm start`: Start the production server.
-- `pnpm lint`: ESLint (zero warnings allowed).
-- `pnpm type-check`: TypeScript strict mode check.
-- `pnpm format`: Prettier format all files.
-- `pnpm test`: Vitest unit tests.
-- `pnpm test:e2e`: Playwright E2E tests.
-- `pnpm db:push` / `pnpm db:migrate`: Drizzle schema sync and migrations.
+Use `pnpm` (lockfile e scripts assumem pnpm).
 
-## Coding Style & Naming Conventions
+- `pnpm dev`: servidor de dev (`http://localhost:3000`).
+- `pnpm build`: build de produção.
+- `pnpm start`: inicia o server de produção (usa `scripts/start-standalone.mjs`).
+- `pnpm lint`: ESLint (zero warnings).
+- `pnpm type-check`: geração de tipos de rotas + `tsc --noEmit`.
+- `pnpm format` e `pnpm format:check`: Prettier.
+- `pnpm test`, `pnpm test:watch`, `pnpm test:coverage`: Vitest.
+- `pnpm test:e2e`: Playwright (projetos padrão).
+- `pnpm test:e2e:ui`: Playwright UI mode.
+- `pnpm test:e2e:ci`: Playwright apenas Chromium (mais rápido).
+- `PW_FULL=1 pnpm test:e2e`: matriz cross-browser completa (inclui Firefox/WebKit e mobile).
+- `pnpm verify`: gate local (lint + type-check + unit + build + smoke DB + e2e chromium).
 
-- TypeScript strict mode; avoid `any` (ESLint rule enforced).
-- Prettier rules: 2-space indent, single quotes, semicolons, 100-char line width.
-- Naming: `camelCase` for variables/functions, `PascalCase` for components/types.
-- Prefer Server Components; use `'use client'` only when needed.
-- Use `@/` path alias for `src/` imports.
+## Padrões De Código
 
-## Testing Guidelines
+- TypeScript estrito: evite `any`. Prefira `unknown` + type guards.
+- Formatação: 2 espaços, aspas simples, `;`, largura 100 (Prettier).
+- Nomes: `camelCase` (variáveis/funções), `PascalCase` (componentes/tipos).
+- Next.js: prefira Server Components; use `'use client'` apenas quando necessário.
+- `searchParams`: prefira ler no Server Component (`searchParams: Promise<...>`) e passar como prop para Client Components. Evite `useSearchParams()` no topo da página para não induzir CSR bailout e reduzir riscos de hidratação/flakiness. Se precisar de `useSearchParams()`, isole em um componente pequeno e envolva em `Suspense`.
+- Imports: use o alias `@/` para `src/`.
+- Não introduza dependências novas sem motivo claro e sem evidência (build/test) de que valeu a pena.
 
-- Unit tests: Vitest in `src/lib/__tests__/*.test.ts`. Run with `pnpm test` or `pnpm test:watch`.
-- E2E tests: Playwright in `e2e/*.spec.ts`. Run with `pnpm test:e2e` or `pnpm test:e2e:ui`.
-- Keep tests close to the code they validate; add tests for new features and regressions.
+## Testes (Regras Práticas)
 
-## Commit & Pull Request Guidelines
+- Unit (Vitest): `src/lib/__tests__/*.vitest.ts`.
+- E2E (Playwright): `e2e/*.e2e.ts`.
+- Se o teste é sobre UI, use `getByRole/getByLabel` e `expect()` em vez de timeouts.
+- Se precisar de seletores estáveis, prefira `data-testid` estático (evite lógica de runtime só para testes).
+- Não aumente `retries` globalmente para mascarar flakiness; conserte a causa (esperas corretas, asserts, seletor estável).
 
-- Commit messages follow Conventional Commits, as seen in history: `feat(blog): add MDX blog system`.
-- PR titles use the same format.
-- Fill out the PR template in `.github/pull_request_template.md`, including testing and screenshots when UI changes are involved.
-- Ensure `pnpm lint`, `pnpm type-check`, and tests pass before requesting review.
+## Banco De Dados (Drizzle)
 
-## Environment & Configuration
+- Sincronização/migração: `pnpm db:push`, `pnpm db:migrate`.
+- Seed e checks: `pnpm db:seed`, `pnpm db:assert-seed`, `pnpm db:portability-check`, `pnpm db:schema-parity`.
+- Smoke tests: `pnpm db:smoke` (e variantes).
+- Providers via env: `DB_PROVIDER=postgres|sqlite|d1` (veja `.env.example`).
 
-- Copy `.env.example` to `.env.local` and set required values:
-  - `DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, and third-party API keys (Stripe, Resend, etc.).
-- Never commit `.env.local`. See `SECURITY.md` for reporting vulnerabilities.
+## Segurança (Obrigatório)
+
+- Nunca commitar `.env.local` nem segredos. Use `.env.example` apenas com placeholders.
+- Dependências: `pnpm audit --prod` deve ficar limpo.
+- Secret scanning: o CI usa Gitleaks em modo `git` (histórico completo). Para checar localmente:
+  - `gitleaks git --redact --report-format sarif --report-path gitleaks.sarif`
+  - Opcional (pré-commit): `gitleaks protect --staged --redact`
+- Métricas: `/metrics` (Prometheus). Em produção requer `METRICS_TOKEN` (Bearer). Veja `app/metrics/route.ts`.
+- Redirecionamentos/callbacks: preserve validações (ex.: normalização de `callbackUrl`) e não introduza open-redirect.
+- Autenticação/rate limiting: não desabilitar em produção; qualquer exceção precisa ser explicitamente restrita a ambiente de teste/local.
+
+## PRs E Commits
+
+- Mensagens e títulos: Conventional Commits (ex.: `feat(blog): ...`).
+- Antes de pedir review: rode pelo menos `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build` e o E2E relevante.
+- UI: inclua screenshots ou passos claros de validação quando aplicável.

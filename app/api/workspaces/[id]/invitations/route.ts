@@ -11,177 +11,163 @@ import {
 } from '@/db/queries/invitations';
 import { sendInvitationEmail } from '@/lib/email-actions';
 import { isInviteRole } from '@/lib/security/workspace-roles';
+import { INVITE_ROLES } from '@/lib/security/workspace-roles';
+import { withApiLogging } from '@/lib/logging';
+import { badRequest, conflict, forbidden, notFound, HttpError, unauthorized } from '@/lib/http';
+import { readJsonBodyAs } from '@/lib/http-body';
+import { z } from 'zod';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+const createInvitationSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .email()
+      .transform((value) => value.toLowerCase()),
+    role: z.enum(INVITE_ROLES).default('member'),
+  })
+  .strict();
+
+const revokeInvitationSchema = z
+  .object({
+    invitationId: z.coerce.number().int().positive(),
+  })
+  .strict();
 
 /**
  * GET /api/workspaces/[id]/invitations
  * List pending invitations (owner/admin only)
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const GET = withApiLogging(
+  'api.workspaces.invitations.list',
+  async (_request: NextRequest, context: RouteContext) => {
+    const auth = getAuth();
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+      throw unauthorized();
+    }
 
-  const { id } = await context.params;
-  const workspaceId = Number(id);
-  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
-    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
-  }
+    const { id } = await context.params;
+    const workspaceId = Number(id);
+    if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+      throw badRequest('Invalid workspace id');
+    }
 
-  // Verify owner/admin
-  const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
-  if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+    // Verify owner/admin
+    const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw forbidden();
+    }
 
-  const invitations = await getWorkspaceInvitations(workspaceId);
-  return NextResponse.json({ invitations });
-}
+    const invitations = await getWorkspaceInvitations(workspaceId);
+    return NextResponse.json({ invitations });
+  }
+);
 
 /**
  * POST /api/workspaces/[id]/invitations
  * Create new invitation (owner/admin only)
  */
-export async function POST(request: NextRequest, context: RouteContext) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const POST = withApiLogging(
+  'api.workspaces.invitations.create',
+  async (request: NextRequest, context: RouteContext) => {
+    const auth = getAuth();
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+      throw unauthorized();
+    }
 
-  const { id } = await context.params;
-  const workspaceId = Number(id);
-  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
-    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
-  }
+    const { id } = await context.params;
+    const workspaceId = Number(id);
+    if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+      throw badRequest('Invalid workspace id');
+    }
 
-  // Verify owner/admin
-  const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
-  if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+    // Verify owner/admin
+    const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw forbidden();
+    }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const { email: normalizedEmail, role } = await readJsonBodyAs(request, createInvitationSchema);
 
-  const email =
-    typeof body === 'object' && body !== null && 'email' in body
-      ? (body as { email?: unknown }).email
-      : undefined;
-  const role =
-    typeof body === 'object' && body !== null && 'role' in body
-      ? (body as { role?: unknown }).role
-      : 'member';
+    // Extra defense: keep runtime type guard for future refactors.
+    if (!isInviteRole(role)) throw badRequest('Invalid role');
 
-  if (typeof email !== 'string' || !email.trim()) {
-    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-  }
+    // Check for existing invitation
+    const exists = await hasExistingInvitation(workspaceId, normalizedEmail);
+    if (exists) {
+      throw conflict('Invitation already pending for this email');
+    }
 
-  // Validate email format
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
-  }
+    const [invitation] = await createInvitation({
+      workspaceId,
+      email: normalizedEmail,
+      role,
+      invitedByUserId: session.user.id,
+    });
+    if (!invitation) {
+      throw new Error('createInvitation returned no invitation');
+    }
 
-  if (!isInviteRole(role)) {
-    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-  }
+    const workspace = await getWorkspaceById(workspaceId);
+    if (!workspace) {
+      await revokeInvitation(invitation.id);
+      throw notFound('Workspace not found');
+    }
 
-  // Check for existing invitation
-  const exists = await hasExistingInvitation(workspaceId, normalizedEmail);
-  if (exists) {
+    const inviterName = session.user.name ?? session.user.email;
+    const emailResult = await sendInvitationEmail({
+      to: invitation.email,
+      inviterName,
+      workspaceName: workspace.name,
+      role: invitation.role,
+      token: invitation.token,
+      expiresAt: invitation.expiresAt,
+    });
+
+    if (!emailResult.success) {
+      await revokeInvitation(invitation.id);
+      throw new HttpError(500, 'Failed to send invitation email');
+    }
+
     return NextResponse.json(
-      { error: 'Invitation already pending for this email' },
-      { status: 409 }
+      { invitation, email: { success: true, id: emailResult.id } },
+      { status: 201 }
     );
   }
-
-  const [invitation] = await createInvitation({
-    workspaceId,
-    email: normalizedEmail,
-    role,
-    invitedByUserId: session.user.id,
-  });
-  if (!invitation) {
-    return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 });
-  }
-
-  const workspace = await getWorkspaceById(workspaceId);
-  if (!workspace) {
-    await revokeInvitation(invitation.id);
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
-  }
-
-  const inviterName = session.user.name ?? session.user.email;
-  const emailResult = await sendInvitationEmail({
-    to: invitation.email,
-    inviterName,
-    workspaceName: workspace.name,
-    role: invitation.role,
-    token: invitation.token,
-    expiresAt: invitation.expiresAt,
-  });
-
-  if (!emailResult.success) {
-    await revokeInvitation(invitation.id);
-    return NextResponse.json(
-      { error: emailResult.error ?? 'Failed to send invitation email' },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json(
-    { invitation, email: { success: true, id: emailResult.id } },
-    { status: 201 }
-  );
-}
+);
 
 /**
  * DELETE /api/workspaces/[id]/invitations
  * Revoke invitation (owner/admin only)
  */
-export async function DELETE(request: NextRequest, context: RouteContext) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export const DELETE = withApiLogging(
+  'api.workspaces.invitations.revoke',
+  async (request: NextRequest, context: RouteContext) => {
+    const auth = getAuth();
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+      throw unauthorized();
+    }
+
+    const { id } = await context.params;
+    const workspaceId = Number(id);
+    if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
+      throw badRequest('Invalid workspace id');
+    }
+
+    // Verify owner/admin
+    const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      throw forbidden();
+    }
+
+    const { invitationId } = await readJsonBodyAs(request, revokeInvitationSchema);
+
+    await revokeInvitation(invitationId);
+    return NextResponse.json({ success: true });
   }
-
-  const { id } = await context.params;
-  const workspaceId = Number(id);
-  if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
-    return NextResponse.json({ error: 'Invalid workspace id' }, { status: 400 });
-  }
-
-  // Verify owner/admin
-  const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
-  if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const invitationId =
-    typeof body === 'object' && body !== null && 'invitationId' in body
-      ? (body as { invitationId?: unknown }).invitationId
-      : undefined;
-
-  if (typeof invitationId !== 'number' || !Number.isFinite(invitationId) || invitationId <= 0) {
-    return NextResponse.json({ error: 'invitationId is required' }, { status: 400 });
-  }
-
-  await revokeInvitation(invitationId);
-  return NextResponse.json({ success: true });
-}
+);

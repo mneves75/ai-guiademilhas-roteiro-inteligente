@@ -11,7 +11,7 @@ export function WelcomeEmail({ name, loginUrl = 'https://shipped.dev/login' }: W
   return (
     <BaseLayout preview={`Welcome to Shipped, ${name}!`}>
       <Section style={content}>
-        <Heading style={heading}>Welcome to Shipped! 🚀</Heading>
+        <Heading style={heading}>Welcome to Shipped!</Heading>
         <Text style={paragraph}>Hi {name},</Text>
         <Text style={paragraph}>
           Thank you for signing up for Shipped. We&apos;re excited to have you on board!

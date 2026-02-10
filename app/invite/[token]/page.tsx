@@ -88,11 +88,9 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/">
-              <Button variant="outline" className="w-full">
-                Go Home
-              </Button>
-            </Link>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/">Go Home</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -121,14 +119,12 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
                 <strong>Invited by:</strong> {invite?.invitedBy}
               </p>
             </div>
-            <Link href={`/login?callbackUrl=/invite/${token}`}>
-              <Button className="w-full">Sign In</Button>
-            </Link>
-            <Link href={`/signup?callbackUrl=/invite/${token}`}>
-              <Button variant="outline" className="w-full">
-                Create Account
-              </Button>
-            </Link>
+            <Button asChild className="w-full">
+              <Link href={`/login?callbackUrl=/invite/${token}`}>Sign In</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={`/signup?callbackUrl=/invite/${token}`}>Create Account</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -163,11 +159,9 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
             {isAccepting ? 'Accepting...' : 'Accept Invitation'}
           </Button>
 
-          <Link href="/dashboard">
-            <Button variant="ghost" className="w-full">
-              Cancel
-            </Button>
-          </Link>
+          <Button asChild variant="ghost" className="w-full">
+            <Link href="/dashboard">Cancel</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

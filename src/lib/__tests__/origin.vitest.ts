@@ -24,8 +24,24 @@ describe('resolveAppOrigin', () => {
     delete process.env.BETTER_AUTH_URL;
     (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
 
-    const request = { nextUrl: { origin: 'http://localhost:3000' } } as never;
+    const request = {
+      nextUrl: { origin: 'http://localhost:3000' },
+      headers: new Headers(),
+    } as never;
     expect(resolveAppOrigin(request)).toBe('http://localhost:3000');
+  });
+
+  it('uses forwarded host/proto in non-production when env origin is missing', () => {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.BETTER_AUTH_BASE_URL;
+    delete process.env.BETTER_AUTH_URL;
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
+
+    const request = {
+      nextUrl: { origin: 'http://localhost:3000', protocol: 'http:' },
+      headers: new Headers({ 'x-forwarded-host': 'preview.example', 'x-forwarded-proto': 'https' }),
+    } as never;
+    expect(resolveAppOrigin(request)).toBe('https://preview.example');
   });
 
   it('throws in production when env origin is missing', () => {

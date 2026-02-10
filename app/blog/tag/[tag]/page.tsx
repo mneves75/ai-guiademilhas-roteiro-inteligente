@@ -31,12 +31,12 @@ export default async function TagPage({ params }: Props) {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-16">
-      <Link href="/blog">
-        <Button variant="ghost" className="mb-8">
+      <Button asChild variant="ghost" className="mb-8">
+        <Link href="/blog">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Blog
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <div className="mb-12">
         <div className="mb-4 flex items-center gap-2">
@@ -49,17 +49,13 @@ export default async function TagPage({ params }: Props) {
       </div>
 
       <div className="mb-8 flex flex-wrap gap-2">
-        <Link href="/blog">
-          <Button variant="outline" size="sm">
-            All Posts
-          </Button>
-        </Link>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/blog">All Posts</Link>
+        </Button>
         {allTags.map((t) => (
-          <Link key={t} href={`/blog/tag/${t}`}>
-            <Button variant={t === tag ? 'default' : 'ghost'} size="sm">
-              {t}
-            </Button>
-          </Link>
+          <Button key={t} asChild variant={t === tag ? 'default' : 'ghost'} size="sm">
+            <Link href={`/blog/tag/${t}`}>{t}</Link>
+          </Button>
         ))}
       </div>
 
@@ -72,11 +68,16 @@ export default async function TagPage({ params }: Props) {
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`}>
+            <Link key={post.slug} href={`/blog/${post.slug}`} className="block h-full">
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {post.image && (
                   <div className="relative aspect-video overflow-hidden rounded-t-lg">
-                    <Image src={post.image} alt={post.title} fill className="object-cover" />
+                    <Image
+                      src={post.image}
+                      alt={post.title}
+                      fill
+                      className="pointer-events-none object-cover"
+                    />
                   </div>
                 )}
                 <CardHeader>

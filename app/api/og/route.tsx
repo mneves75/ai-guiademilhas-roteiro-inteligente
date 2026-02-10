@@ -1,12 +1,19 @@
 import { ImageResponse } from 'next/og';
 import type { NextRequest } from 'next/server';
+import { withApiLogging } from '@/lib/logging';
 
-export const runtime = 'edge';
+function cleanText(value: string, maxLen: number): string {
+  // Keep this route safe against DoS-y long inputs and control chars.
+  return value.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, maxLen);
+}
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLogging('api.og', async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
-  const title = searchParams.get('title') ?? 'NextJS Bootstrapped Shipped';
-  const description = searchParams.get('description') ?? 'Ship production-ready apps fast';
+  const title = cleanText(searchParams.get('title') ?? 'NextJS Bootstrapped Shipped', 120);
+  const description = cleanText(
+    searchParams.get('description') ?? 'Ship production-ready apps fast',
+    240
+  );
 
   return new ImageResponse(
     <div
@@ -120,4 +127,4 @@ export async function GET(request: NextRequest) {
       height: 630,
     }
   );
-}
+});

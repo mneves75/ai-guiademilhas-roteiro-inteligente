@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { sendEmail, type EmailResult } from './email';
 import { WelcomeEmail } from '@/emails/welcome-email';
 import { InvitationEmail } from '@/emails/invitation-email';
@@ -12,7 +14,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 export async function sendWelcomeEmail(params: { to: string; name: string }): Promise<EmailResult> {
   return sendEmail({
     to: params.to,
-    subject: 'Welcome to Shipped! 🚀',
+    subject: 'Welcome to Shipped!',
     react: WelcomeEmail({
       name: params.name,
       loginUrl: `${APP_URL}/login`,

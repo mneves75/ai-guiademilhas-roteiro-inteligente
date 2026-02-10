@@ -43,18 +43,16 @@ export default function BlogPage() {
 
       {tags.length > 0 && (
         <div className="mb-8 flex flex-wrap justify-center gap-2">
-          <Link href="/blog">
-            <Button variant="outline" size="sm">
-              All Posts
-            </Button>
-          </Link>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/blog">All Posts</Link>
+          </Button>
           {tags.map((tag) => (
-            <Link key={tag} href={`/blog/tag/${tag}`}>
-              <Button variant="ghost" size="sm">
+            <Button key={tag} asChild variant="ghost" size="sm">
+              <Link href={`/blog/tag/${tag}`}>
                 <Tag className="mr-1 h-3 w-3" />
                 {tag}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ))}
         </div>
       )}
@@ -68,11 +66,16 @@ export default function BlogPage() {
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`}>
+            <Link key={post.slug} href={`/blog/${post.slug}`} className="block h-full">
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {post.image && (
                   <div className="relative aspect-video overflow-hidden rounded-t-lg">
-                    <Image src={post.image} alt={post.title} fill className="object-cover" />
+                    <Image
+                      src={post.image}
+                      alt={post.title}
+                      fill
+                      className="pointer-events-none object-cover"
+                    />
                   </div>
                 )}
                 <CardHeader>

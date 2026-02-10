@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getStorage } from '@/lib/storage';
+import { getStorage, STORAGE_PROVIDER } from '@/lib/storage';
+import { withApiLogging } from '@/lib/logging';
 
 type RouteContext = { params: Promise<{ key: string[] }> };
 
@@ -10,8 +11,6 @@ const MIME_BY_EXT: Record<string, string> = {
   '.webp': 'image/webp',
   '.gif': 'image/gif',
 };
-
-const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER ?? 'local';
 
 // Only expose a very small subset of the storage key space publicly.
 const DEFAULT_PUBLIC_PREFIXES = ['avatars/', 'uploads/'];
@@ -42,36 +41,39 @@ function isSafeKey(key: string): boolean {
   return !key.split('/').some((seg) => seg === '..' || seg.includes('..'));
 }
 
-export async function GET(_request: NextRequest, context: RouteContext) {
-  // Security boundary: this route is only needed for local filesystem storage.
-  // For cloud storage providers, serve files via their public URLs instead.
-  if (STORAGE_PROVIDER !== 'local') {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+export const GET = withApiLogging(
+  'api.files.public_download',
+  async (_request: NextRequest, context: RouteContext) => {
+    // Security boundary: this route is only needed for local filesystem storage.
+    // For cloud storage providers, serve files via their public URLs instead.
+    if (STORAGE_PROVIDER !== 'local') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const { key: keyParts } = await context.params;
+    const key = keyParts.join('/');
+
+    if (!key || !isSafeKey(key) || !isAllowedPublicKey(key)) {
+      return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
+    }
+
+    try {
+      const storage = getStorage();
+      const buffer = await storage.download(key);
+      const body = new Uint8Array(buffer);
+      const ext = getExt(key);
+
+      return new NextResponse(body, {
+        status: 200,
+        headers: {
+          'Content-Type': MIME_BY_EXT[ext] ?? 'application/octet-stream',
+          'X-Content-Type-Options': 'nosniff',
+          // Avatars and uploads are immutable by key (we include a UUID in file names).
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
   }
-
-  const { key: keyParts } = await context.params;
-  const key = keyParts.join('/');
-
-  if (!key || !isSafeKey(key) || !isAllowedPublicKey(key)) {
-    return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
-  }
-
-  try {
-    const storage = getStorage();
-    const buffer = await storage.download(key);
-    const body = new Uint8Array(buffer);
-    const ext = getExt(key);
-
-    return new NextResponse(body, {
-      status: 200,
-      headers: {
-        'Content-Type': MIME_BY_EXT[ext] ?? 'application/octet-stream',
-        'X-Content-Type-Options': 'nosniff',
-        // Avatars and uploads are immutable by key (we include a UUID in file names).
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  }
-}
+);

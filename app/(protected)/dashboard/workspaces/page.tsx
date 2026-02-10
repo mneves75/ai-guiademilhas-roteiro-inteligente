@@ -26,12 +26,12 @@ export default async function WorkspacesPage() {
           <h1 className="text-2xl font-bold">Workspaces</h1>
           <p className="text-muted-foreground">Manage all your workspaces in one place.</p>
         </div>
-        <Link href="/dashboard/workspaces/new">
-          <Button>
+        <Button asChild>
+          <Link href="/dashboard/workspaces/new">
             <Plus className="mr-2 h-4 w-4" />
             New Workspace
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {workspaces.length === 0 ? (
@@ -44,9 +44,9 @@ export default async function WorkspacesPage() {
             <p className="mt-2 text-center text-sm text-muted-foreground">
               Create your first workspace to start collaborating with your team.
             </p>
-            <Link href="/dashboard/workspaces/new" className="mt-4">
-              <Button>Create Workspace</Button>
-            </Link>
+            <Button asChild className="mt-4">
+              <Link href="/dashboard/workspaces/new">Create Workspace</Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -66,18 +66,18 @@ export default async function WorkspacesPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
-                  <Link href={`/dashboard/workspaces/${workspace.id}/settings`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
+                  <Button asChild variant="outline" size="sm" className="flex-1">
+                    <Link href={`/dashboard/workspaces/${workspace.id}/settings`}>
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
-                    </Button>
-                  </Link>
-                  <Link href={`/dashboard/workspaces/${workspace.id}/members`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm" className="flex-1">
+                    <Link href={`/dashboard/workspaces/${workspace.id}/members`}>
                       <Users className="mr-2 h-4 w-4" />
                       Members
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

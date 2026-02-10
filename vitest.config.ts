@@ -8,7 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.tsx'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.vitest.{ts,tsx}'],
     exclude: ['node_modules', '.next', 'e2e'],
     coverage: {
       provider: 'v8',
@@ -19,6 +19,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      // Next.js provides special handling for `server-only`, but Vitest/Vite will execute it directly.
+      // Stub it out so server-only modules remain unit-testable.
+      'server-only': resolve(__dirname, './src/test/stubs/server-only.ts'),
     },
   },
 });

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-10
+
+### Added
+
+- RFC 9116 `security.txt` (`/.well-known/security.txt`) plus a public security policy page (`/security`)
+- DAST-lite Playwright checks for baseline security headers and `security.txt` validity (tagged `@dast`)
+- GitHub Actions workflows for DAST-lite on schedules and on deploy (when `deployment_status.target_url` / `environment_url` is available)
+- Local security audit runner (`pnpm security:audit`) that chains dependency audit, secret scan (gitleaks), DAST-lite, and basic gates
+- Health and metrics endpoints for production readiness (`/health`, `/metrics`)
+
 ### Changed
 
 - Standardized invalid `DB_PROVIDER` error messaging to English for consistency
@@ -21,6 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playwright E2E now provisions and seeds a deterministic DB by default (SQLite) during `webServer` startup
 - Added `pnpm verify` as a single-command local verification gate (lint + type-check + unit + build + db smokes + e2e)
 - Type-check is now deterministic by purging generated Next type dirs before `next typegen`
+- Auth pages refactored to a server wrapper + client form pattern to avoid hydration/CSR bailout pitfalls and to improve E2E determinism
+- Normalized and validated `callbackUrl` handling to prevent open redirects
+- Added production fail-fast invariants for public deployments (HTTPS origin + security contact requirements)
+- Standalone production start script updated to support an isolated E2E distDir without breaking runtime filesystem readers
+
+### Fixed
+
+- E2E flakiness on signup/login flows caused by timing and client-side state mismatches (forms now submit deterministically)
+- Blog link clicks on listing pages (images no longer intercept clicks)
+- Standalone/Docker runtime access to `content/blog` (content now shipped; runtime path is stable)
+
+### Security
+
+- Baseline security headers on public pages and API routes (with safer defaults for caching and framing)
+- Strict nonce-based CSP on protected routes, plus `no-store` on authenticated pages and sensitive redirects
+- Best-effort CSRF mitigations for state-changing API routes (Origin + Fetch Metadata checks) and basic rate limiting
 
 ## [0.2.0] - 2026-02-06
 
@@ -96,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - pnpm as package manager
   - GitHub repository with best practices docs
 
-[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mneves75/nextjs-bootstrapped-shipped/releases/tag/v0.1.0

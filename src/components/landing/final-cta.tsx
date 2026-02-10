@@ -15,11 +15,11 @@ export function FinalCTA() {
             required.
           </p>
           <div className="mt-8">
-            <Link href="/signup">
-              <Button size="lg" variant="secondary" className="gap-2">
+            <Button asChild size="lg" variant="secondary" className="gap-2">
+              <Link href="/signup">
                 Get Started Free <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

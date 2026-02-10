@@ -61,7 +61,7 @@ async function seedSqlite() {
     }));
 
     await db.insert(schema.users).values(sampleUsers).onConflictDoNothing();
-    console.log('  + 10 users');
+    console.info('  + 10 users');
 
     await db
       .insert(schema.workspaces)
@@ -74,7 +74,7 @@ async function seedSqlite() {
         }))
       )
       .onConflictDoNothing();
-    console.log('  + 5 workspaces');
+    console.info('  + 5 workspaces');
 
     const workspaceRows = await db
       .select({
@@ -121,7 +121,7 @@ async function seedSqlite() {
     });
 
     await db.insert(schema.workspaceMembers).values(memberData).onConflictDoNothing();
-    console.log('  + 15 workspace members');
+    console.info('  + 15 workspace members');
 
     const subscriptionData = workspaceRows.map((ws, i) => ({
       workspaceId: ws.id,
@@ -138,7 +138,7 @@ async function seedSqlite() {
     }));
 
     await db.insert(schema.subscriptions).values(subscriptionData).onConflictDoNothing();
-    console.log('  + 5 subscriptions');
+    console.info('  + 5 subscriptions');
   } finally {
     sqlite.close();
   }
@@ -173,7 +173,7 @@ async function seedPostgres() {
     }));
 
     await db.insert(schema.users).values(sampleUsers).onConflictDoNothing();
-    console.log('  + 10 users');
+    console.info('  + 10 users');
 
     await db
       .insert(schema.workspaces)
@@ -186,7 +186,7 @@ async function seedPostgres() {
         }))
       )
       .onConflictDoNothing();
-    console.log('  + 5 workspaces');
+    console.info('  + 5 workspaces');
 
     const workspaceRows = await db
       .select({
@@ -233,7 +233,7 @@ async function seedPostgres() {
     });
 
     await db.insert(schema.workspaceMembers).values(memberData).onConflictDoNothing();
-    console.log('  + 15 workspace members');
+    console.info('  + 15 workspace members');
 
     const subscriptionData = workspaceRows.map((ws, i) => ({
       workspaceId: ws.id,
@@ -250,7 +250,7 @@ async function seedPostgres() {
     }));
 
     await db.insert(schema.subscriptions).values(subscriptionData).onConflictDoNothing();
-    console.log('  + 5 subscriptions');
+    console.info('  + 5 subscriptions');
   } finally {
     await client.end();
   }
@@ -266,7 +266,7 @@ function seedD1(): never {
 }
 
 async function runSeed() {
-  console.log(`Seeding database (provider: ${DB_PROVIDER})...`);
+  console.info(`Seeding database (provider: ${DB_PROVIDER})...`);
 
   switch (DB_PROVIDER) {
     case 'sqlite':
@@ -281,7 +281,7 @@ async function runSeed() {
 
 runSeed()
   .then(() => {
-    console.log('\nDatabase seeded successfully');
+    console.info('\nDatabase seeded successfully');
     process.exit(0);
   })
   .catch((error: unknown) => {

@@ -1,10 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/security/rate-limit';
+import { getOrCreateRequestId } from '@/lib/request-id';
+import {
+  incAuthRateLimited,
+  incBlockedRequest,
+  incProtectedRedirect,
+  observeProxyLatencyMs,
+} from '@/lib/metrics';
 
 // Only protect actual app pages here. API routes must always enforce authz in the handler.
 const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/admin'] as const;
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function withRequestId(response: NextResponse, requestId: string): NextResponse {
+  response.headers.set('x-request-id', requestId);
+  return response;
+}
 
 function generateCspNonce(): string {
   // CSP nonce should be unpredictable and unique per request.
@@ -95,7 +107,9 @@ function getRequestOriginForCsrf(request: NextRequest): string | null {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const startedAt = Date.now();
+  const requestId = getOrCreateRequestId(request);
   const { pathname } = request.nextUrl;
   const isApi = pathname === '/api' || pathname.startsWith('/api/');
 
@@ -115,18 +129,22 @@ export async function middleware(request: NextRequest) {
       // Prefer Fetch Metadata for modern browsers.
       const fetchSite = request.headers.get('sec-fetch-site');
       if (fetchSite === 'cross-site') {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        incBlockedRequest('csrf_cross_site');
+        observeProxyLatencyMs('blocked', Date.now() - startedAt);
+        return withRequestId(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), requestId);
       }
 
       const origin = getRequestOriginForCsrf(request);
       if (!origin || !isAllowedOrigin(origin, request)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        incBlockedRequest('csrf_origin');
+        observeProxyLatencyMs('blocked', Date.now() - startedAt);
+        return withRequestId(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), requestId);
       }
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Best-effort rate limiting (edge-memory). For production, prefer a shared store.
+  // Best-effort rate limiting (process memory). For production, prefer a shared store.
   // ---------------------------------------------------------------------------
   if (pathname.startsWith('/api/auth') && request.method === 'POST') {
     const ip = getClientIp(request);
@@ -138,12 +156,17 @@ export async function middleware(request: NextRequest) {
         windowMs: 10 * 60 * 1000, // 30 requests / 10 minutes / IP
       });
       if (!result.ok) {
-        return NextResponse.json(
-          { error: 'Too Many Requests' },
-          {
-            status: 429,
-            headers: { 'Retry-After': String(result.retryAfterSeconds) },
-          }
+        incAuthRateLimited();
+        observeProxyLatencyMs('rate_limited', Date.now() - startedAt);
+        return withRequestId(
+          NextResponse.json(
+            { error: 'Too Many Requests' },
+            {
+              status: 429,
+              headers: { 'Retry-After': String(result.retryAfterSeconds) },
+            }
+          ),
+          requestId
         );
       }
     }
@@ -160,18 +183,24 @@ export async function middleware(request: NextRequest) {
   if (isProtectedPage) {
     const hasSessionCookie = hasBetterAuthSessionCookie(request);
     if (!hasSessionCookie) {
+      incProtectedRedirect();
+      observeProxyLatencyMs('redirect', Date.now() - startedAt);
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set(
         'callbackUrl',
         `${request.nextUrl.pathname}${request.nextUrl.search}`
       );
-      return NextResponse.redirect(loginUrl);
+      const res = NextResponse.redirect(loginUrl);
+      // Avoid caching redirects from sensitive pages at intermediaries.
+      res.headers.set('Cache-Control', 'no-store, max-age=0');
+      return withRequestId(res, requestId);
     }
 
     // Protected pages handle sensitive data. Apply a strict nonce-based CSP.
     const nonce = generateCspNonce();
     const cspHeader = buildProtectedCsp(nonce);
     const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-request-id', requestId);
     requestHeaders.set('x-nonce', nonce);
     requestHeaders.set('Content-Security-Policy', cspHeader);
 
@@ -179,14 +208,21 @@ export async function middleware(request: NextRequest) {
       request: { headers: requestHeaders },
     });
     response.headers.set('Content-Security-Policy', cspHeader);
+    response.headers.set('x-request-id', requestId);
     // Avoid caching personalized HTML at intermediaries.
     response.headers.set('Cache-Control', 'no-store, max-age=0');
+    observeProxyLatencyMs('protected', Date.now() - startedAt);
     return response;
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-request-id', requestId);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set('x-request-id', requestId);
+  return response;
 }
 
+// Next.js requires this object to be statically analyzable in the proxy file.
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };

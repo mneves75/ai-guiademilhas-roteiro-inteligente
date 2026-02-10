@@ -26,16 +26,16 @@ export function Hero() {
         </p>
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Link href="/signup">
-            <Button size="lg" className="gap-2">
+          <Button asChild size="lg" className="gap-2">
+            <Link href="/signup">
               Start Building <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="https://github.com/mneves75/nextjs-bootstrapped-shipped">
-            <Button variant="outline" size="lg" className="gap-2">
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="gap-2">
+            <Link href="https://github.com/mneves75/nextjs-bootstrapped-shipped">
               <Github className="h-4 w-4" /> View on GitHub
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

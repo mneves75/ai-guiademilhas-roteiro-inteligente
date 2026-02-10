@@ -27,7 +27,7 @@ export function InvitationEmail({
   return (
     <BaseLayout preview={`${inviterName} invited you to join ${workspaceName}`}>
       <Section style={content}>
-        <Heading style={heading}>You&apos;ve been invited! 🎉</Heading>
+        <Heading style={heading}>You&apos;ve been invited!</Heading>
         <Text style={paragraph}>
           <strong>{inviterName}</strong> has invited you to join <strong>{workspaceName}</strong> as
           a <strong>{role}</strong>.

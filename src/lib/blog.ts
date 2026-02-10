@@ -3,7 +3,9 @@ import path from 'path';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
 
-const CONTENT_DIR = path.join(process.cwd(), 'content/blog');
+// In "output: standalone", the server process can run with cwd inside `<distDir>/standalone`.
+// Keep the content path stable across runtime environments.
+const CONTENT_DIR = path.join(process.env.APP_ROOT_DIR ?? process.cwd(), 'content/blog');
 
 export interface BlogPost {
   slug: string;

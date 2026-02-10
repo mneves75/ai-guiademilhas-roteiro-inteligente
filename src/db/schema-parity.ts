@@ -68,5 +68,5 @@ export function assertSchemaParity() {
 
 if (require.main === module) {
   assertSchemaParity();
-  console.log('db:schema-parity OK');
+  console.info('db:schema-parity OK');
 }

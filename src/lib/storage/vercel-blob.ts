@@ -10,6 +10,7 @@ import type { StorageAdapter } from './index';
  */
 export class VercelBlobStorage implements StorageAdapter {
   async upload(key: string, data: Buffer | ReadableStream): Promise<string> {
+    requireVercelBlobToken();
     const { put } = await loadVercelBlob();
     const body = await toBuffer(data);
     const blob = await put(key, body, { access: 'public' });
@@ -29,6 +30,7 @@ export class VercelBlobStorage implements StorageAdapter {
   }
 
   async delete(key: string): Promise<void> {
+    requireVercelBlobToken();
     const { del } = await loadVercelBlob();
     await del(key);
   }
@@ -49,6 +51,12 @@ function isAllowedBlobUrl(value: string): boolean {
     );
   } catch {
     return false;
+  }
+}
+
+function requireVercelBlobToken(): void {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('BLOB_READ_WRITE_TOKEN is required for Vercel Blob uploads/deletes');
   }
 }
 

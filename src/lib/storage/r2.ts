@@ -26,13 +26,21 @@ type AwsS3Module = {
 export class R2Storage implements StorageAdapter {
   private bucketName: string;
   private accountId: string;
+  private accessKeyId: string;
+  private secretAccessKey: string;
 
   constructor() {
     this.bucketName = process.env.R2_BUCKET_NAME ?? '';
     this.accountId = process.env.R2_ACCOUNT_ID ?? '';
+    this.accessKeyId = process.env.R2_ACCESS_KEY_ID ?? '';
+    this.secretAccessKey = process.env.R2_SECRET_ACCESS_KEY ?? '';
 
     if (!this.bucketName || !this.accountId) {
       throw new Error('R2_BUCKET_NAME and R2_ACCOUNT_ID are required for R2 storage');
+    }
+
+    if (!this.accessKeyId || !this.secretAccessKey) {
+      throw new Error('R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY are required for R2 storage');
     }
   }
 
@@ -83,8 +91,8 @@ export class R2Storage implements StorageAdapter {
       region: 'auto',
       endpoint: `https://${this.accountId}.r2.cloudflarestorage.com`,
       credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? '',
+        accessKeyId: this.accessKeyId,
+        secretAccessKey: this.secretAccessKey,
       },
     });
   }

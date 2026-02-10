@@ -5,58 +5,40 @@ import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getOrCreateStripeCustomer, createCheckoutSession } from '@/lib/stripe-helpers';
 import { getPlanPriceId, STRIPE_PLANS, type BillingInterval, type PlanId } from '@/lib/stripe';
 import { resolveAppOrigin } from '@/lib/security/origin';
+import { withApiLogging } from '@/lib/logging';
+import { badRequest, forbidden, unauthorized } from '@/lib/http';
+import { readJsonBodyAs } from '@/lib/http-body';
+import { z } from 'zod';
+
+const stripeCheckoutSchema = z
+  .object({
+    workspaceId: z.coerce.number().int().positive(),
+    plan: z.enum(['free', 'pro', 'enterprise']),
+    interval: z.enum(['month', 'year']).optional(),
+  })
+  .strict();
 
 /**
  * POST /api/stripe/checkout
  * Create Stripe Checkout session for subscription upgrade
  */
-export async function POST(request: NextRequest) {
+export const POST = withApiLogging('api.stripe.checkout', async (request: NextRequest) => {
   const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw unauthorized();
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+  const { workspaceId, plan, interval } = await readJsonBodyAs(request, stripeCheckoutSchema);
 
-  const workspaceId =
-    typeof body === 'object' && body !== null && 'workspaceId' in body
-      ? (body as { workspaceId?: unknown }).workspaceId
-      : undefined;
-  const plan =
-    typeof body === 'object' && body !== null && 'plan' in body
-      ? (body as { plan?: unknown }).plan
-      : undefined;
-  const interval =
-    typeof body === 'object' && body !== null && 'interval' in body
-      ? (body as { interval?: unknown }).interval
-      : undefined;
-
-  if (typeof workspaceId !== 'number' || !Number.isFinite(workspaceId) || workspaceId <= 0) {
-    return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
-  }
-  if (typeof plan !== 'string') {
-    return NextResponse.json({ error: 'plan is required' }, { status: 400 });
-  }
-  if (interval !== undefined && typeof interval !== 'string') {
-    return NextResponse.json({ error: 'Invalid interval' }, { status: 400 });
-  }
-
-  if (!(plan in STRIPE_PLANS)) {
-    return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
-  }
+  if (!(plan in STRIPE_PLANS)) throw badRequest('Invalid plan');
 
   const planId = plan as PlanId;
 
   // Verify user is owner/admin of workspace
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
   if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    throw forbidden();
   }
 
   // Get plan details
@@ -64,30 +46,25 @@ export async function POST(request: NextRequest) {
   const billingInterval: BillingInterval = interval === 'year' ? 'year' : 'month';
   const priceId = getPlanPriceId(planId, billingInterval);
   if (!planConfig || !priceId) {
-    return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+    throw badRequest('Invalid plan');
   }
 
-  try {
-    // Get or create Stripe customer
-    const customerId = await getOrCreateStripeCustomer(
-      workspaceId,
-      session.user.email,
-      session.user.name ?? undefined
-    );
+  // Get or create Stripe customer
+  const customerId = await getOrCreateStripeCustomer(
+    workspaceId,
+    session.user.email,
+    session.user.name ?? undefined
+  );
 
-    // Create checkout session
-    const origin = resolveAppOrigin(request);
-    const checkoutSession = await createCheckoutSession({
-      workspaceId,
-      priceId,
-      customerId,
-      successUrl: `${origin}/dashboard/billing?success=true`,
-      cancelUrl: `${origin}/dashboard/billing?canceled=true`,
-    });
+  // Create checkout session
+  const origin = resolveAppOrigin(request);
+  const checkoutSession = await createCheckoutSession({
+    workspaceId,
+    priceId,
+    customerId,
+    successUrl: `${origin}/dashboard/billing?success=true`,
+    cancelUrl: `${origin}/dashboard/billing?canceled=true`,
+  });
 
-    return NextResponse.json({ sessionId: checkoutSession.id, url: checkoutSession.url });
-  } catch (error) {
-    console.error('Checkout session error:', error);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
-  }
-}
+  return NextResponse.json({ sessionId: checkoutSession.id, url: checkoutSession.url });
+});

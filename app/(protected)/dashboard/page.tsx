@@ -49,12 +49,12 @@ export default async function DashboardPage() {
             Here&apos;s what&apos;s happening with your account.
           </p>
         </div>
-        <Link href="/dashboard/workspaces/new">
-          <Button>
+        <Button asChild>
+          <Link href="/dashboard/workspaces/new">
             <Plus className="mr-2 h-4 w-4" />
             New Workspace
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -95,12 +95,12 @@ export default async function DashboardPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Create your first workspace to get started.
               </p>
-              <Link href="/dashboard/workspaces/new" className="mt-4">
-                <Button>
+              <Button asChild className="mt-4">
+                <Link href="/dashboard/workspaces/new">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Workspace
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -134,24 +134,24 @@ export default async function DashboardPage() {
             <CardDescription>Common tasks you can do right now</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Link href="/dashboard/workspaces/new">
-              <Button variant="outline" className="w-full justify-start">
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/workspaces/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Create a new workspace
-              </Button>
-            </Link>
-            <Link href="/dashboard/team">
-              <Button variant="outline" className="w-full justify-start">
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/team">
                 <Users className="mr-2 h-4 w-4" />
                 Invite team members
-              </Button>
-            </Link>
-            <Link href="/dashboard/settings">
-              <Button variant="outline" className="w-full justify-start">
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/settings">
                 <CreditCard className="mr-2 h-4 w-4" />
                 Update your profile
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 

@@ -16,7 +16,7 @@ Welcome to NextJS Bootstrapped Shipped! This guide will help you get up and runn
 
 Before you begin, make sure you have:
 
-- Node.js 20+ or Bun 1.0+
+- Node.js 20+ and pnpm
 - A PostgreSQL database (we recommend [Neon](https://neon.tech))
 - A Stripe account for payments
 
@@ -27,7 +27,7 @@ Before you begin, make sure you have:
 ```bash
 git clone https://github.com/your-org/nextjs-bootstrapped-shipped.git
 cd nextjs-bootstrapped-shipped
-bun install
+pnpm install
 ```
 
 2. Copy the environment file and configure your variables:
@@ -39,14 +39,14 @@ cp .env.example .env.local
 3. Set up your database:
 
 ```bash
-bun db:push
-bun db:seed
+pnpm db:push
+pnpm db:seed
 ```
 
 4. Start the development server:
 
 ```bash
-bun dev
+pnpm dev
 ```
 
 ## Project Structure

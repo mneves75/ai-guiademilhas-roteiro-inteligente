@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { ThemeProvider } from '@/components/theme-provider';
+import { PostHogAnalyticsProvider } from '@/components/posthog-provider';
+import { ExperimentsProvider } from '@/components/experiments/growthbook-provider';
 import { getRequestLocale } from '@/lib/locale-server';
 import './globals.css';
 
@@ -96,7 +98,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <PostHogAnalyticsProvider>
+            <ExperimentsProvider>{children}</ExperimentsProvider>
+          </PostHogAnalyticsProvider>
         </ThemeProvider>
       </body>
     </html>

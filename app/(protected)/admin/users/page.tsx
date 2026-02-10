@@ -71,18 +71,33 @@ export default async function AdminUsersPage({
                 Page {pagination.page} of {pagination.totalPages}
               </p>
               <div className="flex gap-2">
-                <Link href={`/admin/users?page=${Math.max(1, page - 1)}`}>
+                {page <= 1 ? (
                   <Button variant="outline" size="sm" disabled={page <= 1}>
                     <ChevronLeft className="h-4 w-4" />
                     Previous
                   </Button>
-                </Link>
-                <Link href={`/admin/users?page=${Math.min(pagination.totalPages, page + 1)}`}>
+                ) : (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/users?page=${Math.max(1, page - 1)}`}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Link>
+                  </Button>
+                )}
+
+                {page >= pagination.totalPages ? (
                   <Button variant="outline" size="sm" disabled={page >= pagination.totalPages}>
                     Next
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                </Link>
+                ) : (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/users?page=${Math.min(pagination.totalPages, page + 1)}`}>
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           )}

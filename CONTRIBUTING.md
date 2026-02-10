@@ -105,6 +105,15 @@ Include:
 - Use case / problem it solves
 - Proposed implementation (optional)
 
+## Release Process
+
+This repository uses git tags and `CHANGELOG.md` for releases.
+
+1. Ensure the full quality gate passes: `pnpm verify`
+2. Update `CHANGELOG.md` and bump the version in `package.json`
+3. Create and push a tag (example): `git tag vX.Y.Z && git push --tags`
+4. Publish a GitHub Release using the changelog notes
+
 ## Questions?
 
 - Open a [Discussion](https://github.com/mneves75/nextjs-bootstrapped-shipped/discussions)

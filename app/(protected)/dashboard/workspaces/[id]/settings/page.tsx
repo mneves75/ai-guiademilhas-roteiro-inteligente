@@ -156,9 +156,9 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
             <CardDescription>Manage who has access to this workspace.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href={`/dashboard/workspaces/${id}/members`}>
-              <Button variant="outline">Manage Members</Button>
-            </Link>
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/workspaces/${id}/members`}>Manage Members</Link>
+            </Button>
           </CardContent>
         </Card>
 

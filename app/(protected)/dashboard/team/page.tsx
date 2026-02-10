@@ -36,9 +36,9 @@ export default async function TeamPage() {
             <p className="mt-2 text-center text-sm text-muted-foreground">
               Create a workspace first to start inviting team members.
             </p>
-            <Link href="/dashboard/workspaces/new" className="mt-4">
-              <Button>Create Workspace</Button>
-            </Link>
+            <Button asChild className="mt-4">
+              <Link href="/dashboard/workspaces/new">Create Workspace</Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -54,12 +54,12 @@ export default async function TeamPage() {
                     </CardDescription>
                   </div>
                   {(role === 'owner' || role === 'admin') && (
-                    <Link href={`/dashboard/workspaces/${workspace.id}/members`}>
-                      <Button>
+                    <Button asChild>
+                      <Link href={`/dashboard/workspaces/${workspace.id}/members`}>
                         <UserPlus className="mr-2 h-4 w-4" />
                         Manage Team
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </CardHeader>

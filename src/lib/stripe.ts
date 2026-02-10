@@ -1,3 +1,5 @@
+import 'server-only';
+
 import Stripe from 'stripe';
 import { PLAN_CATALOG, type PlanId } from './plan-catalog';
 

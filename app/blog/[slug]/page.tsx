@@ -82,12 +82,12 @@ export default async function BlogPostPage({ params }: Props) {
           url: canonical,
         }}
       />
-      <Link href="/blog">
-        <Button variant="ghost" className="mb-8">
+      <Button asChild variant="ghost" className="mb-8">
+        <Link href="/blog">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Blog
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <header className="mb-8">
         {post.image && (
@@ -161,12 +161,12 @@ export default async function BlogPostPage({ params }: Props) {
 
       <footer className="mt-12 border-t pt-8">
         <div className="flex items-center justify-between">
-          <Link href="/blog">
-            <Button variant="outline">
+          <Button asChild variant="outline">
+            <Link href="/blog">
               <ArrowLeft className="mr-2 h-4 w-4" />
               All Posts
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </footer>
     </article>

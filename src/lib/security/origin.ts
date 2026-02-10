@@ -9,6 +9,16 @@ function tryGetOriginFromEnv(value: string | undefined): string | null {
   }
 }
 
+function resolveOriginFromForwardedHeaders(request: NextRequest): string | null {
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const host = forwardedHost || request.headers.get('host')?.trim();
+  if (!host) return null;
+
+  const proto = forwardedProto || request.nextUrl.protocol.replace(':', '') || 'http';
+  return `${proto}://${host}`;
+}
+
 /**
  * Resolve the canonical app origin for server-side redirects/return URLs.
  *
@@ -31,5 +41,6 @@ export function resolveAppOrigin(request: NextRequest): string {
     );
   }
 
-  return request.nextUrl.origin;
+  // In non-production, allow dev proxies/tunnels to set the canonical origin via forwarded headers.
+  return resolveOriginFromForwardedHeaders(request) ?? request.nextUrl.origin;
 }

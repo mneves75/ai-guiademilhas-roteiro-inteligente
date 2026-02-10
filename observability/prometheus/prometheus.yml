@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - /etc/prometheus/rules/*.yaml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  - job_name: nextjs_app
+    metrics_path: /metrics
+    # O endpoint aceita Authorization: Bearer <token> quando METRICS_TOKEN esta configurado.
+    authorization:
+      credentials: ${METRICS_TOKEN}
+    static_configs:
+      - targets: ['${APP_METRICS_TARGET}']
+

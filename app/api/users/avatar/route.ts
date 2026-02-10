@@ -3,6 +3,8 @@ import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { getStorage } from '@/lib/storage';
 import crypto from 'node:crypto';
+import { withApiLogging } from '@/lib/logging';
+import { badRequest, unauthorized } from '@/lib/http';
 
 const MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
@@ -55,25 +57,31 @@ function hasMagicBytes(mime: string, buffer: Buffer): boolean {
   return false;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiLogging('api.users.avatar', async (request: NextRequest) => {
   const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw unauthorized();
   }
 
-  const formData = await request.formData();
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch (err) {
+    throw badRequest('Invalid form data', err);
+  }
+
   const file = formData.get('file');
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'file is required' }, { status: 400 });
+    throw badRequest('file is required');
   }
 
   if (!ALLOWED_MIME.has(file.type)) {
-    return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+    throw badRequest('Unsupported file type');
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: 'File too large (max 2MB)' }, { status: 400 });
+    throw badRequest('File too large (max 2MB)');
   }
 
   const ext = EXT_BY_MIME[file.type] ?? 'bin';
@@ -83,14 +91,11 @@ export async function POST(request: NextRequest) {
   const body = Buffer.from(await file.arrayBuffer());
 
   if (!hasMagicBytes(file.type, body)) {
-    return NextResponse.json(
-      { error: 'File content does not match declared type' },
-      { status: 400 }
-    );
+    throw badRequest('File content does not match declared type');
   }
 
   const storedKey = await storage.upload(key, body);
   const url = storage.getUrl(storedKey);
 
   return NextResponse.json({ url }, { status: 201 });
-}
+});

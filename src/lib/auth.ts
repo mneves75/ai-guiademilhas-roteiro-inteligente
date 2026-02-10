@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins/admin';
@@ -5,12 +7,29 @@ import { magicLink } from 'better-auth/plugins/magic-link';
 import { eq } from 'drizzle-orm';
 import { db, DB_PROVIDER, users, sessions, accounts, verification } from '@/db/client';
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendWelcomeEmail } from '@/lib/email-actions';
+import { assertProductionConfig } from '@/lib/security/prod-config';
+
+function isLoopbackOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1';
+  } catch {
+    return false;
+  }
+}
 
 function initAuth() {
+  // Fail fast for production misconfiguration (defense-in-depth).
+  assertProductionConfig();
+
   const baseURL = resolveBaseURL();
   const secret = requireSecret();
   const socialProviders = resolveSocialProviders();
   const adminEmails = getAdminEmailAllowlist();
+  // Test-only escape hatch: Playwright runs against a production build (`pnpm build && pnpm start`)
+  // and the full cross-browser matrix can exceed Better Auth's default rate limits.
+  // Keep this locked to local loopback origins to avoid accidental weakening in real deployments.
+  const isPlaywrightE2E = process.env.PLAYWRIGHT_E2E === '1' && isLoopbackOrigin(baseURL);
 
   return betterAuth({
     secret,
@@ -42,6 +61,7 @@ function initAuth() {
       updateAge: 60 * 60 * 24, // 1 day
     },
     trustedOrigins: [baseURL],
+    ...(isPlaywrightE2E ? { rateLimit: { enabled: false } } : {}),
     plugins: [
       admin({
         defaultRole: 'user',

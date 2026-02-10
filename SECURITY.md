@@ -16,6 +16,9 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Instead, please email: **marcusneves2004@yahoo.com.br**
 
+In production deployments, set `SECURITY_CONTACT_EMAIL` (or `SECURITY_CONTACT_URL`) so
+`/.well-known/security.txt` publishes a real contact channel (RFC 9116).
+
 Include:
 
 - Description of the vulnerability
@@ -71,6 +74,7 @@ This boilerplate includes:
 - [x] Rate limiting for auth endpoints (edge-memory by default; optional Upstash Redis REST for hard multi-instance guarantees)
 - [x] Input validation for API routes (strict runtime checks)
 - [x] Secure headers baseline via `next.config.ts` (works on Vercel + self-host)
+- [x] `/.well-known/security.txt` (RFC 9116) endpoint for vulnerability disclosure metadata (configure via `SECURITY_CONTACT_EMAIL`, etc.)
 
 ## Acknowledgments
 

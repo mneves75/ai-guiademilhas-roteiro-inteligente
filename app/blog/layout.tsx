@@ -27,9 +27,9 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
               Home
             </Link>
             <ThemeToggle />
-            <Link href="/login">
-              <Button size="sm">Sign In</Button>
-            </Link>
+            <Button asChild size="sm">
+              <Link href="/login">Sign In</Link>
+            </Button>
           </nav>
         </div>
       </header>

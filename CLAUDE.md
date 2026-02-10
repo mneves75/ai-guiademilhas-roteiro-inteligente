@@ -6,30 +6,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Development
-bun dev                    # Start dev server on localhost:3000
-bun build                  # Production build
-bun start                  # Start production server
+pnpm dev                   # Start dev server on localhost:3000
+pnpm build                 # Production build
+pnpm start                 # Start production server
 
 # Code Quality
-bun lint                   # ESLint (zero warnings allowed)
-bun type-check             # TypeScript strict mode check
-bun format                 # Prettier format all files
+pnpm lint                  # ESLint (zero warnings allowed)
+pnpm type-check            # TypeScript strict mode check
+pnpm format                # Prettier format all files
 
 # Testing
-bun test                   # Run unit tests (Vitest)
-bun test:watch             # Watch mode
-bun test:coverage          # With coverage report
-bun test:e2e               # Run E2E tests (Playwright)
-bun test:e2e:ui            # Playwright UI mode
+pnpm test                  # Run unit tests (Vitest)
+pnpm test:watch            # Watch mode
+pnpm test:coverage         # With coverage report
+pnpm test:e2e              # Run E2E tests (Playwright)
+pnpm test:e2e:ui           # Playwright UI mode
 
 # Database (Drizzle ORM)
-bun db:push                # Push schema to database
-bun db:generate            # Generate migrations
-bun db:migrate             # Run migrations
-bun db:studio              # Open Drizzle Studio GUI
-bun db:seed                # Seed database
-bun db:reset               # Reset and reseed
+pnpm db:push               # Push schema to database
+pnpm db:generate           # Generate migrations
+pnpm db:migrate            # Run migrations
+pnpm db:studio             # Open Drizzle Studio GUI
+pnpm db:seed               # Seed database
+pnpm db:reset              # Reset and reseed
 ```
+
+## Health
+
+- `GET /health` and `GET /api/health` - liveness probes for load balancers/uptime checks
 
 ## Architecture
 
@@ -122,3 +126,11 @@ React Email templates in `src/emails/`. Send via `src/lib/email-actions.ts`.
 2. **Path alias** - Use `@/` for `src/` imports
 3. **Zod validation** - Schema types exported from `src/db/schema.ts`
 4. **Pre-commit hooks** - Husky runs lint-staged on commit
+
+## Branch Protection (Recommended)
+
+To keep `main` healthy, enable branch protection with:
+
+- Required review (at least 1 approval)
+- Required status check(s): `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm test:e2e:ci`
+- Require conversation resolution before merge

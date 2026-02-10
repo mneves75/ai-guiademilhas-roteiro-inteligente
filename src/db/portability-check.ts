@@ -89,7 +89,7 @@ async function main() {
       throw new Error('Expected stripe event idempotency (true then false).');
     }
 
-    console.log(`db:portability-check OK (provider=${DB_PROVIDER})`);
+    console.info(`db:portability-check OK (provider=${DB_PROVIDER})`);
   } finally {
     // Cleanup to keep CI/local DBs from accumulating junk.
     // Order matters: child rows first.

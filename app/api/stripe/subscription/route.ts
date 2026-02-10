@@ -4,32 +4,34 @@ import { headers } from 'next/headers';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getWorkspaceSubscription } from '@/lib/stripe-helpers';
 import { STRIPE_PLANS } from '@/lib/stripe';
+import { withApiLogging } from '@/lib/logging';
+import { badRequest, forbidden, unauthorized } from '@/lib/http';
 
 /**
  * GET /api/stripe/subscription?workspaceId=123
  * Get subscription status for a workspace
  */
-export async function GET(request: NextRequest) {
+export const GET = withApiLogging('api.stripe.subscription', async (request: NextRequest) => {
   const auth = getAuth();
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw unauthorized();
   }
 
   const workspaceIdParam = request.nextUrl.searchParams.get('workspaceId');
   if (!workspaceIdParam) {
-    return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
+    throw badRequest('workspaceId is required');
   }
 
   const workspaceId = Number(workspaceIdParam);
   if (!Number.isFinite(workspaceId) || workspaceId <= 0) {
-    return NextResponse.json({ error: 'Invalid workspaceId' }, { status: 400 });
+    throw badRequest('Invalid workspaceId');
   }
 
   // Verify user is member of workspace
   const membership = await verifyWorkspaceMember(workspaceId, session.user.id);
   if (!membership) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    throw forbidden();
   }
 
   const subscription = await getWorkspaceSubscription(workspaceId);
@@ -45,4 +47,4 @@ export async function GET(request: NextRequest) {
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     hasCustomer: !!subscription.customerId,
   });
-}
+});
