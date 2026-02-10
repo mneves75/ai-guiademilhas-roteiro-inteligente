@@ -12,7 +12,9 @@ async function main() {
   }
 
   const next = text.replace(
-    /^import\s+"\.\/\.(?:next|next-[^/]+)\/types\/routes\.d\.ts";\s*$/m,
+    // Next may rewrite this import based on `distDir` (e.g. `.next-playwright/dist/types/...`).
+    // Keep it canonical so running E2E/dev/typegen in different distDirs doesn't churn `next-env.d.ts`.
+    /^import\s+"\.\/\.(?:next|next-[^/]+)(?:\/dist)?\/types\/routes\.d\.ts";\s*$/m,
     CANONICAL
   );
 
@@ -22,4 +24,3 @@ async function main() {
 }
 
 await main();
-
