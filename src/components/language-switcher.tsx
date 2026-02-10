@@ -37,12 +37,17 @@ export function LanguageSwitcher() {
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const [isPending, startTransition] = useTransition();
+  const [hydrated, setHydrated] = useState(false);
   const [optimisticLocale, setOptimisticLocale] = useState<Locale | null>(null);
 
   // Clear optimistic state once the server-driven locale catches up (after router.refresh()).
   useEffect(() => {
     if (optimisticLocale && optimisticLocale === locale) setOptimisticLocale(null);
   }, [locale, optimisticLocale]);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function onChange(next: string) {
     const nextLocale = next as Locale;
@@ -51,8 +56,6 @@ export function LanguageSwitcher() {
     setOptimisticLocale(nextLocale);
     startTransition(async () => {
       try {
-        await setLocaleAction(nextLocale);
-
         // If the user is on a public, locale-prefixed page, switch the URL too.
         // Otherwise, keep the current URL and just refresh to pick up the cookie.
         const query = searchParams.toString();
@@ -60,15 +63,14 @@ export function LanguageSwitcher() {
         const prefixed = stripPublicLocalePrefix(pathname);
         if (prefixed && isPublicLocalizedPath(prefixed.restPathname)) {
           router.replace(withQuery(publicPathname(nextLocale, prefixed.restPathname)));
-          router.refresh();
-          return;
         }
         if (!prefixed && isPublicLocalizedPath(pathname)) {
           router.replace(withQuery(publicPathname(nextLocale, pathname)));
-          router.refresh();
-          return;
         }
 
+        // Best-effort persistence: the URL determines the effective locale on public pages, but
+        // we still keep a cookie for non-prefixed surfaces (auth/protected) and future visits.
+        await setLocaleAction(nextLocale);
         router.refresh();
       } catch {
         // Network/runtime failures should not leave the control stuck in an optimistic state.
@@ -78,7 +80,11 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <Select value={optimisticLocale ?? locale} onValueChange={onChange} disabled={isPending}>
+    <Select
+      value={optimisticLocale ?? locale}
+      onValueChange={onChange}
+      disabled={!hydrated || isPending}
+    >
       <SelectTrigger
         className="h-9 w-[140px]"
         aria-label={locale === 'pt-BR' ? 'Idioma' : 'Language'}

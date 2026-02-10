@@ -106,7 +106,7 @@ export default async function TagPage({ params }: Props) {
             >
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {post.image && (
-                  <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                  <div className="pointer-events-none relative aspect-video overflow-hidden rounded-t-lg">
                     <Image
                       src={post.image}
                       alt={post.title}

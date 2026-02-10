@@ -83,16 +83,21 @@ Os outros 10%: tecnico/medicao (Search Console, CWV, correcoes de indexacao).
 
 Pilar:
 
-- `/blog/nextjs-saas-boilerplate-10-10`
+- URLs publicas sao estaveis por locale: `/pt-br/*` e `/en/*`.
+- Pilar (pt-BR): `/pt-br/blog/nextjs-saas-boilerplate-10-10`
 
 Satelites:
 
-- `/blog/multi-tenancy-workspaces-rbac-nextjs`
-- `/blog/stripe-subscriptions-webhooks-idempotentes-nextjs`
-- `/blog/better-auth-nextjs-app-router-sem-csr-bailout`
-- `/blog/seo-tecnico-nextjs-sitemap-robots-canonical-rss`
-- `/blog/playwright-e2e-deterministico-nextjs-standalone`
-- `/blog/headers-de-seguranca-nextjs-noindex-x-robots-tag`
+- pt-BR:
+- `/pt-br/blog/multi-tenancy-workspaces-rbac-nextjs`
+- `/pt-br/blog/stripe-subscriptions-webhooks-idempotentes-nextjs`
+- `/pt-br/blog/better-auth-nextjs-app-router-sem-csr-bailout`
+- `/pt-br/blog/seo-tecnico-nextjs-sitemap-robots-canonical-rss`
+- `/pt-br/blog/playwright-e2e-deterministico-nextjs-standalone`
+- `/pt-br/blog/headers-de-seguranca-nextjs-noindex-x-robots-tag`
+- en:
+- `/en/blog/getting-started`
+- `/en/blog/why-nextjs-16`
 
 ## 2) O que precisa para 10/10 (criterios objetivos)
 

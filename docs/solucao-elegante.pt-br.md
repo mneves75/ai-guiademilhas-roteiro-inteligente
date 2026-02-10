@@ -98,7 +98,7 @@ O que torna isso "elegante" (nao so "funciona"):
 
 - A UI nunca precisa "descobrir" locale no client.
 - A mudanca de locale e aplicada pelo server (cookie httpOnly), entao toda a arvore fica consistente apos refresh.
-- Existe teste E2E de i18n cruzando telas publicas (`/`, `/pricing`, `/blog`).
+- Existe teste E2E de i18n cruzando telas publicas com URL por locale (`/en`, `/en/pricing`, `/en/blog`) e troca para `/pt-br/*`.
 
 ## Evidencia (gates)
 

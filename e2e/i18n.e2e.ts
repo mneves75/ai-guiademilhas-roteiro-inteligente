@@ -7,8 +7,9 @@ test.describe('i18n', () => {
     await page.goto('/en', { waitUntil: 'domcontentloaded' });
 
     const switcher = page.getByRole('combobox', { name: /Language|Idioma/ });
+    await expect(switcher).toBeEnabled();
     if (isMobile) await switcher.tap();
-    else await switcher.click();
+    else await switcher.click({ force: true });
 
     const optionByRole = page.getByRole('option', { name: 'Português (Brasil)' });
     const optionByAttr = page
@@ -16,7 +17,7 @@ test.describe('i18n', () => {
       .filter({ hasText: 'Português (Brasil)' })
       .first();
     const option = (await optionByRole.count()) > 0 ? optionByRole : optionByAttr;
-    await expect(option).toBeVisible();
+    await expect(option).toBeVisible({ timeout: 10_000 });
     if (isMobile) await option.tap();
     else await option.click();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signUp } from '@/lib/auth-client';
@@ -19,6 +19,7 @@ export default function SignupForm({
 }) {
   const router = useRouter();
 
+  const [hydrated, setHydrated] = useState(false);
   const [locale] = useState<Locale>(initialLocale);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +35,10 @@ export default function SignupForm({
   const t = m(locale).auth;
   const termsPath = publicPathname(locale, '/terms');
   const privacyPath = publicPathname(locale, '/privacy');
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,7 +106,13 @@ export default function SignupForm({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6" data-testid="signup-form" noValidate>
+      <form
+        onSubmit={handleSubmit}
+        method="post"
+        className="mt-8 space-y-6"
+        data-testid="signup-form"
+        noValidate
+      >
         {error && (
           <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
             {error}
@@ -192,7 +203,9 @@ export default function SignupForm({
 
         <button
           type="submit"
-          disabled={loading}
+          // Avoid leaking secrets via an accidental pre-hydration GET submit (some browsers can be slow to hydrate).
+          // We intentionally require hydration for the JS-based signup flow.
+          disabled={loading || !hydrated}
           className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {loading ? t.creatingAccount : t.createAccountButton}
