@@ -4,6 +4,13 @@ import { WelcomeEmail } from '@/emails/welcome-email';
 import { InvitationEmail } from '@/emails/invitation-email';
 import { PasswordResetEmail } from '@/emails/password-reset-email';
 import { MagicLinkEmail } from '@/emails/magic-link-email';
+import { getRequestLocale } from '@/lib/locale-server';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Email Preview',
+  robots: { index: false, follow: false },
+};
 
 function EmailFrame({ title, html }: { title: string; html: string }) {
   return (
@@ -20,6 +27,8 @@ export default async function EmailPreviewPage() {
   if (process.env.NODE_ENV !== 'development') {
     notFound();
   }
+
+  const locale = await getRequestLocale();
 
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -57,17 +66,24 @@ export default async function EmailPreviewPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold">Email Preview</h1>
+        <h1 className="text-2xl font-bold">
+          {locale === 'pt-BR' ? 'Preview de emails' : 'Email Preview'}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Development-only preview of React Email templates.
+          {locale === 'pt-BR'
+            ? 'Preview (apenas desenvolvimento) dos templates de React Email.'
+            : 'Development-only preview of React Email templates.'}
         </p>
       </div>
 
       <div className="grid gap-6">
-        <EmailFrame title="Welcome" html={welcomeHtml} />
-        <EmailFrame title="Invitation" html={invitationHtml} />
-        <EmailFrame title="Password Reset" html={resetHtml} />
-        <EmailFrame title="Magic Link" html={magicHtml} />
+        <EmailFrame title={locale === 'pt-BR' ? 'Boas-vindas' : 'Welcome'} html={welcomeHtml} />
+        <EmailFrame title={locale === 'pt-BR' ? 'Convite' : 'Invitation'} html={invitationHtml} />
+        <EmailFrame
+          title={locale === 'pt-BR' ? 'Redefinicao de senha' : 'Password Reset'}
+          html={resetHtml}
+        />
+        <EmailFrame title={locale === 'pt-BR' ? 'Link magico' : 'Magic Link'} html={magicHtml} />
       </div>
     </div>
   );

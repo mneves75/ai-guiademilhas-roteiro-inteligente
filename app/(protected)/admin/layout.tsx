@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { getAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -11,16 +12,13 @@ import {
   ArrowLeft,
   CreditCard,
 } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
 export const dynamic = 'force-dynamic';
-
-const navigation = [
-  { name: 'Overview', href: '/admin', icon: BarChart3 },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Workspaces', href: '/admin/workspaces', icon: FolderKanban },
-  { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
-];
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const auth = getAuth();
@@ -36,12 +34,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/dashboard');
   }
 
+  const locale = await getRequestLocale();
+  const t = m(locale);
+
+  const navigation = [
+    { name: t.admin.nav.overview, href: '/admin', icon: BarChart3 },
+    { name: t.admin.nav.users, href: '/admin/users', icon: Users },
+    { name: t.admin.nav.workspaces, href: '/admin/workspaces', icon: FolderKanban },
+    { name: t.admin.nav.subscriptions, href: '/admin/subscriptions', icon: CreditCard },
+    { name: t.admin.nav.settings, href: '/admin/settings', icon: Settings },
+  ];
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-64 border-r bg-background">
         <div className="flex h-14 items-center gap-2 border-b px-4">
           <Shield className="h-5 w-5 text-destructive" />
-          <span className="font-semibold">Admin Panel</span>
+          <span className="font-semibold">{t.admin.panelTitle}</span>
         </div>
 
         <nav className="space-y-1 p-2">
@@ -63,7 +72,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            {t.admin.nav.backToDashboard}
           </Link>
         </div>
       </aside>

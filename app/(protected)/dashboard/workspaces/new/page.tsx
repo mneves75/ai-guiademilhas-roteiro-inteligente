@@ -7,9 +7,14 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 export default function NewWorkspacePage() {
   const router = useRouter();
+  const { locale } = useLocale();
+  const t = m(locale);
+
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [error, setError] = useState('');
@@ -40,13 +45,13 @@ export default function NewWorkspacePage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create workspace');
+        throw new Error(data.error || t.dashboard.workspaces.createFailed);
       }
 
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : t.common.somethingWentWrong);
     } finally {
       setIsLoading(false);
     }
@@ -59,25 +64,23 @@ export default function NewWorkspacePage() {
         className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Dashboard
+        {t.dashboard.workspaces.backToDashboard}
       </Link>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create Workspace</CardTitle>
-          <CardDescription>
-            Create a new workspace to organize your team and projects.
-          </CardDescription>
+          <CardTitle>{t.dashboard.workspaces.createTitle}</CardTitle>
+          <CardDescription>{t.dashboard.workspaces.createSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
-                Workspace Name
+                {t.dashboard.workspaces.workspaceName}
               </label>
               <Input
                 id="name"
-                placeholder="My Awesome Team"
+                placeholder={t.dashboard.workspaces.namePlaceholder}
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 required
@@ -86,7 +89,7 @@ export default function NewWorkspacePage() {
 
             <div className="space-y-2">
               <label htmlFor="slug" className="text-sm font-medium">
-                Workspace URL
+                {t.dashboard.workspaces.workspaceUrl}
               </label>
               <div className="flex items-center">
                 <span className="rounded-l-md border border-r-0 bg-muted px-3 py-2 text-sm text-muted-foreground">
@@ -95,21 +98,19 @@ export default function NewWorkspacePage() {
                 <Input
                   id="slug"
                   className="rounded-l-none"
-                  placeholder="my-team"
+                  placeholder={t.dashboard.workspaces.slugPlaceholder}
                   value={slug}
                   onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   required
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Only lowercase letters, numbers, and hyphens allowed.
-              </p>
+              <p className="text-xs text-muted-foreground">{t.dashboard.workspaces.urlHelp}</p>
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Workspace'}
+              {isLoading ? t.dashboard.workspaces.creating : t.dashboard.workspaces.createCta}
             </Button>
           </form>
         </CardContent>

@@ -2,8 +2,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Rocket } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
-export default function BlogLayout({ children }: { children: React.ReactNode }) {
+export default async function BlogLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -18,17 +24,18 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
               href="/blog"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Blog
+              {t.blog.title}
             </Link>
             <Link
               href="/"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Home
+              {t.blog.home}
             </Link>
+            <LanguageSwitcher />
             <ThemeToggle />
             <Button asChild size="sm">
-              <Link href="/login">Sign In</Link>
+              <Link href="/login">{t.blog.signIn}</Link>
             </Button>
           </nav>
         </div>
@@ -43,15 +50,16 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
               <Rocket className="h-5 w-5" />
               <span className="font-semibold">Shipped</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Open-source Next.js boilerplate for shipping apps fast.
-            </p>
+            <p className="text-sm text-muted-foreground">{t.blog.footerTagline}</p>
             <div className="flex gap-4">
               <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground">
-                Blog
+                {t.blog.title}
+              </Link>
+              <Link href="/rss.xml" className="text-sm text-muted-foreground hover:text-foreground">
+                RSS
               </Link>
               <Link
-                href="https://github.com"
+                href="https://github.com/mneves75/nextjs-bootstrapped-shipped"
                 className="text-sm text-muted-foreground hover:text-foreground"
                 target="_blank"
                 rel="noopener noreferrer"

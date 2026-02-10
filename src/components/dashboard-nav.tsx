@@ -13,16 +13,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
-
-const navigation = [
-  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Workspaces', href: '/dashboard/workspaces', icon: FolderKanban },
-  { name: 'Team', href: '/dashboard/team', icon: Users },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-  { name: 'Notifications', href: '/dashboard/notifications', icon: Mail },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-];
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 interface DashboardNavProps {
   user: {
@@ -34,6 +26,18 @@ interface DashboardNavProps {
 
 export function DashboardNav({ user }: DashboardNavProps) {
   const pathname = usePathname();
+  const { locale } = useLocale();
+  const t = m(locale);
+
+  const navigation = [
+    { name: t.dashboard.nav.overview, href: '/dashboard', icon: LayoutDashboard },
+    { name: t.dashboard.nav.workspaces, href: '/dashboard/workspaces', icon: FolderKanban },
+    { name: t.dashboard.nav.team, href: '/dashboard/team', icon: Users },
+    { name: t.dashboard.nav.analytics, href: '/dashboard/analytics', icon: BarChart3 },
+    { name: t.dashboard.nav.billing, href: '/dashboard/billing', icon: CreditCard },
+    { name: t.dashboard.nav.notifications, href: '/dashboard/notifications', icon: Mail },
+    { name: t.dashboard.nav.settings, href: '/dashboard/settings', icon: Settings },
+  ];
 
   return (
     <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
@@ -52,7 +56,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -76,7 +80,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
             </span>
           </div>
           <div className="flex-1 truncate">
-            <p className="truncate text-sm font-medium">{user.name ?? 'User'}</p>
+            <p className="truncate text-sm font-medium">{user.name ?? t.common.userFallback}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>

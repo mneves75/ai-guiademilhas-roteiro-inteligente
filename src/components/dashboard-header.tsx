@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 interface DashboardHeaderProps {
   user: {
@@ -32,6 +34,8 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) {
   const router = useRouter();
   const [stopping, setStopping] = useState(false);
+  const { locale } = useLocale();
+  const t = m(locale);
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -54,7 +58,7 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
     <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden">
         <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle menu</span>
+        <span className="sr-only">{t.dashboard.header.toggleMenu}</span>
       </Button>
 
       <div className="hidden md:block">
@@ -67,7 +71,7 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search..."
+              placeholder={t.dashboard.header.searchPlaceholder}
               className="w-full max-w-sm bg-muted/50 pl-8 md:w-[300px]"
             />
           </div>
@@ -83,14 +87,14 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
             disabled={stopping}
             className="hidden sm:inline-flex"
           >
-            {stopping ? 'Stopping…' : 'Stop impersonating'}
+            {stopping ? t.dashboard.header.stopping : t.dashboard.header.stopImpersonating}
           </Button>
         )}
 
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">{t.dashboard.header.notifications}</span>
         </Button>
 
         <LanguageSwitcher />
@@ -109,20 +113,20 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span>{user.name ?? 'User'}</span>
+                <span>{user.name ?? t.common.userFallback}</span>
                 <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings">Settings</Link>
+              <Link href="/dashboard/settings">{t.dashboard.nav.settings}</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/billing">Billing</Link>
+              <Link href="/dashboard/billing">{t.dashboard.nav.billing}</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-              Sign out
+              {t.dashboard.header.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Users, FolderKanban, CreditCard, ArrowRight, Plus } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
 export default async function DashboardPage() {
   const auth = getAuth();
@@ -17,24 +19,33 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
+  const locale = await getRequestLocale();
+  const t = m(locale);
+
   const workspaces = await getUserWorkspaces(session.user.id);
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return t.roles.owner;
+    if (role === 'admin') return t.roles.admin;
+    if (role === 'member') return t.roles.member;
+    return role;
+  };
 
   const stats = [
     {
-      name: 'Workspaces',
+      name: t.dashboard.overview.stats.workspaces,
       value: workspaces.length,
       icon: FolderKanban,
       href: '/dashboard/workspaces',
     },
     {
-      name: 'Team Members',
+      name: t.dashboard.overview.stats.teamMembers,
       value: workspaces.reduce((acc) => acc + 1, 0), // Placeholder
       icon: Users,
       href: '/dashboard/team',
     },
     {
-      name: 'Active Plan',
-      value: 'Free',
+      name: t.dashboard.overview.stats.activePlan,
+      value: t.dashboard.overview.stats.activePlanFree,
       icon: CreditCard,
       href: '/dashboard/billing',
     },
@@ -44,15 +55,15 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back, {session.user.name ?? 'there'}!</h1>
-          <p className="text-muted-foreground">
-            Here&apos;s what&apos;s happening with your account.
-          </p>
+          <h1 className="text-2xl font-bold">
+            {t.dashboard.overview.welcomeBack(session.user.name ?? null)}
+          </h1>
+          <p className="text-muted-foreground">{t.dashboard.overview.subtitle}</p>
         </div>
         <Button asChild>
           <Link href="/dashboard/workspaces/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Workspace
+            {t.dashboard.overview.newWorkspace}
           </Link>
         </Button>
       </div>
@@ -73,7 +84,7 @@ export default async function DashboardPage() {
                 href={stat.href}
                 className="mt-2 inline-flex items-center text-sm text-primary hover:underline"
               >
-                View details
+                {t.dashboard.overview.viewDetails}
                 <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </CardContent>
@@ -84,21 +95,21 @@ export default async function DashboardPage() {
       {/* Recent Workspaces */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Workspaces</CardTitle>
-          <CardDescription>Quick access to your recent workspaces</CardDescription>
+          <CardTitle>{t.dashboard.overview.yourWorkspaces}</CardTitle>
+          <CardDescription>{t.dashboard.overview.yourWorkspacesSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           {workspaces.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <FolderKanban className="h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-semibold">No workspaces yet</h3>
+              <h3 className="mt-4 text-lg font-semibold">{t.dashboard.overview.noWorkspacesYet}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Create your first workspace to get started.
+                {t.dashboard.overview.createFirstWorkspace}
               </p>
               <Button asChild className="mt-4">
                 <Link href="/dashboard/workspaces/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Workspace
+                  {t.dashboard.overview.createWorkspace}
                 </Link>
               </Button>
             </div>
@@ -114,7 +125,7 @@ export default async function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium group-hover:text-primary">{workspace.name}</h3>
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs capitalize">
-                        {role}
+                        {roleLabel(role)}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">/{workspace.slug}</p>
@@ -130,26 +141,26 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks you can do right now</CardDescription>
+            <CardTitle>{t.dashboard.overview.quickActions}</CardTitle>
+            <CardDescription>{t.dashboard.overview.quickActionsSubtitle}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2">
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/dashboard/workspaces/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create a new workspace
+                {t.dashboard.overview.actions.createNewWorkspace}
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/dashboard/team">
                 <Users className="mr-2 h-4 w-4" />
-                Invite team members
+                {t.dashboard.overview.actions.inviteTeamMembers}
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/dashboard/settings">
                 <CreditCard className="mr-2 h-4 w-4" />
-                Update your profile
+                {t.dashboard.overview.actions.updateProfile}
               </Link>
             </Button>
           </CardContent>
@@ -157,8 +168,8 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
-            <CardDescription>Complete these steps to get the most out of Shipped</CardDescription>
+            <CardTitle>{t.dashboard.overview.gettingStarted}</CardTitle>
+            <CardDescription>{t.dashboard.overview.gettingStartedSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -166,7 +177,7 @@ export default async function DashboardPage() {
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                   ✓
                 </div>
-                <span className="text-sm">Create your account</span>
+                <span className="text-sm">{t.dashboard.overview.steps.createAccount}</span>
               </li>
               <li className="flex items-center gap-3">
                 <div
@@ -178,19 +189,19 @@ export default async function DashboardPage() {
                 >
                   {workspaces.length > 0 ? '✓' : '2'}
                 </div>
-                <span className="text-sm">Create your first workspace</span>
+                <span className="text-sm">{t.dashboard.overview.steps.createFirstWorkspace}</span>
               </li>
               <li className="flex items-center gap-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-xs text-muted-foreground">
                   3
                 </div>
-                <span className="text-sm">Invite your team</span>
+                <span className="text-sm">{t.dashboard.overview.steps.inviteTeam}</span>
               </li>
               <li className="flex items-center gap-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-xs text-muted-foreground">
                   4
                 </div>
-                <span className="text-sm">Set up billing</span>
+                <span className="text-sm">{t.dashboard.overview.steps.setupBilling}</span>
               </li>
             </ul>
           </CardContent>

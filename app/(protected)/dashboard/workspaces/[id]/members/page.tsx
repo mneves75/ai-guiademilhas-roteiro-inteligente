@@ -30,6 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
 
 type Member = {
   id: number;
@@ -56,6 +59,16 @@ type Invitation = {
 
 export default function WorkspaceMembersPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { locale } = useLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return t.roles.owner;
+    if (role === 'admin') return t.roles.admin;
+    if (role === 'member') return t.roles.member;
+    return role;
+  };
+
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [currentRole, setCurrentRole] = useState<string | null>(null);
@@ -115,7 +128,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to send invitation');
+        throw new Error(data.error || t.dashboard.members.inviteFailed);
       }
 
       setInviteEmail('');
@@ -123,14 +136,14 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
       setInviteDialogOpen(false);
       fetchData();
     } catch (err) {
-      setInviteError(err instanceof Error ? err.message : 'Something went wrong');
+      setInviteError(err instanceof Error ? err.message : t.common.somethingWentWrong);
     } finally {
       setIsInviting(false);
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!confirm('Remove this member from the workspace?')) return;
+    if (!confirm(t.dashboard.members.removeConfirm)) return;
 
     await fetch(`/api/workspaces/${id}/members`, {
       method: 'DELETE',
@@ -173,7 +186,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
   };
 
   if (isLoading) {
-    return <div className="container py-8">Loading...</div>;
+    return <div className="container py-8">{t.common.loading}</div>;
   }
 
   return (
@@ -183,34 +196,34 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
         className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Settings
+        {t.dashboard.members.backToSettings}
       </Link>
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Team Members</h1>
+        <h1 className="text-2xl font-bold">{t.dashboard.members.title}</h1>
         {canManage && (
           <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Invite Member
+                {t.dashboard.members.inviteMember}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <form onSubmit={handleInvite}>
                 <DialogHeader>
-                  <DialogTitle>Invite Team Member</DialogTitle>
-                  <DialogDescription>Send an invitation to join this workspace.</DialogDescription>
+                  <DialogTitle>{t.dashboard.members.inviteTitle}</DialogTitle>
+                  <DialogDescription>{t.dashboard.members.inviteSubtitle}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-medium">
-                      Email Address
+                      {t.dashboard.members.emailAddress}
                     </label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="colleague@example.com"
+                      placeholder={t.dashboard.members.emailPlaceholder}
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
@@ -218,15 +231,15 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="role" className="text-sm font-medium">
-                      Role
+                      {t.dashboard.members.role}
                     </label>
                     <Select value={inviteRole} onValueChange={setInviteRole}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="member">Member</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="member">{t.dashboard.members.roleMember}</SelectItem>
+                        <SelectItem value="admin">{t.dashboard.members.roleAdmin}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -234,7 +247,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isInviting}>
-                    {isInviting ? 'Sending...' : 'Send Invitation'}
+                    {isInviting ? t.dashboard.members.sending : t.dashboard.members.sendInvitation}
                   </Button>
                 </DialogFooter>
               </form>
@@ -246,7 +259,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Members ({members.length})</CardTitle>
+            <CardTitle>{t.dashboard.members.membersCount(members.length)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="divide-y">
@@ -269,14 +282,14 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{member.user.name ?? 'Unnamed'}</p>
+                      <p className="font-medium">{member.user.name ?? t.common.unnamedFallback}</p>
                       <p className="text-sm text-muted-foreground">{member.user.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs">
                       {getRoleIcon(member.role)}
-                      <span className="capitalize">{member.role}</span>
+                      <span className="capitalize">{roleLabel(member.role)}</span>
                     </div>
                     {canManage && member.role !== 'owner' && (
                       <DropdownMenu>
@@ -294,7 +307,9 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                               )
                             }
                           >
-                            {member.role === 'admin' ? 'Demote to Member' : 'Promote to Admin'}
+                            {member.role === 'admin'
+                              ? t.dashboard.members.demoteToMember
+                              : t.dashboard.members.promoteToAdmin}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -302,7 +317,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                             onClick={() => handleRemoveMember(member.userId)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Remove
+                            {t.dashboard.members.remove}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -317,8 +332,8 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
         {canManage && invitations.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Pending Invitations ({invitations.length})</CardTitle>
-              <CardDescription>Invitations that haven&apos;t been accepted yet.</CardDescription>
+              <CardTitle>{t.dashboard.members.pendingInvitesCount(invitations.length)}</CardTitle>
+              <CardDescription>{t.dashboard.members.pendingInvitesSubtitle}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="divide-y">
@@ -327,8 +342,10 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                     <div>
                       <p className="font-medium">{invitation.email}</p>
                       <p className="text-sm text-muted-foreground">
-                        Invited as {invitation.role} · Expires{' '}
-                        {new Date(invitation.expiresAt).toLocaleDateString()}
+                        {t.dashboard.members.invitedAs(
+                          roleLabel(invitation.role),
+                          new Date(invitation.expiresAt).toLocaleDateString(intlLocale)
+                        )}
                       </p>
                     </div>
                     <Button
@@ -336,7 +353,7 @@ export default function WorkspaceMembersPage({ params }: { params: Promise<{ id:
                       size="sm"
                       onClick={() => handleRevokeInvitation(invitation.id)}
                     >
-                      Revoke
+                      {t.dashboard.members.revoke}
                     </Button>
                   </div>
                 ))}

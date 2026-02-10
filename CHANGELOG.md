@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- RSS feed for the blog at `/rss.xml`
+- Optional site verification env vars for SEO (`GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`)
+- Noindex metadata for sensitive routes (dashboard and invite flows)
+- New unit coverage for SEO routes (sitemap, robots, RSS)
+
+### Changed
+
+- `sitemap.xml` now includes only indexable public pages plus blog posts and tag pages (and excludes auth pages)
+- `robots.txt` now blocks crawling the development-only email preview route
+
+### Fixed
+
+- Completed pt-BR translations across the main UI surfaces (marketing, blog, dashboard, admin)
+
 ## [0.3.0] - 2026-02-10
 
 ### Added

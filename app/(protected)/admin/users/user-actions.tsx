@@ -11,9 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 export function AdminUserActions({ userId }: { userId: string }) {
   const router = useRouter();
+  const { locale } = useLocale();
+  const t = m(locale);
   const [loading, setLoading] = useState(false);
 
   async function impersonate() {
@@ -39,19 +43,24 @@ export function AdminUserActions({ userId }: { userId: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={loading} aria-label="User actions">
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={loading}
+          aria-label={t.admin.users.actionsAria}
+        >
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/admin/users/${userId}`}>View Details</Link>
+          <Link href={`/admin/users/${userId}`}>{t.admin.users.viewDetails}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={impersonate} disabled={loading}>
-          {loading ? 'Impersonating…' : 'Impersonate'}
+          {loading ? t.admin.users.impersonating : t.admin.users.impersonate}
         </DropdownMenuItem>
         <DropdownMenuItem className="text-destructive" disabled>
-          Disable Account
+          {t.admin.users.disableAccount}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

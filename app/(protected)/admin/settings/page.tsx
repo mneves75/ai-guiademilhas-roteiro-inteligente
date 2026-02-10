@@ -3,86 +3,90 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const ts = t.admin.settings;
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Admin Settings</h1>
-        <p className="text-muted-foreground">Configure system-wide settings.</p>
+        <h1 className="text-2xl font-bold">{ts.title}</h1>
+        <p className="text-muted-foreground">{ts.subtitle}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>General Settings</CardTitle>
-          <CardDescription>Basic application configuration.</CardDescription>
+          <CardTitle>{ts.generalTitle}</CardTitle>
+          <CardDescription>{ts.generalSubtitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="app-name">Application Name</Label>
+            <Label htmlFor="app-name">{ts.appName}</Label>
             <Input id="app-name" defaultValue="Shipped" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="support-email">Support Email</Label>
+            <Label htmlFor="support-email">{ts.supportEmail}</Label>
             <Input id="support-email" type="email" defaultValue="support@shipped.dev" />
           </div>
-          <Button>Save Changes</Button>
+          <Button>{ts.save}</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Admin Access</CardTitle>
-          <CardDescription>Manage admin email whitelist.</CardDescription>
+          <CardTitle>{ts.accessTitle}</CardTitle>
+          <CardDescription>{ts.accessSubtitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-emails">Admin Emails (comma-separated)</Label>
+            <Label htmlFor="admin-emails">{ts.adminEmails}</Label>
             <Input
               id="admin-emails"
-              placeholder="admin@example.com, super@example.com"
+              placeholder={ts.adminEmailsPlaceholder}
               defaultValue={process.env.ADMIN_EMAILS ?? ''}
             />
-            <p className="text-xs text-muted-foreground">
-              Users with these emails will have admin access. Set via ADMIN_EMAILS env var.
-            </p>
+            <p className="text-xs text-muted-foreground">{ts.adminEmailsHelp}</p>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Feature Flags</CardTitle>
-          <CardDescription>Toggle system features.</CardDescription>
+          <CardTitle>{ts.flagsTitle}</CardTitle>
+          <CardDescription>{ts.flagsSubtitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">User Registration</p>
-              <p className="text-sm text-muted-foreground">Allow new users to sign up.</p>
+              <p className="font-medium">{ts.userRegistration}</p>
+              <p className="text-sm text-muted-foreground">{ts.userRegistrationHint}</p>
             </div>
             <Button variant="outline" size="sm">
-              Enabled
+              {ts.enabled}
             </Button>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Email Verification</p>
-              <p className="text-sm text-muted-foreground">Require email verification.</p>
+              <p className="font-medium">{ts.emailVerification}</p>
+              <p className="text-sm text-muted-foreground">{ts.emailVerificationHint}</p>
             </div>
             <Button variant="outline" size="sm">
-              Disabled
+              {ts.disabled}
             </Button>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Maintenance Mode</p>
-              <p className="text-sm text-muted-foreground">Put the app in maintenance mode.</p>
+              <p className="font-medium">{ts.maintenanceMode}</p>
+              <p className="text-sm text-muted-foreground">{ts.maintenanceModeHint}</p>
             </div>
             <Button variant="outline" size="sm">
-              Disabled
+              {ts.disabled}
             </Button>
           </div>
         </CardContent>
@@ -90,27 +94,27 @@ export default function AdminSettingsPage() {
 
       <Card className="border-destructive">
         <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Irreversible and destructive actions.</CardDescription>
+          <CardTitle className="text-destructive">{ts.dangerTitle}</CardTitle>
+          <CardDescription>{ts.dangerSubtitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Clear All Sessions</p>
-              <p className="text-sm text-muted-foreground">Log out all users immediately.</p>
+              <p className="font-medium">{ts.clearSessions}</p>
+              <p className="text-sm text-muted-foreground">{ts.clearSessionsHint}</p>
             </div>
             <Button variant="destructive" size="sm">
-              Clear Sessions
+              {ts.clearSessionsAction}
             </Button>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Reset Database</p>
-              <p className="text-sm text-muted-foreground">Delete all data (development only).</p>
+              <p className="font-medium">{ts.resetDb}</p>
+              <p className="text-sm text-muted-foreground">{ts.resetDbHint}</p>
             </div>
             <Button variant="destructive" size="sm" disabled>
-              Reset Database
+              {ts.resetDbAction}
             </Button>
           </div>
         </CardContent>

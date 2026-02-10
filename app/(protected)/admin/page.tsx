@@ -2,51 +2,58 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getSystemStats, getRecentActivity } from '@/lib/admin';
 import { Users, FolderKanban, CreditCard, DollarSign, TrendingUp } from 'lucide-react';
 import type { User, Workspace } from '@/db/schema/types';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
 
 export default async function AdminDashboardPage() {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
+
   const stats = await getSystemStats();
   const activity = await getRecentActivity(5);
 
   const statCards = [
     {
-      name: 'Total Users',
+      name: t.admin.dashboard.cards.totalUsers,
       value: stats.totalUsers,
       icon: Users,
-      description: `+${stats.newUsersLast7Days} in last 7 days`,
+      description: t.admin.dashboard.newUsersLast7Days(stats.newUsersLast7Days),
     },
     {
-      name: 'Workspaces',
+      name: t.admin.dashboard.cards.workspaces,
       value: stats.totalWorkspaces,
       icon: FolderKanban,
-      description: 'Active workspaces',
+      description: t.admin.dashboard.activeWorkspaces,
     },
     {
-      name: 'Subscriptions',
+      name: t.admin.dashboard.cards.subscriptions,
       value: stats.activeSubscriptions,
       icon: CreditCard,
-      description: 'Active paid plans',
+      description: t.admin.dashboard.activePaidPlans,
     },
     {
-      name: 'Est. MRR',
-      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+      name: t.admin.dashboard.cards.estMrr,
+      value: new Intl.NumberFormat(intlLocale, { style: 'currency', currency: 'USD' }).format(
         (stats.estimatedMrrCents ?? 0) / 100
       ),
       icon: DollarSign,
-      description: 'Best-effort estimate',
+      description: t.admin.dashboard.bestEffortEstimate,
     },
     {
-      name: 'Growth',
+      name: t.admin.dashboard.cards.growth,
       value: `${stats.newUsersLast7Days > 0 ? '+' : ''}${stats.newUsersLast7Days}`,
       icon: TrendingUp,
-      description: 'New users this week',
+      description: t.admin.dashboard.newUsersThisWeek,
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">System overview and management tools.</p>
+        <h1 className="text-2xl font-bold">{t.admin.dashboard.title}</h1>
+        <p className="text-muted-foreground">{t.admin.dashboard.subtitle}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -69,12 +76,12 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Users</CardTitle>
-            <CardDescription>Latest user registrations</CardDescription>
+            <CardTitle>{t.admin.dashboard.recentUsers}</CardTitle>
+            <CardDescription>{t.admin.dashboard.recentUsersSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             {activity.recentUsers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No users yet.</p>
+              <p className="text-sm text-muted-foreground">{t.admin.dashboard.noUsersYet}</p>
             ) : (
               <div className="space-y-3">
                 {activity.recentUsers.map((user: User) => (
@@ -84,12 +91,14 @@ export default async function AdminDashboardPage() {
                         {(user.name ?? user.email).charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{user.name ?? 'Unnamed'}</p>
+                        <p className="text-sm font-medium">
+                          {user.name ?? t.common.unnamedFallback}
+                        </p>
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {new Date(user.createdAt).toLocaleDateString(intlLocale)}
                     </p>
                   </div>
                 ))}
@@ -100,12 +109,12 @@ export default async function AdminDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Workspaces</CardTitle>
-            <CardDescription>Latest workspace creations</CardDescription>
+            <CardTitle>{t.admin.dashboard.recentWorkspaces}</CardTitle>
+            <CardDescription>{t.admin.dashboard.recentWorkspacesSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             {activity.recentWorkspaces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No workspaces yet.</p>
+              <p className="text-sm text-muted-foreground">{t.admin.dashboard.noWorkspacesYet}</p>
             ) : (
               <div className="space-y-3">
                 {activity.recentWorkspaces.map((workspace: Workspace & { owner?: User | null }) => (
@@ -113,11 +122,15 @@ export default async function AdminDashboardPage() {
                     <div>
                       <p className="text-sm font-medium">{workspace.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        by {workspace.owner?.name ?? workspace.owner?.email ?? 'Unknown'}
+                        {t.admin.dashboard.by(
+                          workspace.owner?.name ??
+                            workspace.owner?.email ??
+                            t.admin.workspaces.unknown
+                        )}
                       </p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(workspace.createdAt).toLocaleDateString()}
+                      {new Date(workspace.createdAt).toLocaleDateString(intlLocale)}
                     </p>
                   </div>
                 ))}

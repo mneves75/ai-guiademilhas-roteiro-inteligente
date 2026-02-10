@@ -16,16 +16,26 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useWorkspace } from '@/contexts/workspace-context';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 export function WorkspaceSwitcher() {
   const router = useRouter();
   const { workspaces, currentWorkspace, setCurrentWorkspace, isLoading } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const { locale } = useLocale();
+  const t = m(locale);
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return t.roles.owner;
+    if (role === 'admin') return t.roles.admin;
+    if (role === 'member') return t.roles.member;
+    return role;
+  };
 
   if (isLoading) {
     return (
       <Button variant="outline" className="w-[200px] justify-between" disabled>
-        Loading...
+        {t.common.loading}
       </Button>
     );
   }
@@ -37,19 +47,19 @@ export function WorkspaceSwitcher() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label="Select workspace"
+          aria-label={t.dashboard.workspaces.selectWorkspace}
           className="w-[200px] justify-between"
         >
-          {currentWorkspace?.name ?? 'Select workspace'}
+          {currentWorkspace?.name ?? t.dashboard.workspaces.selectWorkspace}
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="Search workspace..." />
+          <CommandInput placeholder={t.dashboard.workspaces.searchWorkspace} />
           <CommandList>
-            <CommandEmpty>No workspace found.</CommandEmpty>
-            <CommandGroup heading="Workspaces">
+            <CommandEmpty>{t.dashboard.workspaces.noWorkspaceFound}</CommandEmpty>
+            <CommandGroup heading={t.dashboard.workspaces.title}>
               {workspaces.map(({ workspace, role }) => (
                 <CommandItem
                   key={workspace.id}
@@ -67,7 +77,7 @@ export function WorkspaceSwitcher() {
                   />
                   <div className="flex flex-col">
                     <span>{workspace.name}</span>
-                    <span className="text-xs text-muted-foreground">{role}</span>
+                    <span className="text-xs text-muted-foreground">{roleLabel(role)}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -81,7 +91,7 @@ export function WorkspaceSwitcher() {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create Workspace
+                {t.dashboard.workspaces.createWorkspace}
               </CommandItem>
             </CommandGroup>
           </CommandList>

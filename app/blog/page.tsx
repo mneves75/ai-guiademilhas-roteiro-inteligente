@@ -6,23 +6,39 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Tag } from 'lucide-react';
 import type { Metadata } from 'next';
 import { JsonLd } from '@/components/json-ld';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
+import { resolvePublicOrigin } from '@/lib/seo/base-url';
 
 export const metadata: Metadata = {
-  title: 'Blog | NextJS Bootstrapped Shipped',
+  title: 'Blog',
   description:
     'Articles, tutorials, and updates about building production-ready Next.js applications.',
+  alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Blog | NextJS Bootstrapped Shipped',
+    title: 'Blog',
     description:
       'Articles, tutorials, and updates about building production-ready Next.js applications.',
     type: 'website',
+    url: '/blog',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog',
+    description:
+      'Articles, tutorials, and updates about building production-ready Next.js applications.',
   },
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
+
   const posts = getAllPosts();
   const tags = getAllTags();
-  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+  const url = resolvePublicOrigin();
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-16">
@@ -35,16 +51,14 @@ export default function BlogPage() {
         }}
       />
       <div className="mb-12 text-center">
-        <h1 className="mb-4 text-4xl font-bold tracking-tight">Blog</h1>
-        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          Articles, tutorials, and updates about building production-ready Next.js applications.
-        </p>
+        <h1 className="mb-4 text-4xl font-bold tracking-tight">{t.blog.title}</h1>
+        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{t.blog.description}</p>
       </div>
 
       {tags.length > 0 && (
         <div className="mb-8 flex flex-wrap justify-center gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/blog">All Posts</Link>
+            <Link href="/blog">{t.blog.allPosts}</Link>
           </Button>
           {tags.map((tag) => (
             <Button key={tag} asChild variant="ghost" size="sm">
@@ -60,7 +74,7 @@ export default function BlogPage() {
       {posts.length === 0 ? (
         <Card className="text-center">
           <CardContent className="py-12">
-            <p className="text-muted-foreground">No posts published yet.</p>
+            <p className="text-muted-foreground">{t.blog.noPosts}</p>
           </CardContent>
         </Card>
       ) : (
@@ -96,7 +110,7 @@ export default function BlogPage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {new Date(post.date).toLocaleDateString('en-US', {
+                      {new Date(post.date).toLocaleDateString(intlLocale, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',

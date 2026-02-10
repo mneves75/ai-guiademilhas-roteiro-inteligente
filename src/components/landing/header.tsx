@@ -1,18 +1,35 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MobileNav } from './mobile-nav';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { getRequestLocale } from '@/lib/locale-server';
+import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
 
-export async function Header() {
-  const locale = await getRequestLocale();
+export function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const { locale } = useLocale();
   const t = m(locale).nav;
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="glass-header sticky top-0 z-50 w-full">
+    <header
+      className={cn(
+        'glass-header sticky top-0 z-50 w-full transition-shadow duration-200',
+        scrolled && 'shadow-sm'
+      )}
+    >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center space-x-2">
           <span className="text-lg font-bold">Shipped</span>
@@ -50,7 +67,7 @@ export async function Header() {
           <ThemeToggle />
 
           <Button asChild variant="ghost" size="icon" className="sm:hidden">
-            <Link href="/login" aria-label="Sign In">
+            <Link href="/login" aria-label={t.signIn}>
               <LogIn className="h-4 w-4" />
             </Link>
           </Button>

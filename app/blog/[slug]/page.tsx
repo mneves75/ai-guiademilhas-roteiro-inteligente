@@ -7,9 +7,14 @@ import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getMDXComponents } from '@/components/mdx-components';
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import { JsonLd } from '@/components/json-ld';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
+import { resolvePublicOrigin } from '@/lib/seo/base-url';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -30,16 +35,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+  const url = resolvePublicOrigin();
+  const canonical = `/blog/${post.slug}`;
 
   return {
     title: `${post.title} | Blog`,
     description: post.description,
     authors: [{ name: post.author.name }],
+    alternates: { canonical },
     openGraph: {
       title: post.title,
       description: post.description,
       type: 'article',
+      url: canonical,
       publishedTime: post.date,
       authors: [post.author.name],
       images: post.image
@@ -57,14 +65,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
   const post = getPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  const components = getMDXComponents();
-  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+  const components = getMDXComponents({
+    // Posts already have a page-level <h1>. Prevent MDX content from creating a second <h1>.
+    h1: ({ children }: { children?: ReactNode }) => (
+      <h2 className="mb-4 mt-8 text-4xl font-bold tracking-tight">{children}</h2>
+    ),
+  });
+  const url = resolvePublicOrigin();
   const canonical = `${url}/blog/${post.slug}`;
 
   return (
@@ -85,7 +101,7 @@ export default async function BlogPostPage({ params }: Props) {
       <Button asChild variant="ghost" className="mb-8">
         <Link href="/blog">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Blog
+          {t.blog.backToBlog}
         </Link>
       </Button>
 
@@ -132,7 +148,7 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {new Date(post.date).toLocaleDateString('en-US', {
+              {new Date(post.date).toLocaleDateString(intlLocale, {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
@@ -164,7 +180,7 @@ export default async function BlogPostPage({ params }: Props) {
           <Button asChild variant="outline">
             <Link href="/blog">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              All Posts
+              {t.blog.allPosts}
             </Link>
           </Button>
         </div>

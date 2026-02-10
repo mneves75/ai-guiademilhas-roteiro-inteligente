@@ -1,15 +1,37 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Header } from '@/components/landing/header';
 import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import { PLAN_CATALOG } from '@/lib/plan-catalog';
 import { JsonLd } from '@/components/json-ld';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { getLocalizedPlans } from '@/lib/plan-catalog-localized';
+import { resolvePublicOrigin } from '@/lib/seo/base-url';
 
-export default function PricingPage() {
-  const plans = Object.values(PLAN_CATALOG);
-  const url = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+export const metadata: Metadata = {
+  title: 'Pricing',
+  description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
+  alternates: { canonical: '/pricing' },
+  openGraph: {
+    title: 'Pricing',
+    description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
+    url: '/pricing',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pricing',
+    description: 'Plans and pricing for NextJS Bootstrapped Shipped.',
+  },
+};
+
+export default async function PricingPage() {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const plans = getLocalizedPlans(locale);
+  const url = resolvePublicOrigin();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -17,23 +39,23 @@ export default function PricingPage() {
         data={{
           '@context': 'https://schema.org',
           '@type': 'WebPage',
-          name: 'Pricing',
+          name: t.pricingPage.title,
           url: `${url}/pricing`,
         }}
       />
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-10 px-4 py-12 sm:px-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Pricing</h1>
-          <p className="text-muted-foreground">
-            Choose a plan for your workspace. Upgrade and manage billing from the dashboard.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight">{t.pricingPage.title}</h1>
+          <p className="text-muted-foreground">{t.pricingPage.subtitle}</p>
           <div className="flex justify-center gap-2 pt-2">
             <Button asChild>
-              <Link href="/signup">Get started</Link>
+              <Link href="/signup">{t.pricingPage.getStarted}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/login?callbackUrl=/dashboard/billing">Manage billing</Link>
+              <Link href="/login?callbackUrl=/dashboard/billing">
+                {t.pricingPage.manageBilling}
+              </Link>
             </Button>
           </div>
         </div>
@@ -57,7 +79,7 @@ export default function PricingPage() {
                     ))}
                   </ul>
                   <Button asChild variant={highlighted ? 'default' : 'outline'} className="w-full">
-                    <Link href="/signup">Start with {plan.name}</Link>
+                    <Link href="/signup">{t.pricingPage.startWith(plan.name)}</Link>
                   </Button>
                 </CardContent>
               </Card>

@@ -1,23 +1,25 @@
-import { Github } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
-const badges = ['Open Source', 'Next.js 16', 'TypeScript', 'MIT License'];
+export async function SocialProof() {
+  const locale = await getRequestLocale();
+  const t = m(locale).landing.socialProof;
 
-export function SocialProof() {
   return (
     <section className="py-12 md:py-16">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 px-4 sm:px-6">
-        {badges.map((badge) => (
-          <span
-            key={badge}
-            className="rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm"
-          >
-            {badge}
-          </span>
-        ))}
-        <span className="flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">
-          <Github className="h-3.5 w-3.5" />
-          Star us on GitHub
-        </span>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <p className="mb-8 text-center text-sm font-medium text-muted-foreground">
+          {t.badges[0]} &middot; {t.badges[1]} &middot; {t.badges[2]} &middot; {t.badges[3]}
+        </p>
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8">
+          {t.metrics.map((metric) => (
+            <div key={metric.label} className="text-center">
+              <p className="text-2xl font-bold tracking-tight sm:text-3xl">{metric.value}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{metric.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mx-auto mt-8 h-px max-w-md bg-border/60" />
       </div>
     </section>
   );

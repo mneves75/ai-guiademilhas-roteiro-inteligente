@@ -5,7 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Check, CreditCard, ExternalLink } from 'lucide-react';
 import { useWorkspace, useIsWorkspaceAdmin } from '@/contexts/workspace-context';
-import { PLAN_CATALOG, type PlanId, ONE_TIME_PRODUCT } from '@/lib/plan-catalog';
+import { type PlanId } from '@/lib/plan-catalog';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
+import {
+  getLocalizedOneTimeProduct,
+  getLocalizedPlan,
+  getLocalizedPlans,
+} from '@/lib/plan-catalog-localized';
 
 type SubscriptionResponse = {
   plan: PlanId;
@@ -18,8 +26,8 @@ type SubscriptionResponse = {
   hasCustomer: boolean;
 };
 
-function formatMoney(cents: number | null, locale = 'en-US') {
-  if (cents === null) return 'Custom';
+function formatMoney(cents: number | null, locale: string, customLabel: string) {
+  if (cents === null) return customLabel;
   if (cents === 0) return '$0';
   return new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(cents / 100);
 }
@@ -27,13 +35,14 @@ function formatMoney(cents: number | null, locale = 'en-US') {
 export default function BillingPage() {
   const { currentWorkspace, isLoading: workspaceLoading } = useWorkspace();
   const isAdmin = useIsWorkspaceAdmin();
+  const { locale } = useLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
   const [interval, setInterval] = useState<'month' | 'year'>('month');
-  const locale =
-    typeof document !== 'undefined' ? document.documentElement.lang || 'en-US' : 'en-US';
 
   useEffect(() => {
     async function load() {
@@ -49,16 +58,21 @@ export default function BillingPage() {
         const data = (await res.json()) as SubscriptionResponse;
         setSubscription(data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Unknown error');
+        setError(e instanceof Error ? e.message : t.common.unknownError);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [currentWorkspace]);
+  }, [currentWorkspace, t.common.unknownError]);
 
   const currentPlanId = subscription?.plan ?? 'free';
-  const plans = useMemo(() => Object.values(PLAN_CATALOG), []);
+  const currentPlan = useMemo(
+    () => getLocalizedPlan(locale, currentPlanId),
+    [locale, currentPlanId]
+  );
+  const plans = useMemo(() => getLocalizedPlans(locale), [locale]);
+  const oneTimeProduct = useMemo(() => getLocalizedOneTimeProduct(locale), [locale]);
 
   async function startCheckout(plan: PlanId) {
     if (!currentWorkspace) return;
@@ -75,7 +89,7 @@ export default function BillingPage() {
       }
       if (data?.url) window.location.href = data.url as string;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : t.common.unknownError);
     }
   }
 
@@ -94,7 +108,7 @@ export default function BillingPage() {
       }
       if (data?.url) window.location.href = data.url as string;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : t.common.unknownError);
     }
   }
 
@@ -113,7 +127,7 @@ export default function BillingPage() {
       }
       if (data?.url) window.location.href = data.url as string;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      setError(e instanceof Error ? e.message : t.common.unknownError);
     }
   }
 
@@ -122,8 +136,8 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Billing</h1>
-        <p className="text-muted-foreground">Manage your workspace subscription.</p>
+        <h1 className="text-2xl font-bold">{t.dashboard.billing.title}</h1>
+        <p className="text-muted-foreground">{t.dashboard.billing.subtitle}</p>
       </div>
 
       {error && (
@@ -136,25 +150,29 @@ export default function BillingPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Current Plan
+            {t.dashboard.billing.currentPlan}
           </CardTitle>
           <CardDescription>
             {loading
-              ? 'Loading subscription…'
-              : `You are on the ${PLAN_CATALOG[currentPlanId].name} plan.`}
+              ? t.dashboard.billing.loadingSubscription
+              : t.dashboard.billing.youAreOnPlan(currentPlan.name)}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <div className="text-sm font-medium">{PLAN_CATALOG[currentPlanId].name}</div>
+            <div className="text-sm font-medium">{currentPlan.name}</div>
             <div className="text-sm text-muted-foreground">
-              {formatMoney(PLAN_CATALOG[currentPlanId].priceMonthlyCents, locale)}
-              {PLAN_CATALOG[currentPlanId].priceMonthlyCents ? '/month' : ''}
+              {formatMoney(
+                currentPlan.priceMonthlyCents,
+                intlLocale,
+                t.dashboard.billing.customPrice
+              )}
+              {currentPlan.priceMonthlyCents ? t.dashboard.billing.perMonth : ''}
             </div>
             {subscription?.status && (
               <div className="text-xs text-muted-foreground">
-                Status: {subscription.status}
-                {subscription.cancelAtPeriodEnd ? ' (cancels at period end)' : ''}
+                {t.dashboard.billing.statusLabel} {subscription.status}
+                {subscription.cancelAtPeriodEnd ? ` ${t.dashboard.billing.cancelsAtPeriodEnd}` : ''}
               </div>
             )}
           </div>
@@ -164,17 +182,17 @@ export default function BillingPage() {
               variant="outline"
               onClick={openPortal}
               disabled={!isReady || loading || !subscription?.hasCustomer || !isAdmin}
-              title={!isAdmin ? 'Only workspace admins can manage billing' : undefined}
+              title={!isAdmin ? t.dashboard.billing.adminsOnlyManageBilling : undefined}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
-              Customer Portal
+              {t.dashboard.billing.customerPortal}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold">Plans</h2>
+        <h2 className="mb-4 text-lg font-semibold">{t.dashboard.billing.plansTitle}</h2>
         <div className="mb-4 flex gap-2">
           <Button
             type="button"
@@ -182,7 +200,7 @@ export default function BillingPage() {
             size="sm"
             onClick={() => setInterval('month')}
           >
-            Monthly
+            {t.dashboard.billing.monthly}
           </Button>
           <Button
             type="button"
@@ -190,7 +208,7 @@ export default function BillingPage() {
             size="sm"
             onClick={() => setInterval('year')}
           >
-            Yearly
+            {t.dashboard.billing.yearly}
           </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -205,14 +223,23 @@ export default function BillingPage() {
               >
                 {isHighlighted && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                    Popular
+                    {t.dashboard.billing.popular}
                   </div>
                 )}
                 <CardHeader>
                   <CardTitle>{plan.name}</CardTitle>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">{formatMoney(cents, locale)}</span>
-                    {cents ? <span className="text-muted-foreground">/{interval}</span> : null}
+                    <span className="text-3xl font-bold">
+                      {formatMoney(cents, intlLocale, t.dashboard.billing.customPrice)}
+                    </span>
+                    {cents ? (
+                      <span className="text-muted-foreground">
+                        /
+                        {interval === 'month'
+                          ? t.dashboard.billing.intervalMonth
+                          : t.dashboard.billing.intervalYear}
+                      </span>
+                    ) : null}
                   </div>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
@@ -227,7 +254,7 @@ export default function BillingPage() {
                   </ul>
                   {plan.id === 'enterprise' ? (
                     <Button className="w-full" variant="outline" asChild>
-                      <a href="mailto:sales@shipped.dev">Contact Sales</a>
+                      <a href="mailto:sales@shipped.dev">{t.dashboard.billing.contactSales}</a>
                     </Button>
                   ) : (
                     <Button
@@ -235,9 +262,11 @@ export default function BillingPage() {
                       variant={isCurrent ? 'outline' : isHighlighted ? 'default' : 'outline'}
                       disabled={loading || !isReady || isCurrent || !isAdmin}
                       onClick={() => startCheckout(plan.id as PlanId)}
-                      title={!isAdmin ? 'Only workspace admins can change plans' : undefined}
+                      title={!isAdmin ? t.dashboard.billing.adminsOnlyChangePlans : undefined}
                     >
-                      {isCurrent ? 'Current Plan' : 'Upgrade'}
+                      {isCurrent
+                        ? t.dashboard.billing.currentPlanButton
+                        : t.dashboard.billing.upgrade}
                     </Button>
                   )}
                 </CardContent>
@@ -249,23 +278,23 @@ export default function BillingPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>One-time payment</CardTitle>
-          <CardDescription>{ONE_TIME_PRODUCT.description}</CardDescription>
+          <CardTitle>{t.dashboard.billing.oneTimeTitle}</CardTitle>
+          <CardDescription>{oneTimeProduct.description}</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center justify-between">
           <div className="text-sm">
-            <div className="font-medium">{ONE_TIME_PRODUCT.name}</div>
+            <div className="font-medium">{oneTimeProduct.name}</div>
             <div className="text-muted-foreground">
-              {formatMoney(ONE_TIME_PRODUCT.priceCents, locale)}
+              {formatMoney(oneTimeProduct.priceCents, intlLocale, t.dashboard.billing.customPrice)}
             </div>
           </div>
           <Button
             variant="outline"
             onClick={startOneTimePayment}
             disabled={!isReady || loading || !isAdmin}
-            title={!isAdmin ? 'Only workspace admins can purchase' : undefined}
+            title={!isAdmin ? t.dashboard.billing.adminsOnlyPurchase : undefined}
           >
-            Buy
+            {t.dashboard.billing.buy}
           </Button>
         </CardContent>
       </Card>

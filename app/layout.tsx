@@ -5,15 +5,36 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PostHogAnalyticsProvider } from '@/components/posthog-provider';
 import { ExperimentsProvider } from '@/components/experiments/growthbook-provider';
 import { getRequestLocale } from '@/lib/locale-server';
+import { LocaleProvider } from '@/contexts/locale-context';
+import { resolvePublicOrigin } from '@/lib/seo/base-url';
 import './globals.css';
 
 const APP_NAME = 'NextJS Bootstrapped Shipped';
 const APP_DESCRIPTION =
   'Open-source Next.js 16 boilerplate for shipping production-ready apps fast. Authentication, payments, multi-tenancy, and more included.';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://shipped.dev';
+const APP_URL = resolvePublicOrigin();
+const GOOGLE_SITE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+const BING_SITE_VERIFICATION = process.env.BING_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
+  alternates: {
+    canonical: '/',
+    types: {
+      'application/rss+xml': '/rss.xml',
+    },
+  },
+  verification: {
+    ...(GOOGLE_SITE_VERIFICATION ? { google: GOOGLE_SITE_VERIFICATION } : {}),
+    ...(BING_SITE_VERIFICATION
+      ? {
+          other: {
+            // Bing Webmaster Tools
+            'msvalidate.01': BING_SITE_VERIFICATION,
+          },
+        }
+      : {}),
+  },
   title: {
     default: APP_NAME,
     template: `%s | ${APP_NAME}`,
@@ -92,16 +113,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <PostHogAnalyticsProvider>
-            <ExperimentsProvider>{children}</ExperimentsProvider>
-          </PostHogAnalyticsProvider>
-        </ThemeProvider>
+        <LocaleProvider initialLocale={locale}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <PostHogAnalyticsProvider>
+              <ExperimentsProvider>{children}</ExperimentsProvider>
+            </PostHogAnalyticsProvider>
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

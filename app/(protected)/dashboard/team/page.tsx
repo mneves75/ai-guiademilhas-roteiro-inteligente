@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Users, UserPlus } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
 export default async function TeamPage() {
   const auth = getAuth();
@@ -17,13 +19,16 @@ export default async function TeamPage() {
     redirect('/login');
   }
 
+  const locale = await getRequestLocale();
+  const t = m(locale);
+
   const workspaces = await getUserWorkspaces(session.user.id);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Team</h1>
-        <p className="text-muted-foreground">Manage team members across your workspaces.</p>
+        <h1 className="text-2xl font-bold">{t.dashboard.team.title}</h1>
+        <p className="text-muted-foreground">{t.dashboard.team.subtitle}</p>
       </div>
 
       {workspaces.length === 0 ? (
@@ -32,12 +37,12 @@ export default async function TeamPage() {
             <div className="rounded-full bg-muted p-4">
               <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">No workspaces yet</h3>
+            <h3 className="mt-4 text-lg font-semibold">{t.dashboard.team.noWorkspacesYet}</h3>
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Create a workspace first to start inviting team members.
+              {t.dashboard.team.createWorkspaceFirst}
             </p>
             <Button asChild className="mt-4">
-              <Link href="/dashboard/workspaces/new">Create Workspace</Link>
+              <Link href="/dashboard/workspaces/new">{t.dashboard.team.createWorkspace}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -49,15 +54,13 @@ export default async function TeamPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>{workspace.name}</CardTitle>
-                    <CardDescription>
-                      You are {role === 'owner' ? 'the owner' : `a ${role}`} of this workspace
-                    </CardDescription>
+                    <CardDescription>{t.dashboard.team.youAre(role, t.roles)}</CardDescription>
                   </div>
                   {(role === 'owner' || role === 'admin') && (
                     <Button asChild>
                       <Link href={`/dashboard/workspaces/${workspace.id}/members`}>
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Manage Team
+                        {t.dashboard.team.manageTeam}
                       </Link>
                     </Button>
                   )}
@@ -68,7 +71,7 @@ export default async function TeamPage() {
                   href={`/dashboard/workspaces/${workspace.id}/members`}
                   className="text-sm text-primary hover:underline"
                 >
-                  View all members →
+                  {t.dashboard.team.viewAllMembers}
                 </Link>
               </CardContent>
             </Card>

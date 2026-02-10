@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
 import type { Metadata } from 'next';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -17,15 +20,31 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag } = await params;
+  const canonical = `/blog/tag/${tag}`;
 
   return {
     title: `Posts tagged "${tag}" | Blog`,
     description: `Browse all articles tagged with "${tag}".`,
+    alternates: { canonical },
+    openGraph: {
+      title: `Posts tagged "${tag}"`,
+      description: `Browse all articles tagged with "${tag}".`,
+      url: canonical,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Posts tagged "${tag}"`,
+      description: `Browse all articles tagged with "${tag}".`,
+    },
   };
 }
 
 export default async function TagPage({ params }: Props) {
   const { tag } = await params;
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
   const posts = getPostsByTag(tag);
   const allTags = getAllTags();
 
@@ -34,7 +53,7 @@ export default async function TagPage({ params }: Props) {
       <Button asChild variant="ghost" className="mb-8">
         <Link href="/blog">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Blog
+          {t.blog.backToBlog}
         </Link>
       </Button>
 
@@ -43,18 +62,16 @@ export default async function TagPage({ params }: Props) {
           <Tag className="h-6 w-6 text-primary" />
           <h1 className="text-4xl font-bold tracking-tight">{tag}</h1>
         </div>
-        <p className="text-lg text-muted-foreground">
-          {posts.length} {posts.length === 1 ? 'post' : 'posts'} tagged with &quot;{tag}&quot;
-        </p>
+        <p className="text-lg text-muted-foreground">{t.blog.taggedCount(posts.length, tag)}</p>
       </div>
 
       <div className="mb-8 flex flex-wrap gap-2">
         <Button asChild variant="outline" size="sm">
-          <Link href="/blog">All Posts</Link>
+          <Link href="/blog">{t.blog.allPosts}</Link>
         </Button>
-        {allTags.map((t) => (
-          <Button key={t} asChild variant={t === tag ? 'default' : 'ghost'} size="sm">
-            <Link href={`/blog/tag/${t}`}>{t}</Link>
+        {allTags.map((tagValue) => (
+          <Button key={tagValue} asChild variant={tagValue === tag ? 'default' : 'ghost'} size="sm">
+            <Link href={`/blog/tag/${tagValue}`}>{tagValue}</Link>
           </Button>
         ))}
       </div>
@@ -62,7 +79,7 @@ export default async function TagPage({ params }: Props) {
       {posts.length === 0 ? (
         <Card className="text-center">
           <CardContent className="py-12">
-            <p className="text-muted-foreground">No posts found with this tag.</p>
+            <p className="text-muted-foreground">{t.blog.noPostsForTag}</p>
           </CardContent>
         </Card>
       ) : (
@@ -102,7 +119,7 @@ export default async function TagPage({ params }: Props) {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {new Date(post.date).toLocaleDateString('en-US', {
+                      {new Date(post.date).toLocaleDateString(intlLocale, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',

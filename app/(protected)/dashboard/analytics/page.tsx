@@ -7,22 +7,26 @@ import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, Users, Eye } from 'lucide-react';
 import { useWorkspace } from '@/contexts/workspace-context';
 import type { PlanId } from '@/lib/plan-catalog';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 type SubscriptionResponse = {
   plan: PlanId;
 };
 
-const stats = [
-  { name: 'Total Views', value: '0', change: '+0%', icon: Eye },
-  { name: 'Unique Visitors', value: '0', change: '+0%', icon: Users },
-  { name: 'Growth', value: '0%', change: '+0%', icon: TrendingUp },
-  { name: 'Avg. Session', value: '0m', change: '+0%', icon: BarChart3 },
-];
-
 export default function AnalyticsPage() {
   const { currentWorkspace } = useWorkspace();
+  const { locale } = useLocale();
+  const t = m(locale);
   const [plan, setPlan] = useState<PlanId>('free');
   const [loading, setLoading] = useState(true);
+
+  const stats = [
+    { name: t.dashboard.analytics.stats.totalViews, value: '0', change: '+0%', icon: Eye },
+    { name: t.dashboard.analytics.stats.uniqueVisitors, value: '0', change: '+0%', icon: Users },
+    { name: t.dashboard.analytics.stats.growth, value: '0%', change: '+0%', icon: TrendingUp },
+    { name: t.dashboard.analytics.stats.avgSession, value: '0m', change: '+0%', icon: BarChart3 },
+  ];
 
   useEffect(() => {
     async function load() {
@@ -45,19 +49,17 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Analytics are available on paid plans.</p>
+          <h1 className="text-2xl font-bold">{t.dashboard.analytics.title}</h1>
+          <p className="text-muted-foreground">{t.dashboard.analytics.paidOnly}</p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Upgrade to unlock analytics</CardTitle>
-            <CardDescription>
-              Switch your workspace to Pro to access advanced analytics.
-            </CardDescription>
+            <CardTitle>{t.dashboard.analytics.upgradeTitle}</CardTitle>
+            <CardDescription>{t.dashboard.analytics.upgradeSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/dashboard/billing">View plans</Link>
+              <Link href="/dashboard/billing">{t.dashboard.analytics.viewPlans}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -68,8 +70,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Monitor your workspace performance and usage.</p>
+        <h1 className="text-2xl font-bold">{t.dashboard.analytics.title}</h1>
+        <p className="text-muted-foreground">{t.dashboard.analytics.subtitle}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -83,7 +85,9 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change} from last month</p>
+              <p className="text-xs text-muted-foreground">
+                {stat.change} {t.dashboard.analytics.fromLastMonth}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -92,16 +96,18 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Activity Overview</CardTitle>
-            <CardDescription>Your workspace activity over time.</CardDescription>
+            <CardTitle>{t.dashboard.analytics.activityOverview}</CardTitle>
+            <CardDescription>{t.dashboard.analytics.activityOverviewSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed">
               <div className="text-center">
                 <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-sm text-muted-foreground">Analytics charts coming soon</p>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  {t.dashboard.analytics.chartsComingSoon}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Connect your data sources to see insights
+                  {t.dashboard.analytics.connectDataSources}
                 </p>
               </div>
             </div>
@@ -110,16 +116,18 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Pages</CardTitle>
-            <CardDescription>Most visited pages in your workspace.</CardDescription>
+            <CardTitle>{t.dashboard.analytics.topPages}</CardTitle>
+            <CardDescription>{t.dashboard.analytics.topPagesSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed">
               <div className="text-center">
                 <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-sm text-muted-foreground">No data yet</p>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  {t.dashboard.analytics.noDataYet}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Start using your workspace to see analytics
+                  {t.dashboard.analytics.startUsingWorkspace}
                 </p>
               </div>
             </div>

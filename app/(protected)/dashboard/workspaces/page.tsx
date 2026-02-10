@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Plus, Settings, Users } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
 export default async function WorkspacesPage() {
   const auth = getAuth();
@@ -17,19 +19,28 @@ export default async function WorkspacesPage() {
     redirect('/login');
   }
 
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return t.roles.owner;
+    if (role === 'admin') return t.roles.admin;
+    if (role === 'member') return t.roles.member;
+    return role;
+  };
+
   const workspaces = await getUserWorkspaces(session.user.id);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Workspaces</h1>
-          <p className="text-muted-foreground">Manage all your workspaces in one place.</p>
+          <h1 className="text-2xl font-bold">{t.dashboard.workspaces.title}</h1>
+          <p className="text-muted-foreground">{t.dashboard.workspaces.subtitle}</p>
         </div>
         <Button asChild>
           <Link href="/dashboard/workspaces/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Workspace
+            {t.dashboard.workspaces.newWorkspace}
           </Link>
         </Button>
       </div>
@@ -40,12 +51,12 @@ export default async function WorkspacesPage() {
             <div className="rounded-full bg-muted p-4">
               <Plus className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">No workspaces yet</h3>
+            <h3 className="mt-4 text-lg font-semibold">{t.dashboard.workspaces.noWorkspacesYet}</h3>
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Create your first workspace to start collaborating with your team.
+              {t.dashboard.workspaces.noWorkspacesBody}
             </p>
             <Button asChild className="mt-4">
-              <Link href="/dashboard/workspaces/new">Create Workspace</Link>
+              <Link href="/dashboard/workspaces/new">{t.dashboard.workspaces.createWorkspace}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -60,7 +71,7 @@ export default async function WorkspacesPage() {
                     <CardDescription>/{workspace.slug}</CardDescription>
                   </div>
                   <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium capitalize">
-                    {role}
+                    {roleLabel(role)}
                   </span>
                 </div>
               </CardHeader>
@@ -69,13 +80,13 @@ export default async function WorkspacesPage() {
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link href={`/dashboard/workspaces/${workspace.id}/settings`}>
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t.dashboard.workspaces.settings}
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link href={`/dashboard/workspaces/${workspace.id}/members`}>
                       <Users className="mr-2 h-4 w-4" />
-                      Members
+                      {t.dashboard.workspaces.members}
                     </Link>
                   </Button>
                 </div>

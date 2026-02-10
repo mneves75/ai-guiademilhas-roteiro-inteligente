@@ -1,37 +1,42 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bell, CheckCheck, Mail, Users } from 'lucide-react';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
-const notifications = [
-  {
-    id: 1,
-    type: 'team',
-    title: 'Welcome to Shipped!',
-    description: 'Get started by creating your first workspace.',
-    time: 'Just now',
-    read: false,
-    icon: Users,
-  },
-];
+export default async function NotificationsPage() {
+  const locale = await getRequestLocale();
+  const t = m(locale);
 
-export default function NotificationsPage() {
+  const notifications = [
+    {
+      id: 1,
+      type: 'team',
+      title: t.dashboard.notifications.seed.title,
+      description: t.dashboard.notifications.seed.description,
+      time: t.dashboard.notifications.seed.time,
+      read: false,
+      icon: Users,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">Stay updated with your team activity.</p>
+          <h1 className="text-2xl font-bold">{t.dashboard.notifications.title}</h1>
+          <p className="text-muted-foreground">{t.dashboard.notifications.subtitle}</p>
         </div>
         <Button variant="outline" size="sm">
           <CheckCheck className="mr-2 h-4 w-4" />
-          Mark all as read
+          {t.dashboard.notifications.markAllRead}
         </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">All</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.notifications.all}</CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -40,7 +45,9 @@ export default function NotificationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Unread</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t.dashboard.notifications.unread}
+            </CardTitle>
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -49,7 +56,7 @@ export default function NotificationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Team</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.notifications.team}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -62,16 +69,16 @@ export default function NotificationsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Notifications</CardTitle>
-          <CardDescription>Your latest updates and alerts.</CardDescription>
+          <CardTitle>{t.dashboard.notifications.recentTitle}</CardTitle>
+          <CardDescription>{t.dashboard.notifications.recentSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Bell className="h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-semibold">No notifications</h3>
+              <h3 className="mt-4 text-lg font-semibold">{t.dashboard.notifications.noneTitle}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                You&apos;re all caught up! Check back later.
+                {t.dashboard.notifications.noneBody}
               </p>
             </div>
           ) : (

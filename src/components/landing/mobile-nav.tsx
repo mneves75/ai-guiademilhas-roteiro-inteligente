@@ -1,21 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { getClientLocale } from '@/lib/locale-client';
-import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
+import { useLocale } from '@/contexts/locale-context';
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
-  const [locale, setLocale] = useState<Locale>('en');
-
-  useEffect(() => {
-    setLocale(getClientLocale());
-  }, []);
+  const { locale } = useLocale();
 
   const t = m(locale);
   const navLinks = [
@@ -32,7 +27,7 @@ export function MobileNav() {
           variant="ghost"
           size="icon"
           className="md:hidden"
-          aria-label="Open navigation menu"
+          aria-label={t.landing.mobileNavAriaOpen}
           aria-expanded={open}
         >
           <Menu className="h-5 w-5" />

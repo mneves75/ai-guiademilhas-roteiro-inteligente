@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Select,
@@ -9,8 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getClientLocale, setClientLocale } from '@/lib/locale-client';
+import { setClientLocale } from '@/lib/locale-client';
 import type { Locale } from '@/lib/locale';
+import { useLocale } from '@/contexts/locale-context';
 
 const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
@@ -19,15 +19,11 @@ const LOCALE_LABELS: Record<Locale, string> = {
 
 export function LanguageSwitcher() {
   const router = useRouter();
-  const [value, setValue] = useState<Locale>('en');
-
-  useEffect(() => {
-    setValue(getClientLocale());
-  }, []);
+  const { locale: value, setLocale } = useLocale();
 
   function onChange(next: string) {
     const locale = next as Locale;
-    setValue(locale);
+    setLocale(locale);
     setClientLocale(locale);
     router.refresh();
   }

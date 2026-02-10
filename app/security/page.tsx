@@ -1,7 +1,16 @@
 import type { Metadata } from 'next';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
 
 export const metadata: Metadata = {
   title: 'Security Policy',
+  description: 'How to report security vulnerabilities responsibly.',
+  alternates: { canonical: '/security' },
+  openGraph: {
+    title: 'Security Policy',
+    description: 'How to report security vulnerabilities responsibly.',
+    url: '/security',
+  },
 };
 
 function resolveContactEmail() {
@@ -11,22 +20,24 @@ function resolveContactEmail() {
 export default function SecurityPolicyPage() {
   const contactEmail = resolveContactEmail();
 
+  return <SecurityPolicyContent contactEmail={contactEmail} />;
+}
+
+async function SecurityPolicyContent({ contactEmail }: { contactEmail: string }) {
+  const locale = await getRequestLocale();
+  const t = m(locale).securityPolicy;
+
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-12">
-      <h1 className="text-3xl font-bold">Security Policy</h1>
+      <h1 className="text-3xl font-bold">{t.title}</h1>
 
-      <p className="text-muted-foreground">
-        We take security vulnerabilities seriously. If you discover a security issue, please report
-        it responsibly.
-      </p>
+      <p className="text-muted-foreground">{t.intro}</p>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Reporting a Vulnerability</h2>
+        <h2 className="text-xl font-semibold">{t.reportingTitle}</h2>
+        <p className="text-muted-foreground">{t.reportingNoPublicIssues}</p>
         <p className="text-muted-foreground">
-          Do not open a public GitHub issue for security vulnerabilities.
-        </p>
-        <p className="text-muted-foreground">
-          Contact:{' '}
+          {t.contactLabel}{' '}
           <a className="underline" href={`mailto:${contactEmail}`}>
             {contactEmail}
           </a>
@@ -34,33 +45,28 @@ export default function SecurityPolicyPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">What to Include</h2>
+        <h2 className="text-xl font-semibold">{t.includeTitle}</h2>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-          <li>Description of the vulnerability</li>
-          <li>Steps to reproduce</li>
-          <li>Potential impact</li>
-          <li>Suggested fix (if any)</li>
+          {t.includeItems.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Response Process</h2>
+        <h2 className="text-xl font-semibold">{t.processTitle}</h2>
         <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-          <li>Acknowledgment within 48 hours</li>
-          <li>Severity and impact assessment</li>
-          <li>Fix for confirmed issues</li>
-          <li>Coordinated disclosure timing</li>
+          {t.processItems.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ol>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-xl font-semibold" id="acknowledgments">
-          Acknowledgments
+          {t.acknowledgmentsTitle}
         </h2>
-        <p className="text-muted-foreground">
-          We appreciate security researchers who help keep this project safe. Contributors who
-          report valid vulnerabilities may be acknowledged here (with permission).
-        </p>
+        <p className="text-muted-foreground">{t.acknowledgmentsBody}</p>
       </section>
     </main>
   );

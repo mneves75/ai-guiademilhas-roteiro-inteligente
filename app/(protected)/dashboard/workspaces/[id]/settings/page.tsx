@@ -7,10 +7,15 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocale } from '@/contexts/locale-context';
+import { m } from '@/lib/messages';
 
 export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { locale } = useLocale();
+  const t = m(locale);
+
   const [workspace, setWorkspace] = useState<{ name: string; slug: string } | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -51,13 +56,13 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to update workspace');
+        throw new Error(data.error || t.dashboard.workspaces.updateFailed);
       }
 
-      setSuccess('Workspace updated successfully');
+      setSuccess(t.dashboard.workspaces.updatedSuccess);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : t.common.somethingWentWrong);
     } finally {
       setIsSaving(false);
     }
@@ -71,22 +76,22 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to delete workspace');
+        throw new Error(data.error || t.dashboard.workspaces.deleteFailed);
       }
 
       router.push('/dashboard');
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : t.common.somethingWentWrong);
     }
   };
 
   if (isLoading) {
-    return <div className="container py-8">Loading...</div>;
+    return <div className="container py-8">{t.common.loading}</div>;
   }
 
   if (!workspace) {
-    return <div className="container py-8">Workspace not found</div>;
+    return <div className="container py-8">{t.dashboard.workspaces.workspaceNotFound}</div>;
   }
 
   const isOwner = role === 'owner';
@@ -99,22 +104,22 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
         className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Dashboard
+        {t.dashboard.workspaces.backToDashboard}
       </Link>
 
-      <h1 className="mb-6 text-2xl font-bold">Workspace Settings</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.dashboard.workspaces.settingsTitle}</h1>
 
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>General</CardTitle>
-            <CardDescription>Update your workspace name and URL.</CardDescription>
+            <CardTitle>{t.dashboard.workspaces.general}</CardTitle>
+            <CardDescription>{t.dashboard.workspaces.generalSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSave} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
-                  Workspace Name
+                  {t.dashboard.workspaces.workspaceName}
                 </label>
                 <Input
                   id="name"
@@ -127,7 +132,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
 
               <div className="space-y-2">
                 <label htmlFor="slug" className="text-sm font-medium">
-                  Workspace URL
+                  {t.dashboard.workspaces.workspaceUrl}
                 </label>
                 <Input
                   id="slug"
@@ -143,7 +148,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
 
               {canEdit && (
                 <Button type="submit" disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? t.common.saving : t.common.saveChanges}
                 </Button>
               )}
             </form>
@@ -152,12 +157,14 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
 
         <Card>
           <CardHeader>
-            <CardTitle>Team Members</CardTitle>
-            <CardDescription>Manage who has access to this workspace.</CardDescription>
+            <CardTitle>{t.dashboard.workspaces.teamMembersTitle}</CardTitle>
+            <CardDescription>{t.dashboard.workspaces.teamMembersSubtitle}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline">
-              <Link href={`/dashboard/workspaces/${id}/members`}>Manage Members</Link>
+              <Link href={`/dashboard/workspaces/${id}/members`}>
+                {t.dashboard.workspaces.manageMembers}
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -165,26 +172,28 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ id
         {isOwner && (
           <Card className="border-destructive">
             <CardHeader>
-              <CardTitle className="text-destructive">Danger Zone</CardTitle>
-              <CardDescription>Permanently delete this workspace and all its data.</CardDescription>
+              <CardTitle className="text-destructive">
+                {t.dashboard.workspaces.dangerZone}
+              </CardTitle>
+              <CardDescription>{t.dashboard.workspaces.dangerSubtitle}</CardDescription>
             </CardHeader>
             <CardContent>
               {!showDeleteConfirm ? (
                 <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Workspace
+                  {t.dashboard.workspaces.deleteWorkspace}
                 </Button>
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Are you sure? This action cannot be undone.
+                    {t.dashboard.workspaces.deleteConfirm}
                   </p>
                   <div className="flex gap-2">
                     <Button variant="destructive" onClick={handleDelete}>
-                      Yes, Delete
+                      {t.dashboard.workspaces.yesDelete}
                     </Button>
                     <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-                      Cancel
+                      {t.common.cancel}
                     </Button>
                   </div>
                 </div>

@@ -9,12 +9,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getRequestLocale } from '@/lib/locale-server';
+import { m } from '@/lib/messages';
+import { toIntlLocale } from '@/lib/intl';
 
 export default async function AdminWorkspacesPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = m(locale);
+  const intlLocale = toIntlLocale(locale);
+
   const { page: pageParam } = await searchParams;
   const page = parseInt(pageParam ?? '1');
   const { workspaces, pagination } = await getAdminWorkspaces(page, 20);
@@ -23,27 +30,27 @@ export default async function AdminWorkspacesPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Workspaces</h1>
-          <p className="text-muted-foreground">Manage all workspaces ({pagination.total} total)</p>
+          <h1 className="text-2xl font-bold">{t.admin.workspaces.title}</h1>
+          <p className="text-muted-foreground">{t.admin.workspaces.subtitle(pagination.total)}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Workspaces</CardTitle>
-          <CardDescription>View and manage workspace accounts</CardDescription>
+          <CardTitle>{t.admin.workspaces.tableTitle}</CardTitle>
+          <CardDescription>{t.admin.workspaces.tableSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Workspace</th>
-                  <th className="px-4 py-3">Owner</th>
-                  <th className="px-4 py-3">Members</th>
-                  <th className="px-4 py-3">Plan</th>
-                  <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.workspace}</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.owner}</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.members}</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.plan}</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.created}</th>
+                  <th className="px-4 py-3">{t.admin.workspaces.columns.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -60,7 +67,7 @@ export default async function AdminWorkspacesPage({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {workspace.owner?.email ?? 'Unknown'}
+                        {workspace.owner?.email ?? t.admin.workspaces.unknown}
                       </td>
                       <td className="px-4 py-3">{workspace.members?.length ?? 0}</td>
                       <td className="px-4 py-3">
@@ -69,11 +76,11 @@ export default async function AdminWorkspacesPage({
                             activeSub ? 'bg-green-100 text-green-800' : 'bg-muted'
                           }`}
                         >
-                          {activeSub ? 'Pro' : 'Free'}
+                          {activeSub ? t.admin.workspaces.pro : t.admin.workspaces.free}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {new Date(workspace.createdAt).toLocaleDateString()}
+                        {new Date(workspace.createdAt).toLocaleDateString(intlLocale)}
                       </td>
                       <td className="px-4 py-3">
                         <DropdownMenu>
@@ -83,10 +90,10 @@ export default async function AdminWorkspacesPage({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>View Members</DropdownMenuItem>
+                            <DropdownMenuItem>{t.admin.workspaces.viewDetails}</DropdownMenuItem>
+                            <DropdownMenuItem>{t.admin.workspaces.viewMembers}</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
-                              Delete Workspace
+                              {t.admin.workspaces.deleteWorkspace}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -101,26 +108,26 @@ export default async function AdminWorkspacesPage({
           {pagination.totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Page {pagination.page} of {pagination.totalPages}
+                {t.admin.workspaces.pageOf(pagination.page, pagination.totalPages)}
               </p>
               <div className="flex gap-2">
                 {page <= 1 ? (
                   <Button variant="outline" size="sm" disabled={page <= 1}>
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t.admin.workspaces.previous}
                   </Button>
                 ) : (
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/admin/workspaces?page=${Math.max(1, page - 1)}`}>
                       <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      {t.admin.workspaces.previous}
                     </Link>
                   </Button>
                 )}
 
                 {page >= pagination.totalPages ? (
                   <Button variant="outline" size="sm" disabled={page >= pagination.totalPages}>
-                    Next
+                    {t.admin.workspaces.next}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
@@ -128,7 +135,7 @@ export default async function AdminWorkspacesPage({
                     <Link
                       href={`/admin/workspaces?page=${Math.min(pagination.totalPages, page + 1)}`}
                     >
-                      Next
+                      {t.admin.workspaces.next}
                       <ChevronRight className="h-4 w-4" />
                     </Link>
                   </Button>
