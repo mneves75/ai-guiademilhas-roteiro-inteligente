@@ -23,11 +23,8 @@ A modern, full-featured Next.js 16 boilerplate for shipping production apps fast
 git clone https://github.com/mneves75/nextjs-bootstrapped-shipped.git
 cd nextjs-bootstrapped-shipped
 
-# Install dependencies (uses pnpm)
-pnpm install
-
-# Start development server
-pnpm dev
+# One command local setup (SQLite + seed + dev server)
+./init.sh
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see your app.
