@@ -40,7 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${post.title} | Blog`,
     description: post.description,
     authors: [{ name: post.author.name }],
-    alternates: publicAlternates(locale, `/blog/${post.slug}`),
+    // Do not emit hreflang for posts unless a real translation exists.
+    // Hreflang pointing to 404 harms SEO.
+    alternates: publicAlternates(locale, `/blog/${post.slug}`, { availableLocales: [locale] }),
     openGraph: {
       title: post.title,
       description: post.description,

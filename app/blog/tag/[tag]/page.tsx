@@ -19,6 +19,17 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag } = await params;
   const locale = await getRequestLocale();
+  const tagsEn = getAllTags({ locale: 'en' });
+  const tagsPtBr = getAllTags({ locale: 'pt-BR' });
+
+  const availableLocales = [
+    ...(tagsEn.includes(tag) ? (['en'] as const) : []),
+    ...(tagsPtBr.includes(tag) ? (['pt-BR'] as const) : []),
+  ];
+
+  // Keep metadata consistent with the page-level 404 behavior.
+  if (!availableLocales.includes(locale)) notFound();
+
   const safeTag = encodeURIComponent(tag);
   const canonical = publicPathname(locale, `/blog/tag/${safeTag}`);
 
@@ -28,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale === 'pt-BR'
         ? `Veja todos os artigos com a tag "${tag}".`
         : `Browse all articles tagged with "${tag}".`,
-    alternates: publicAlternates(locale, `/blog/tag/${safeTag}`),
+    alternates: publicAlternates(locale, `/blog/tag/${safeTag}`, { availableLocales }),
     openGraph: {
       title: locale === 'pt-BR' ? `Posts com tag "${tag}"` : `Posts tagged "${tag}"`,
       description:
