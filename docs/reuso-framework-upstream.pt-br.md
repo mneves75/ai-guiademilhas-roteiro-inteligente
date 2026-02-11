@@ -49,6 +49,7 @@ Comandos disponiveis:
 5. Doctor de prontidao (sem mutacao):
    - `pnpm framework:doctor`
    - Diagnostica reuso fim-a-fim: Git/upstream, `origin`, `CODEOWNERS` e branch protection no GitHub (quando `gh` autenticado).
+   - Em limitacoes de plataforma (ex.: branch protection indisponivel no plano), sinaliza `[LIMIT]` com acao recomendada.
 6. Sync (merge) do upstream:
    - `pnpm framework:sync`
    - Pre-condicoes: working tree limpo e pelo menos 1 commit local.

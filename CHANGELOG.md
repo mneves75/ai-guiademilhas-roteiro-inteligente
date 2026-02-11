@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bootstrap now enables Git `rerere` to reduce recurring merge-conflict cost
 - Weekly upstream sync PR workflow now runs baseline quality checks (`pnpm lint && pnpm test`) before opening/updating PR
 - Repository now stores a local merge bridge to upstream history, enabling incremental `framework:sync` without unrelated-history errors
-- Framework upstream automation now includes `doctor` governance diagnostics (origin, CODEOWNERS, branch protection checks via `gh` when available)
+- Framework upstream automation now includes `doctor` governance diagnostics (origin, CODEOWNERS, branch protection checks via `gh`), with explicit `[LIMIT]` reporting for platform constraints
 
 ### Fixed
 

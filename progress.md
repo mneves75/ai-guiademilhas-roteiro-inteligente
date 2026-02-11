@@ -289,3 +289,18 @@ Data: 2026-02-11
   - `pnpm verify` ✅
   - `pnpm security:audit` ✅
   - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)
+
+### Fechamento autonomo final (2026-02-11)
+
+- Evolucao final:
+  - `origin` configurado para `https://github.com/mneves75/ai-guiademilhas-apps.git`.
+  - `framework:doctor` refinado para reportar limites externos como `[LIMIT]` (ex.: branch protection indisponivel por plano).
+- Verificacao de limite externo:
+  - tentativa de aplicar branch protection via API retornou `403`:
+    - "Upgrade to GitHub Pro or make this repository public to enable this feature."
+  - comportamento final do doctor:
+    - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ✅ com `limit:2` e `fail:0`.
+- Evidencia da rodada final:
+  - `pnpm framework:check` ✅
+  - `pnpm verify` ✅
+  - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)

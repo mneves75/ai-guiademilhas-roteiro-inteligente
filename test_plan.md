@@ -243,3 +243,16 @@ pnpm db:smoke
   - `pnpm verify` passou.
   - `pnpm security:audit` passou.
   - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).
+
+## Fechamento autonomo final (2026-02-11)
+
+- Escopo:
+  - fechar lacuna de `origin` e transformar bloqueio externo de branch protection em diagnostico explicito, sem falso negativo local.
+- Validacao:
+  - `origin` configurado para GitHub (`mneves75/ai-guiademilhas-apps`).
+  - tentativa de `PUT /branches/main/protection` via `gh api` retornou `403` por plano.
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` passou com:
+    - `ok:6 warn:0 limit:2 fail:0`
+  - `pnpm framework:check` passou.
+  - `pnpm verify` passou.
+  - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).

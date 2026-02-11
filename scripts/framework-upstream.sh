@@ -253,6 +253,7 @@ doctor_framework() {
   local strict="${FRAMEWORK_DOCTOR_STRICT:-0}"
   local failures=0
   local warnings=0
+  local limits=0
   local oks=0
 
   [[ "$strict" =~ ^[01]$ ]] || die "FRAMEWORK_DOCTOR_STRICT invalido: $strict (use 0 ou 1)"
@@ -270,6 +271,11 @@ doctor_framework() {
   doctor_fail() {
     echo "[FAIL] $*"
     failures=$((failures + 1))
+  }
+
+  doctor_limit() {
+    echo "[LIMIT] $*"
+    limits=$((limits + 1))
   }
 
   if ! is_git_repo; then
@@ -356,7 +362,10 @@ doctor_framework() {
         target_branch="main"
       fi
 
-      if protection_json="$(gh api -H "Accept: application/vnd.github+json" "repos/$github_repo/branches/$target_branch/protection" 2>/dev/null)"; then
+      local protection_error=""
+      if protection_json="$(
+        gh api -H "Accept: application/vnd.github+json" "repos/$github_repo/branches/$target_branch/protection" 2>&1
+      )"; then
         codeowners_required="$(
           printf '%s' "$protection_json" \
             | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_pull_request_reviews?.require_code_owner_reviews)));'
@@ -396,7 +405,11 @@ doctor_framework() {
           fi
         fi
       else
-        if [ "$strict" = "1" ]; then
+        protection_error="$protection_json"
+        if printf '%s' "$protection_error" | grep -q "Upgrade to GitHub Pro or make this repository public"; then
+          doctor_limit "Branch protection indisponivel para repo privado no plano atual ($github_repo:$target_branch)."
+          doctor_limit "Para validacao total: tornar repo publico ou usar plano com suporte a branch protection."
+        elif [ "$strict" = "1" ]; then
           doctor_fail "Branch protection nao encontrada/acessivel para $github_repo:$target_branch."
         else
           doctor_warn "Branch protection nao encontrada/acessivel para $github_repo:$target_branch."
@@ -406,7 +419,7 @@ doctor_framework() {
   fi
 
   echo
-  echo "Doctor summary -> ok:$oks warn:$warnings fail:$failures"
+  echo "Doctor summary -> ok:$oks warn:$warnings limit:$limits fail:$failures"
 
   if [ "$failures" -gt 0 ]; then
     exit 1

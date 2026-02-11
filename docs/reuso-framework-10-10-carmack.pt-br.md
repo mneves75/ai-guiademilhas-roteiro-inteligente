@@ -71,9 +71,8 @@ Manter um produto derivado de framework sem degradar:
 
 ## O que falta para 10/10 absoluto
 
-1. Conectar `origin` neste workspace local para push/PR automatizavel fim-a-fim.
-2. Rodar `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` em ambiente com `gh` autenticado e permissao de leitura no repo remoto para validar branch protection real.
-3. Opcional: endurecer workflow semanal para executar `pnpm verify` completo no job de abertura de PR.
+1. Resolver limite de plataforma para branch protection em repo privado (upgrade de plano com suporte ou repo publico), hoje sinalizado como `[LIMIT]` pelo `framework:doctor`.
+2. Opcional: endurecer workflow semanal para executar `pnpm verify` completo no job de abertura de PR.
 
 ## Fontes
 

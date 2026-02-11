@@ -95,6 +95,8 @@ Variaveis uteis:
 - `FRAMEWORK_DOCTOR_STRICT`: em `1`, warnings do `framework:doctor` tambem quebram o comando.
 - `FRAMEWORK_DOCTOR_TARGET_BRANCH`: branch alvo para validar branch protection no `framework:doctor`.
 
+`framework:doctor` pode emitir `[LIMIT]` quando o ambiente/repo nao permite validar branch protection (ex.: repo privado sem plano com suporte), sem mascarar falhas locais.
+
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
 No CI, o projeto possui detecao diaria de drift e PR semanal automatica de sync upstream (`.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`).
 
