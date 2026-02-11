@@ -99,7 +99,10 @@ Variaveis uteis:
 `framework:doctor` pode emitir `[LIMIT]` quando o ambiente/repo nao permite validar branch protection (ex.: repo privado sem plano com suporte), sem mascarar falhas locais.
 
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
-No CI, o projeto possui detecao diaria de drift com `framework:doctor` estrito e PR semanal automatica de sync upstream com gate completo (`pnpm verify`) em `.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`.
+No CI, o projeto possui:
+- deteccao diaria de drift em `.github/workflows/upstream-drift.yml`;
+- PR semanal automatica de sync upstream em `.github/workflows/upstream-sync-pr.yml`;
+- gate unico de bloqueio para PR/push em `main` (`.github/workflows/governance-gate.yml`) executando `framework:doctor` estrito + `framework:check` + `pnpm verify`.
 
 ## Health
 

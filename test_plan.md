@@ -218,6 +218,17 @@ pnpm db:smoke
   - executa `framework:check` pos-sync e baseline local (`pnpm lint && pnpm test`) antes de abrir/atualizar PR;
   - CI existente no PR continua sendo gate de qualidade final.
 
+## Gate unico de bloqueio (2026-02-11)
+
+- Novo workflow:
+  - `.github/workflows/governance-gate.yml`
+- Criterios de aprovacao do gate:
+  - `framework:doctor` com `FRAMEWORK_DOCTOR_STRICT=1`
+  - `framework:check` com `FRAMEWORK_UPSTREAM_MAX_BEHIND=0`
+  - `pnpm verify` (lint + type-check + test + build + db:smoke + test:e2e:ci)
+- Evidencia esperada:
+  - Job `Governance Gate` verde em PR e push para `main`.
+
 ## Limpeza final do workflow semanal (2026-02-11)
 
 - Escopo:

@@ -219,6 +219,15 @@ Data: 2026-02-11
 - Estado:
   - Reuso deixou de depender de path local e agora possui verificacao automatizada em CI.
 
+### Gate unico de bloqueio 10/10 (2026-02-11)
+
+- Nova automacao de governanca unificada:
+  - Workflow novo: `.github/workflows/governance-gate.yml`.
+  - Escopo do gate: `framework:doctor` estrito + `framework:check` estrito + `pnpm verify`.
+  - Gatilhos: `push` e `pull_request` para `main/master` + `workflow_dispatch`.
+- Objetivo:
+  - Consolidar governanca upstream e regressao funcional completa em um unico status check de alto sinal.
+
 ### Operacao elegante de sync (2026-02-11)
 
 - Melhoria de ergonomia e controle de risco:
