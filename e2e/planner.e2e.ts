@@ -20,7 +20,9 @@ test.describe('Planner', () => {
     });
 
     await expect(page).toHaveURL(/\/dashboard\/planner/);
-    await expect(page.getByRole('heading', { name: /planner de viagens com milhas|miles travel planner/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /planner de viagens com milhas|miles travel planner/i })
+    ).toBeVisible();
 
     await page.getByLabel(/data de ida|departure date/i).fill('2026-09-10');
     await page.getByLabel(/data de volta|return date/i).fill('2026-09-20');

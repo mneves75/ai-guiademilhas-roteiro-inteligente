@@ -98,10 +98,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     [formData.num_adultos, formData.num_chd, formData.num_inf]
   );
 
-  function updateField<K extends keyof TravelPreferences>(
-    key: K,
-    value: TravelPreferences[K]
-  ) {
+  function updateField<K extends keyof TravelPreferences>(key: K, value: TravelPreferences[K]) {
     setFormData((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -261,9 +258,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                   type="number"
                   min={1}
                   value={formData.num_adultos}
-                  onChange={(event) =>
-                    updateField('num_adultos', Number(event.target.value) || 0)
-                  }
+                  onChange={(event) => updateField('num_adultos', Number(event.target.value) || 0)}
                 />
                 {errors.num_adultos && (
                   <p className="text-xs text-destructive">{errors.num_adultos}</p>
@@ -276,9 +271,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                   type="number"
                   min={0}
                   value={formData.num_chd}
-                  onChange={(event) =>
-                    updateField('num_chd', Number(event.target.value) || 0)
-                  }
+                  onChange={(event) => updateField('num_chd', Number(event.target.value) || 0)}
                 />
               </div>
               <div className="space-y-2">
@@ -288,9 +281,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                   type="number"
                   min={0}
                   value={formData.num_inf}
-                  onChange={(event) =>
-                    updateField('num_inf', Number(event.target.value) || 0)
-                  }
+                  onChange={(event) => updateField('num_inf', Number(event.target.value) || 0)}
                 />
               </div>
             </div>

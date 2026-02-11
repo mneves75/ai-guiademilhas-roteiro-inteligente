@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from '@google/genai';
 import { TravelPreferences, ReportData } from '../types';
 
 const AGENT_PROMPT_TEMPLATE = `
@@ -63,36 +63,49 @@ Obrigatório: Pesquisar na web em tempo real (voos, milhas, clima, vistos/entrad
 `;
 
 const mapPreferenciaVoo = (pref: string) => {
-    switch(pref) {
-        case 'direto': return 'Apenas voos diretos';
-        case '1_conexao': return 'Até 1 conexão';
-        default: return 'Indiferente';
-    }
-}
+  switch (pref) {
+    case 'direto':
+      return 'Apenas voos diretos';
+    case '1_conexao':
+      return 'Até 1 conexão';
+    default:
+      return 'Indiferente';
+  }
+};
 const mapBagagem = (bag: string) => {
-    switch(bag) {
-        case 'mao': return 'Apenas bagagem de mão';
-        case '1_despachada': return '1 bagagem despachada';
-        case 'mais_despachadas': return 'Mais de 1 bagagem despachada';
-        default: return 'Não especificado';
-    }
-}
+  switch (bag) {
+    case 'mao':
+      return 'Apenas bagagem de mão';
+    case '1_despachada':
+      return '1 bagagem despachada';
+    case 'mais_despachadas':
+      return 'Mais de 1 bagagem despachada';
+    default:
+      return 'Não especificado';
+  }
+};
 
 const mapHorariosVoo = (hora: string) => {
-    switch(hora) {
-        case 'qualquer': return 'Qualquer horário';
-        case 'manha': return 'Preferência por voos de manhã (06h-12h)';
-        case 'tarde': return 'Preferência por voos a tarde (12h-18h)';
-        case 'noite': return 'Preferência por voos a noite (18h-00h)';
-        case 'madrugada': return 'Preferência por voos de madrugada';
-        case 'evitar_madrugada': return 'Evitar voos de madrugada';
-        default: return hora || 'Qualquer horário';
-    }
-}
+  switch (hora) {
+    case 'qualquer':
+      return 'Qualquer horário';
+    case 'manha':
+      return 'Preferência por voos de manhã (06h-12h)';
+    case 'tarde':
+      return 'Preferência por voos a tarde (12h-18h)';
+    case 'noite':
+      return 'Preferência por voos a noite (18h-00h)';
+    case 'madrugada':
+      return 'Preferência por voos de madrugada';
+    case 'evitar_madrugada':
+      return 'Evitar voos de madrugada';
+    default:
+      return hora || 'Qualquer horário';
+  }
+};
 
 function buildPrompt(preferences: TravelPreferences): string {
-  return AGENT_PROMPT_TEMPLATE
-    .replace('{{data_ida}}', preferences.data_ida || 'Não informado')
+  return AGENT_PROMPT_TEMPLATE.replace('{{data_ida}}', preferences.data_ida || 'Não informado')
     .replace('{{data_volta}}', preferences.data_volta || 'Não informado')
     .replace('{{flex_dias}}', preferences.flex_dias || '0')
     .replace('{{origens}}', preferences.origens || 'Não informado')
@@ -110,49 +123,55 @@ function buildPrompt(preferences: TravelPreferences): string {
     .replace('{{orcamento_brl}}', preferences.orcamento_brl || 'Não informado')
     .replace('{{tolerancia_risco}}', preferences.tolerancia_risco)
     .replace('{{perfil}}', preferences.perfil || 'Não informado')
-    .replace('{{hospedagem_padrao}}', preferences.hospedagem_padrao === 'indiferente' ? 'Indiferente' : preferences.hospedagem_padrao)
+    .replace(
+      '{{hospedagem_padrao}}',
+      preferences.hospedagem_padrao === 'indiferente'
+        ? 'Indiferente'
+        : preferences.hospedagem_padrao
+    )
     .replace('{{bairros_pref}}', preferences.bairros_pref || 'Sem preferência')
     .replace('{{restricoes}}', preferences.restricoes || 'Nenhuma');
 }
 
 export async function generateTravelReport(preferences: TravelPreferences): Promise<ReportData> {
-    if (!process.env.API_KEY) {
-        throw new Error("API_KEY environment variable not set.");
-    }
+  if (!process.env.API_KEY) {
+    throw new Error('API_KEY environment variable not set.');
+  }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = buildPrompt(preferences);
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const prompt = buildPrompt(preferences);
 
-    try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3-pro-preview',
-          contents: prompt,
-          config: {
-            tools: [{googleSearch: {}}],
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const sources =
+      response.candidates?.[0]?.groundingMetadata?.groundingChunks
+        ?.map((chunk) => {
+          const web = chunk.web;
+          if (web && web.uri) {
+            return { title: web.title || web.uri, uri: web.uri };
           }
-        });
+          return null;
+        })
+        .filter((s): s is { title: string; uri: string } => s !== null) || [];
 
-        const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
-            ?.map(chunk => {
-                const web = chunk.web;
-                if (web && web.uri) {
-                    return { title: web.title || web.uri, uri: web.uri };
-                }
-                return null;
-            })
-            .filter((s): s is { title: string; uri: string } => s !== null) || [];
+    // Deduplicate sources
+    const sourceMap = new Map<string, { title: string; uri: string }>();
+    sources.forEach((s) => sourceMap.set(s.uri, s));
+    const uniqueSources = Array.from(sourceMap.values());
 
-        // Deduplicate sources
-        const sourceMap = new Map<string, { title: string; uri: string }>();
-        sources.forEach(s => sourceMap.set(s.uri, s));
-        const uniqueSources = Array.from(sourceMap.values());
-
-        return {
-            text: response.text || "",
-            sources: uniqueSources
-        };
-    } catch (error) {
-        console.error("Error calling Gemini API:", error);
-        throw new Error("Failed to generate travel report from Gemini API.");
-    }
+    return {
+      text: response.text || '',
+      sources: uniqueSources,
+    };
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    throw new Error('Failed to generate travel report from Gemini API.');
+  }
 }

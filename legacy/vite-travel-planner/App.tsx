@@ -37,13 +37,13 @@ export default function App() {
 
   const handleNext = () => {
     if (step < totalSteps - 1 && isCurrentStepValid) {
-      setStep(prev => prev + 1);
+      setStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
     if (step > 0) {
-      setStep(prev => prev - 1);
+      setStep((prev) => prev - 1);
     }
   };
 
@@ -76,18 +76,22 @@ export default function App() {
 
   if (error) {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-            <div className="bg-white p-8 rounded-lg shadow-md max-w-lg">
-                <h2 className="text-2xl font-bold text-red-600 mb-4">Ops! Algo deu errado.</h2>
-                <p className="text-gray-700 mb-6">{error}</p>
-                <button
-                    onClick={() => { setError(null); setReport(null); setIsLoading(false); }}
-                    className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                    Tentar Novamente
-                </button>
-            </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Ops! Algo deu errado.</h2>
+          <p className="text-gray-700 mb-6">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              setReport(null);
+              setIsLoading(false);
+            }}
+            className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Tentar Novamente
+          </button>
         </div>
+      </div>
     );
   }
 
@@ -97,7 +101,11 @@ export default function App() {
         <div className="max-w-4xl mx-auto">
           <ReportDisplay data={report} preferences={formData} />
           <button
-            onClick={() => { setReport(null); setStep(0); setFormData(initialTravelPreferences); }}
+            onClick={() => {
+              setReport(null);
+              setStep(0);
+              setFormData(initialTravelPreferences);
+            }}
             className="mt-8 w-full sm:w-auto bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
           >
             Criar Novo Relatório
@@ -111,8 +119,12 @@ export default function App() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 transition-all duration-500">
       <div className="w-full max-w-2xl">
         <header className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Agente de Viagens IA</h1>
-          <p className="text-md sm:text-lg text-gray-500 mt-2">Responda algumas perguntas e criaremos o roteiro perfeito para você.</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">
+            Agente de Viagens IA
+          </h1>
+          <p className="text-md sm:text-lg text-gray-500 mt-2">
+            Responda algumas perguntas e criaremos o roteiro perfeito para você.
+          </p>
         </header>
 
         <QuestionCard title={formSteps[step].title} description={formSteps[step].description}>
@@ -131,7 +143,7 @@ export default function App() {
             <ArrowLeftIcon />
             Voltar
           </button>
-          
+
           {isLastStep ? (
             <button
               onClick={handleGenerateReport}
