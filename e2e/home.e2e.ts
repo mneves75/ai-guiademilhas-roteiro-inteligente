@@ -55,10 +55,7 @@ test.describe('Home Page', () => {
       .getByRole('navigation', { name: 'Primary' })
       .locator('a[href^="/login"]')
       .first();
-    await expect(loginCta).toHaveAttribute(
-      'href',
-      /\/login\?callbackUrl=%2Fdashboard%2Fplanner/
-    );
+    await expect(loginCta).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
   });
 });
 
@@ -127,6 +124,20 @@ test.describe('Authentication Pages', () => {
     await expect(emailInput).toBeVisible();
     await expect(passwordInput).toBeVisible();
   });
+
+  test('should preserve planner callback between login and signup links', async ({ page }) => {
+    await gotoPage(page, '/login?callbackUrl=%2Fdashboard%2Fplanner');
+
+    const createAccountLink = page.locator('a[href^="/signup"]').first();
+    await expect(createAccountLink).toHaveAttribute(
+      'href',
+      /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
+    );
+
+    await gotoPage(page, '/signup?callbackUrl=%2Fdashboard%2Fplanner');
+    const signInLink = page.locator('a[href^="/login"]').first();
+    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+  });
 });
 
 test.describe('Pricing', () => {
@@ -135,6 +146,19 @@ test.describe('Pricing', () => {
     await expect(
       page.getByRole('heading', { name: /(pricing|precos|pre\u00e7os)/i })
     ).toBeVisible();
+  });
+
+  test('should keep planner callback in pricing sign-up ctas', async ({ page }) => {
+    await gotoPage(page, '/en/pricing');
+    const signupLinks = page.locator('a[href^="/signup"]');
+    const count = await signupLinks.count();
+
+    for (let i = 0; i < count; i += 1) {
+      await expect(signupLinks.nth(i)).toHaveAttribute(
+        'href',
+        /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
+      );
+    }
   });
 });
 
