@@ -49,6 +49,7 @@ Comandos disponiveis:
 5. Doctor de prontidao (sem mutacao):
    - `pnpm framework:doctor`
    - Diagnostica reuso fim-a-fim: Git/upstream, `origin`, `CODEOWNERS` e branch protection no GitHub (quando `gh` autenticado).
+   - Em modo estrito (`FRAMEWORK_DOCTOR_STRICT=1`), valida invariantes de branch protection: `strict=true`, check obrigatorio (`FRAMEWORK_DOCTOR_REQUIRED_CHECK`, default `Governance Gate`), `conversation resolution` e `enforce admins`.
    - Em limitacoes de plataforma (ex.: branch protection indisponivel no plano), sinaliza `[LIMIT]` com acao recomendada.
 6. Sync (merge) do upstream:
    - `pnpm framework:sync`
@@ -69,6 +70,7 @@ Variaveis opcionais para customizar automacao:
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND` (default: `0`, usado em `framework:check`)
 - `FRAMEWORK_DOCTOR_STRICT` (default: `0`; em `1`, warning tambem falha)
 - `FRAMEWORK_DOCTOR_TARGET_BRANCH` (branch alvo para validar branch protection)
+- `FRAMEWORK_DOCTOR_REQUIRED_CHECK` (default: `Governance Gate`; check obrigatorio esperado no branch protection)
 - `FRAMEWORK_UPSTREAM_SOURCE_URL` (Repository Variable no GitHub Actions) para fornecer URL acessivel ao runner quando o upstream for privado.
 
 ## Governanca automatica (CI)
