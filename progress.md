@@ -340,3 +340,21 @@ Data: 2026-02-11
   - reproducao local com conflito proposital de host (`NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000`) + `pnpm test:e2e:ci` ✅ (`33 passed`).
   - `pnpm lint` ✅
   - `pnpm type-check` ✅
+
+### Fechamento 10/10 operacional (2026-02-11)
+
+- Governanca upstream reforcada em CI:
+  - `.github/workflows/upstream-drift.yml` agora roda `framework:doctor` strict antes do `framework:check`.
+  - `.github/workflows/upstream-sync-pr.yml` agora roda `framework:doctor` strict + `pnpm verify` (gate completo) antes de abrir/atualizar PR.
+  - PR semanal de sync recebe owner explicito (`assignees: mneves75`).
+- Checklist versionada adicionada:
+  - `docs/framework-sync-checklist.pt-br.md` (pre-sync, fronteiras de conflito, pos-sync, governanca).
+- Auditoria de segredos local ficou acionavel e deterministica:
+  - `scripts/security-audit.sh` agora usa `SECURITY_AUDIT_GITLEAKS_SCOPE=head` por padrao e suporta `all` para varredura historica completa.
+- Evidencias desta rodada:
+  - `pnpm lint` ✅
+  - `pnpm type-check` ✅
+  - `pnpm security:audit` ✅
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ✅
+  - `pnpm framework:check` ✅
+  - `pnpm verify` ✅
