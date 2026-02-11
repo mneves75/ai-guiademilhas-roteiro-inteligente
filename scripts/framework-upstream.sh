@@ -13,6 +13,7 @@ usage() {
 Uso:
   scripts/framework-upstream.sh bootstrap
   scripts/framework-upstream.sh status
+  scripts/framework-upstream.sh preview
   scripts/framework-upstream.sh check
   scripts/framework-upstream.sh sync [--verify]
 
@@ -50,6 +51,11 @@ ensure_git_repo() {
 
   git init >/dev/null
   git symbolic-ref HEAD refs/heads/main >/dev/null 2>&1 || true
+}
+
+configure_git_merge_helpers() {
+  git config rerere.enabled true >/dev/null 2>&1 || true
+  git config rerere.autoupdate true >/dev/null 2>&1 || true
 }
 
 is_remote_source() {
@@ -154,6 +160,35 @@ print_status() {
   fi
 }
 
+preview_sync() {
+  is_git_repo || die "Repositorio Git nao inicializado. Rode: pnpm framework:bootstrap"
+  git remote get-url "$UPSTREAM_REMOTE" >/dev/null 2>&1 || die "Remote '$UPSTREAM_REMOTE' nao configurado. Rode: pnpm framework:bootstrap"
+  has_head_commit || die "Sem commits locais. Crie um commit inicial antes de preview."
+
+  fetch_upstream
+  echo "Branch upstream alvo: $UPSTREAM_BRANCH"
+
+  local ahead
+  local behind
+  if ! read -r ahead behind < <(git rev-list --left-right --count "HEAD...$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" 2>/dev/null); then
+    die "Nao foi possivel calcular divergencia contra $UPSTREAM_REMOTE/$UPSTREAM_BRANCH."
+  fi
+
+  echo "Divergencia vs $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -> ahead:$ahead behind:$behind"
+  if [ "$behind" -eq 0 ]; then
+    echo "Sem commits novos no upstream para aplicar."
+    return 0
+  fi
+
+  echo
+  echo "Commits do upstream ainda nao aplicados (mais antigos primeiro):"
+  git log --reverse --oneline "HEAD..$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"
+
+  echo
+  echo "Arquivos impactados no sync:"
+  git diff --name-only "HEAD..$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"
+}
+
 check_upstream() {
   local max_behind="${FRAMEWORK_UPSTREAM_MAX_BEHIND:-0}"
 
@@ -204,12 +239,16 @@ cmd="${1:-}"
 case "$cmd" in
   bootstrap)
     ensure_git_repo
+    configure_git_merge_helpers
     ensure_upstream_remote
     fetch_upstream
     print_status
     ;;
   status)
     print_status
+    ;;
+  preview)
+    preview_sync
     ;;
   check)
     check_upstream

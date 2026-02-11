@@ -12,13 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Planner API contract helpers with resilient parsing for versioned success payloads and RFC 9457 problem details
 - Route-level unit tests for `POST /api/planner/generate` (401, 429 problem+json, 200 success)
 - OpenAPI 3.1 contract for planner endpoint (`docs/openapi.planner.yaml`)
+- First-principles 10/10 framework reuse review doc (`docs/reuso-framework-10-10-carmack.pt-br.md`)
 - Framework upstream automation commands:
   - `pnpm framework:bootstrap`
   - `pnpm framework:status`
+  - `pnpm framework:preview`
   - `pnpm framework:check`
   - `pnpm framework:sync`
   - `pnpm framework:sync:verify`
 - CI workflow for upstream drift governance (`.github/workflows/upstream-drift.yml`)
+- CODEOWNERS baseline for ownership boundaries (`.github/CODEOWNERS`)
 
 ### Changed
 
@@ -26,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors
 - Reuse docs now document executable upstream sync workflow with branch autodetection and local path defaults
 - Upstream automation now supports local path and remote Git URL sources via `FRAMEWORK_UPSTREAM_SOURCE`
+- Bootstrap now enables Git `rerere` to reduce recurring merge-conflict cost
 - Repository now stores a local merge bridge to upstream history, enabling incremental `framework:sync` without unrelated-history errors
 
 ### Fixed

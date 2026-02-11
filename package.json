@@ -43,6 +43,7 @@
     "db:reset": "drizzle-kit push --force && NODE_OPTIONS=--conditions=react-server tsx ./src/db/seed.ts",
     "framework:bootstrap": "bash ./scripts/framework-upstream.sh bootstrap",
     "framework:status": "bash ./scripts/framework-upstream.sh status",
+    "framework:preview": "bash ./scripts/framework-upstream.sh preview",
     "framework:check": "bash ./scripts/framework-upstream.sh check",
     "framework:sync": "bash ./scripts/framework-upstream.sh sync",
     "framework:sync:verify": "bash ./scripts/framework-upstream.sh sync --verify"

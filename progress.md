@@ -218,3 +218,25 @@ Data: 2026-02-11
   - `README.md` e `docs/reuso-framework-upstream.pt-br.md`.
 - Estado:
   - Reuso deixou de depender de path local e agora possui verificacao automatizada em CI.
+
+### Operacao elegante de sync (2026-02-11)
+
+- Melhoria de ergonomia e controle de risco:
+  - Novo comando `pnpm framework:preview` para listar commits/arquivos antes do merge.
+  - `bootstrap` agora liga `git rerere` para reaproveitar resolucoes de conflito recorrentes.
+  - `.github/CODEOWNERS` adicionado para reforcar ownership entre core e dominio.
+- Resultado:
+  - Fluxo de sync ficou observavel (preview), repetivel (rerere) e governavel (ownership + drift gate).
+
+### Pesquisa + critica 10/10 (2026-02-11)
+
+- Documento tecnico consolidado em pt-BR:
+  - `docs/reuso-framework-10-10-carmack.pt-br.md`
+  - inclui critica de primeiros principios, abordagem de mercado e lacunas remotas para fechar 10/10 absoluto.
+- Evidencia desta rodada:
+  - `pnpm framework:bootstrap` (rerere habilitado) ✅
+  - `pnpm framework:preview` ✅
+  - `pnpm framework:check` ✅
+  - `pnpm verify` ✅
+  - `pnpm security:audit` ✅
+  - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)

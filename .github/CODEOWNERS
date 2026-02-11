@@ -1,12 +1,15 @@
-# See GitHub CODEOWNERS docs:
-# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-#
-# NOTE: Update owners to match your GitHub org/users/teams.
-
+# Default ownership
 * @mneves75
 
-# Security-sensitive surfaces
-/proxy.ts @mneves75
+# Core framework surface
+/.github/workflows/ @mneves75
+/scripts/ @mneves75
 /app/api/ @mneves75
-/src/lib/auth @mneves75
-/src/db/ @mneves75
+/src/lib/security/ @mneves75
+
+# Product domain (Guia de Milhas)
+/app/page.tsx @mneves75
+/src/content/landing.ts @mneves75
+/src/lib/planner/ @mneves75
+/app/(protected)/dashboard/planner/ @mneves75
+/docs/ @mneves75

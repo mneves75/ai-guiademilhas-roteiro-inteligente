@@ -36,20 +36,23 @@ Comandos disponiveis:
 
 1. Bootstrap de reuso:
    - `pnpm framework:bootstrap`
-   - Efeito: inicializa Git local (se necessario), configura remote `upstream` e busca branch padrao automaticamente (`main` ou fallback por `HEAD`, ex.: `master`).
+   - Efeito: inicializa Git local (se necessario), configura remote `upstream`, habilita `git rerere` (`rerere.enabled` + `rerere.autoupdate`) e busca branch padrao automaticamente (`main` ou fallback por `HEAD`, ex.: `master`).
 2. Status de divergencia:
    - `pnpm framework:status`
    - Mostra remote configurado e estado local contra `upstream/<branch>`.
-3. Check de drift (sem mutacao):
+3. Preview de sync (sem mutacao):
+   - `pnpm framework:preview`
+   - Mostra commits e arquivos que seriam incorporados no proximo merge de upstream.
+4. Check de drift (sem mutacao):
    - `pnpm framework:check`
    - Falha se `behind > FRAMEWORK_UPSTREAM_MAX_BEHIND` (default `0`).
-4. Sync (merge) do upstream:
+5. Sync (merge) do upstream:
    - `pnpm framework:sync`
    - Pre-condicoes: working tree limpo e pelo menos 1 commit local.
-5. Sync + validacao completa:
+6. Sync + validacao completa:
    - `pnpm framework:sync:verify`
    - Executa `pnpm verify` apos merge.
-6. Resolver conflitos priorizando:
+7. Resolver conflitos priorizando:
    - manter customizacoes em `app/page.tsx`, `src/content/landing.ts`, `src/lib/planner/**`
    - aceitar evolucoes de infraestrutura em `proxy.ts`, `scripts/**`, `observability/**`
 
@@ -66,6 +69,7 @@ Variaveis opcionais para customizar automacao:
 - Workflow: `.github/workflows/upstream-drift.yml`
 - Agenda: diaria (`07:00 UTC`) + gatilho manual.
 - Politica atual: strict (`FRAMEWORK_UPSTREAM_MAX_BEHIND=0`) contra `https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.
+- Ownership: `.github/CODEOWNERS` define fronteiras de revisao para core e dominio.
 
 ## Estado atual
 

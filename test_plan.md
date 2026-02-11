@@ -194,3 +194,16 @@ pnpm db:smoke
 - Variantes validadas:
   - source local: `FRAMEWORK_UPSTREAM_SOURCE=~/dev/PROJETOS/nextjs-bootstrapped-shipped`.
   - source remoto: `FRAMEWORK_UPSTREAM_SOURCE=https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.
+
+## Operacao elegante de sync (2026-02-11)
+
+- Novas verificacoes:
+  - `pnpm framework:preview`: deve listar commits/arquivos pendentes sem mutar working tree.
+  - `pnpm framework:bootstrap`: deve ativar `git rerere` (`git config --get rerere.enabled` = `true`).
+  - `.github/CODEOWNERS` presente com cobertura de core + dominio.
+
+## Revalidacao completa da rodada (2026-02-11)
+
+- `pnpm verify` => sucesso completo (lint + type-check + test + build + db smoke + e2e:ci).
+- `pnpm security:audit` => sucesso completo (audit + gitleaks + DAST-lite + gates basicos).
+- `PW_FULL=1 pnpm test:e2e` => `161 passed`, `4 skipped`.
