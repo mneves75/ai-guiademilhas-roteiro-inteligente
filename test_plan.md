@@ -256,3 +256,18 @@ pnpm db:smoke
   - `pnpm framework:check` passou.
   - `pnpm verify` passou.
   - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).
+
+## Regressao final - estabilizacao auth E2E (2026-02-11)
+
+- Alteracao validada:
+  - `e2e/helpers/auth.ts` (regex de callback ancorado + sincronizacao click/navegacao com `Promise.all`).
+- Comandos executados:
+  - `pnpm lint` -> PASS
+  - `pnpm type-check` -> PASS
+  - `pnpm test` -> PASS (`79 passed`)
+  - `pnpm test:e2e` -> PASS (`65 passed`, `1 skipped`)
+  - `pnpm test:e2e:ci` -> PASS (`33 passed`)
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` -> PASS (`ok:9 warn:0 limit:0 fail:0`)
+  - `pnpm security:audit` -> FAIL (gitleaks encontrou leaks no historico; sem relacao com o diff atual)
+- Resultado:
+  - Flake de redirect/callback em auth E2E removido localmente no modo CI e full.
