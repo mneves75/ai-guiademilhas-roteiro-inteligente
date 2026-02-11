@@ -85,9 +85,7 @@ function computeWebServerEnv(baseURL) {
 }
 
 async function runExternally({ fullMatrix }) {
-  const baseURL =
-    process.env.PLAYWRIGHT_BASE_URL ??
-    `http://127.0.0.1:${await getFreePort()}`;
+  const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${await getFreePort()}`;
 
   const { env, dbProvider } = computeWebServerEnv(baseURL);
   const healthURL = `${baseURL.replace(/\/$/, '')}/health`;
@@ -110,7 +108,9 @@ async function runExternally({ fullMatrix }) {
     runSync('pnpm', ['db:push:pg'], env);
     runSync('pnpm', ['db:seed'], env);
   } else {
-    throw new Error(`Playwright E2E does not support DB_PROVIDER=${dbProvider}. Use sqlite or postgres.`);
+    throw new Error(
+      `Playwright E2E does not support DB_PROVIDER=${dbProvider}. Use sqlite or postgres.`
+    );
   }
 
   // Build before Playwright spins up multiple browser engines. This reduces peak memory usage vs.

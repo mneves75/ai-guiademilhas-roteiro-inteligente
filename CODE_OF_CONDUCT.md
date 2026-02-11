@@ -4,6 +4,8 @@ Este projeto adota o **Contributor Covenant**, versao 2.1.
 
 Texto completo (PT-BR): https://www.contributor-covenant.org/pt-br/version/2/1/code_of_conduct/
 
+Observacao (GitHub): o arquivo funciona mesmo assim, mas o "Community Profile" do GitHub pode exigir que o arquivo tenha sido criado via template para marcar "Code of conduct" como completo.
+
 ## Aplicacao
 
 Para relatar violacoes:
