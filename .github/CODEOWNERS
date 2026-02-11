@@ -1,3 +1,13 @@
-# Default code owners.
-* @mneves75
+# See GitHub CODEOWNERS docs:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# NOTE: Update owners to match your GitHub org/users/teams.
+
+* @mneves
+
+# Security-sensitive surfaces
+/proxy.ts @mneves
+/app/api/ @mneves
+/src/lib/auth @mneves
+/src/db/ @mneves
 

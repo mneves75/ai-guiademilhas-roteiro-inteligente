@@ -11,7 +11,7 @@ O foco e ter um "demo app" completo (auth, multi-tenancy, billing, admin, blog) 
 
 ## Request Pipeline (proxy)
 
-O Next.js 16 deprecou `middleware.ts` neste repo; usamos `src/proxy.ts`:
+O Next.js 16 deprecou `middleware.ts` neste repo; usamos `proxy.ts`:
 
 - injeta/propaga `x-request-id` para correlacao de logs e respostas;
 - aplica hardening basico (ex.: CSRF/cookies), rate-limit em `POST /api/auth/*`;
