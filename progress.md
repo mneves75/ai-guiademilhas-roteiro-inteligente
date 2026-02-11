@@ -45,6 +45,19 @@ Scrap + rebuild com invariantes fortes para:
   - `content/blog/nextjs-saas-boilerplate-10-10.mdx` (pilar)
   - satelites em `content/blog/*.mdx` (multi-tenancy, Stripe, auth, SEO tecnico, E2E, headers)
 
+## Auth Pages Design System Alignment (2026-02-11)
+
+- Auth layout (`app/(auth)/layout.tsx`): `Card` + `glass-card-elevated` + `hero-glow` + `reveal-visible` + logo Shipped/Rocket
+- 4 pages simplificadas (login, signup, forgot-password, reset-password): layout cuida do container visual
+- 4 forms reescritos com design system:
+  - `login-form.tsx`: OAuth-first (Google/GitHub no topo), `Separator` divider, magic link como botao inline, `Loader2` spinner
+  - `signup-form.tsx`: tokens consistentes, `Loader2`, `bg-destructive/15` para erros
+  - `forgot-password-form.tsx`: `bg-primary/10` para notice de sucesso, `Loader2`
+  - `reset-password-form.tsx`: `Button asChild` para link INVALID_TOKEN, `Loader2`
+- Cores hardcoded eliminadas: `bg-blue-600`, `gray-50`, `bg-green-500/15` → CSS variables
+- Net -98 linhas (9 arquivos modificados)
+- Todos os data-testid, aria-\*, i18n, validacao, OAuth e magic link preservados
+
 ## Verificacao
 
-- Gates executados (verdes): `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm build`, `PW_FULL=1 pnpm test:e2e`.
+- Gates executados (verdes): `pnpm lint`, `pnpm type-check`, `pnpm test` (67/67), `pnpm build`, `pnpm test:e2e` (30/30).

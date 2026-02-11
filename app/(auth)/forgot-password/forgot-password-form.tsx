@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
 import { parseBodyFieldErrors } from '@/lib/auth/error-utils';
 import { isValidEmail } from '@/lib/validation/email';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 export default function ForgotPasswordForm({ initialLocale }: { initialLocale: Locale }) {
   const [locale] = useState<Locale>(initialLocale);
@@ -35,7 +39,6 @@ export default function ForgotPasswordForm({ initialLocale }: { initialLocale: L
         return;
       }
 
-      // Prefer same-origin so previews/staging work without hardcoding envs.
       const redirectTo = `${window.location.origin}/reset-password`;
       const res = await fetch('/api/auth/request-password-reset', {
         method: 'POST',
@@ -54,7 +57,6 @@ export default function ForgotPasswordForm({ initialLocale }: { initialLocale: L
         return;
       }
 
-      // Security: do not leak whether the email exists.
       setNotice(t.requestResetSent);
     } catch {
       setError(t.requestResetFailedFallback);
@@ -64,34 +66,23 @@ export default function ForgotPasswordForm({ initialLocale }: { initialLocale: L
   }
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {t.resetTitle}
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.resetHint}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.resetTitle}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t.resetHint}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
-            {error}
-          </div>
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
         )}
         {notice && (
-          <div className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
-            {notice}
-          </div>
+          <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">{notice}</div>
         )}
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {t.email}
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">{t.email}</Label>
+          <Input
             id="email"
             name="email"
             type="email"
@@ -101,26 +92,22 @@ export default function ForgotPasswordForm({ initialLocale }: { initialLocale: L
             onChange={(e) => setEmail(e.target.value)}
             aria-invalid={!!fieldError}
             aria-describedby={fieldError ? 'email-error' : undefined}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           />
           {fieldError && (
-            <p id="email-error" className="mt-1 text-xs text-red-600 dark:text-red-300">
+            <p id="email-error" className="text-xs text-destructive">
               {fieldError}
             </p>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? t.sendingResetLink : t.sendResetLink}
-        </button>
+        </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+      <p className="text-center text-sm">
+        <Link href="/login" className="font-medium text-muted-foreground hover:text-foreground">
           {t.backToSignIn}
         </Link>
       </p>

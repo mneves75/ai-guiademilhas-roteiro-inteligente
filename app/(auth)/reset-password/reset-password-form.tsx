@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
 import { parseBodyFieldErrors } from '@/lib/auth/error-utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 export default function ResetPasswordForm({
   token,
@@ -81,49 +85,35 @@ export default function ResetPasswordForm({
 
   if (errorParam === 'INVALID_TOKEN') {
     return (
-      <div className="w-full max-w-md space-y-6">
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+      <div className="space-y-6">
+        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
           {t.invalidResetLink}
         </div>
-        <Link
-          href="/forgot-password"
-          className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-        >
-          {t.requestNewResetLink}
-        </Link>
+        <Button asChild className="w-full">
+          <Link href="/forgot-password">{t.requestNewResetLink}</Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {t.chooseNewPassword}
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.setNewPasswordHint}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.chooseNewPassword}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t.setNewPasswordHint}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
-            {error}
-          </div>
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
         )}
         {notice && (
-          <div className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
-            {notice}
-          </div>
+          <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">{notice}</div>
         )}
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {t.newPassword}
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="password">{t.newPassword}</Label>
+          <Input
             id="password"
             name="password"
             type="password"
@@ -134,23 +124,17 @@ export default function ResetPasswordForm({
             onChange={(e) => setPassword(e.target.value)}
             aria-invalid={!!fieldErrors.password}
             aria-describedby={fieldErrors.password ? 'password-error' : undefined}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           />
           {fieldErrors.password && (
-            <p id="password-error" className="mt-1 text-xs text-red-600 dark:text-red-300">
+            <p id="password-error" className="text-xs text-destructive">
               {fieldErrors.password}
             </p>
           )}
         </div>
 
-        <div>
-          <label
-            htmlFor="confirm"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {t.confirmPassword}
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="confirm">{t.confirmPassword}</Label>
+          <Input
             id="confirm"
             name="confirm"
             type="password"
@@ -161,26 +145,22 @@ export default function ResetPasswordForm({
             onChange={(e) => setConfirm(e.target.value)}
             aria-invalid={!!fieldErrors.confirm}
             aria-describedby={fieldErrors.confirm ? 'confirm-error' : undefined}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           />
           {fieldErrors.confirm && (
-            <p id="confirm-error" className="mt-1 text-xs text-red-600 dark:text-red-300">
+            <p id="confirm-error" className="text-xs text-destructive">
               {fieldErrors.confirm}
             </p>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? t.resetting : t.resetPasswordButton}
-        </button>
+        </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+      <p className="text-center text-sm">
+        <Link href="/login" className="font-medium text-muted-foreground hover:text-foreground">
           {t.backToSignIn}
         </Link>
       </p>

@@ -7,17 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- (none)
-
 ### Changed
 
-- (none)
-
-### Fixed
-
-- (none)
+- Auth pages (login, signup, forgot-password, reset-password) fully aligned with site design system
+  - OAuth-first login pattern (Google/GitHub buttons above email form, matching Clerk/Linear industry standard)
+  - Glass card wrapper via `Card` component + `glass-card-elevated` in shared auth layout
+  - All raw HTML inputs/buttons replaced with shadcn/ui `Input`, `Label`, `Button`, `Separator`
+  - Hardcoded colors (`bg-blue-600`, `gray-50`, `bg-green-500/15`) replaced with CSS variable tokens (`text-foreground`, `bg-destructive/15`, `bg-primary/10`)
+  - `Loader2` spinners on all submit buttons during loading states
+  - `hero-glow` background + `reveal-visible` entry animation on auth layout
+  - Magic link collapsed from separate boxed section to inline button (less visual noise)
+  - Pages simplified — layout.tsx is Single Source of Truth for visual container
+  - Net reduction of ~100 lines across 9 files
 
 ## [0.4.4] - 2026-02-10
 
