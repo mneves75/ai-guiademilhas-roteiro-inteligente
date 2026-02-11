@@ -79,8 +79,16 @@ Para estrategia de sincronizacao com framework base, veja [docs/reuso-framework-
 
 - `pnpm framework:bootstrap`: inicializa Git (se necessario) e configura o remote `upstream` do framework base.
 - `pnpm framework:status`: mostra branch upstream efetiva e divergencia local.
+- `pnpm framework:check`: falha se o repositorio estiver atras do upstream (controle de drift).
 - `pnpm framework:sync`: aplica merge de `upstream/<branch>`.
 - `pnpm framework:sync:verify`: executa sync + `pnpm verify`.
+
+Variaveis uteis:
+
+- `FRAMEWORK_UPSTREAM_SOURCE`: aceita caminho local **ou** URL Git remota do framework.
+- `FRAMEWORK_UPSTREAM_PATH`: compat legado para caminho local.
+- `FRAMEWORK_UPSTREAM_BRANCH`: branch alvo (autodetecta via `HEAD` quando necessario).
+- `FRAMEWORK_UPSTREAM_MAX_BEHIND`: tolerancia de drift usada por `framework:check` (default `0`).
 
 ## Health
 

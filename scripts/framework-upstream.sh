@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
 UPSTREAM_REMOTE="${FRAMEWORK_UPSTREAM_REMOTE:-upstream}"
-UPSTREAM_PATH="${FRAMEWORK_UPSTREAM_PATH:-$HOME/dev/PROJETOS/nextjs-bootstrapped-shipped}"
+UPSTREAM_SOURCE="${FRAMEWORK_UPSTREAM_SOURCE:-${FRAMEWORK_UPSTREAM_PATH:-$HOME/dev/PROJETOS/nextjs-bootstrapped-shipped}}"
 UPSTREAM_BRANCH="${FRAMEWORK_UPSTREAM_BRANCH:-$(git config --get framework.upstreamBranch 2>/dev/null || echo main)}"
 
 usage() {
@@ -13,12 +13,15 @@ usage() {
 Uso:
   scripts/framework-upstream.sh bootstrap
   scripts/framework-upstream.sh status
+  scripts/framework-upstream.sh check
   scripts/framework-upstream.sh sync [--verify]
 
 Variaveis opcionais:
   FRAMEWORK_UPSTREAM_REMOTE  (default: upstream)
-  FRAMEWORK_UPSTREAM_PATH    (default: ~/dev/PROJETOS/nextjs-bootstrapped-shipped)
+  FRAMEWORK_UPSTREAM_SOURCE  (default: FRAMEWORK_UPSTREAM_PATH or ~/dev/PROJETOS/nextjs-bootstrapped-shipped)
+  FRAMEWORK_UPSTREAM_PATH    (compat: caminho local legado)
   FRAMEWORK_UPSTREAM_BRANCH  (default: main)
+  FRAMEWORK_UPSTREAM_MAX_BEHIND (default: 0, usado em "check")
 USAGE
 }
 
@@ -49,18 +52,48 @@ ensure_git_repo() {
   git symbolic-ref HEAD refs/heads/main >/dev/null 2>&1 || true
 }
 
-ensure_upstream_path() {
-  [ -d "$UPSTREAM_PATH" ] || die "FRAMEWORK_UPSTREAM_PATH nao existe: $UPSTREAM_PATH"
-  [ -d "$UPSTREAM_PATH/.git" ] || die "FRAMEWORK_UPSTREAM_PATH nao aponta para repo Git: $UPSTREAM_PATH"
+is_remote_source() {
+  case "$1" in
+    http://*|https://*|ssh://*|git@*|git://*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+resolve_upstream_target() {
+  local source="${UPSTREAM_SOURCE/#\~/$HOME}"
+  [ -n "$source" ] || die "FRAMEWORK_UPSTREAM_SOURCE vazio."
+
+  if [ -d "$source" ]; then
+    [ -d "$source/.git" ] || die "FRAMEWORK_UPSTREAM_SOURCE aponta para pasta sem .git: $source"
+    echo "$source"
+    return 0
+  fi
+
+  if is_remote_source "$source"; then
+    echo "$source"
+    return 0
+  fi
+
+  if [[ "$source" == /* || "$source" == ./* || "$source" == ../* || "$source" == ~* ]]; then
+    die "FRAMEWORK_UPSTREAM_SOURCE parece caminho local inexistente: $source"
+  fi
+
+  # Fallback: permite formatos de remote nao capturados acima.
+  echo "$source"
 }
 
 ensure_upstream_remote() {
-  ensure_upstream_path
+  local upstream_target
+  upstream_target="$(resolve_upstream_target)"
 
   if git remote get-url "$UPSTREAM_REMOTE" >/dev/null 2>&1; then
-    git remote set-url "$UPSTREAM_REMOTE" "$UPSTREAM_PATH"
+    git remote set-url "$UPSTREAM_REMOTE" "$upstream_target"
   else
-    git remote add "$UPSTREAM_REMOTE" "$UPSTREAM_PATH"
+    git remote add "$UPSTREAM_REMOTE" "$upstream_target"
   fi
 }
 
@@ -121,6 +154,32 @@ print_status() {
   fi
 }
 
+check_upstream() {
+  local max_behind="${FRAMEWORK_UPSTREAM_MAX_BEHIND:-0}"
+
+  is_git_repo || die "Repositorio Git nao inicializado. Rode: pnpm framework:bootstrap"
+  git remote get-url "$UPSTREAM_REMOTE" >/dev/null 2>&1 || die "Remote '$UPSTREAM_REMOTE' nao configurado. Rode: pnpm framework:bootstrap"
+  has_head_commit || die "Sem commits locais. Crie um commit inicial antes de check."
+
+  [[ "$max_behind" =~ ^[0-9]+$ ]] || die "FRAMEWORK_UPSTREAM_MAX_BEHIND invalido: $max_behind"
+
+  fetch_upstream
+  echo "Branch upstream alvo: $UPSTREAM_BRANCH"
+
+  local ahead
+  local behind
+  if ! read -r ahead behind < <(git rev-list --left-right --count "HEAD...$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" 2>/dev/null); then
+    die "Nao foi possivel calcular divergencia contra $UPSTREAM_REMOTE/$UPSTREAM_BRANCH."
+  fi
+
+  echo "Divergencia vs $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -> ahead:$ahead behind:$behind"
+  if [ "$behind" -gt "$max_behind" ]; then
+    die "Repo esta $behind commits atras do upstream (max permitido: $max_behind). Rode: pnpm framework:sync"
+  fi
+
+  echo "Upstream check OK (behind <= $max_behind)."
+}
+
 sync_upstream() {
   local verify_after="${1:-}"
 
@@ -151,6 +210,9 @@ case "$cmd" in
     ;;
   status)
     print_status
+    ;;
+  check)
+    check_upstream
     ;;
   sync)
     sync_upstream "${2:-}"

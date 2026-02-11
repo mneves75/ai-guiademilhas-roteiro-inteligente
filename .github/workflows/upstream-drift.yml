@@ -1,0 +1,29 @@
+name: Upstream Drift
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-upstream-drift:
+    name: Check Upstream Drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bootstrap upstream remote
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+        run: bash ./scripts/framework-upstream.sh bootstrap
+
+      - name: Validate behind count (strict)
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+          FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
+        run: bash ./scripts/framework-upstream.sh check

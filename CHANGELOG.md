@@ -15,14 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Framework upstream automation commands:
   - `pnpm framework:bootstrap`
   - `pnpm framework:status`
+  - `pnpm framework:check`
   - `pnpm framework:sync`
   - `pnpm framework:sync:verify`
+- CI workflow for upstream drift governance (`.github/workflows/upstream-drift.yml`)
 
 ### Changed
 
 - `POST /api/planner/generate` now returns versioned success payload (`schemaVersion`, `generatedAt`) and standardized 429 `application/problem+json`
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors
 - Reuse docs now document executable upstream sync workflow with branch autodetection and local path defaults
+- Upstream automation now supports local path and remote Git URL sources via `FRAMEWORK_UPSTREAM_SOURCE`
 - Repository now stores a local merge bridge to upstream history, enabling incremental `framework:sync` without unrelated-history errors
 
 ### Fixed

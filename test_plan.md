@@ -185,3 +185,12 @@ pnpm db:smoke
   - E2E full: `161 passed`, `4 skipped`, `0 failed`.
 - Observacao de confiabilidade:
   - Execucao paralela de audit + E2E full nao e recomendada por contencao de banco local; execucao sequencial validada como baseline.
+
+## Governanca de drift upstream (2026-02-11)
+
+- Novos checks:
+  - `pnpm framework:check` (local): falha se o repo estiver atras do upstream acima do limite.
+  - `.github/workflows/upstream-drift.yml` (CI): executa bootstrap + check com politica strict (`behind <= 0`).
+- Variantes validadas:
+  - source local: `FRAMEWORK_UPSTREAM_SOURCE=~/dev/PROJETOS/nextjs-bootstrapped-shipped`.
+  - source remoto: `FRAMEWORK_UPSTREAM_SOURCE=https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.

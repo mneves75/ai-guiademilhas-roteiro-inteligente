@@ -207,3 +207,14 @@ Data: 2026-02-11
   - `161 passed`, `4 skipped`, `0 failed`.
 - Nota de engenharia:
   - Uma tentativa de executar `security:audit` e E2E full em paralelo gerou corrida no SQLite; rerun sequencial confirmou estabilidade completa.
+
+### Governanca de drift upstream (2026-02-11)
+
+- Evolucao de reuso para operacao continua:
+  - `scripts/framework-upstream.sh` agora aceita `FRAMEWORK_UPSTREAM_SOURCE` com caminho local ou URL Git remota.
+  - Novo comando `pnpm framework:check` para gate de drift (`behind` maximo via `FRAMEWORK_UPSTREAM_MAX_BEHIND`, default `0`).
+  - Novo workflow `.github/workflows/upstream-drift.yml` (diario + manual) para detectar atraso frente ao framework.
+- Documentacao atualizada:
+  - `README.md` e `docs/reuso-framework-upstream.pt-br.md`.
+- Estado:
+  - Reuso deixou de depender de path local e agora possui verificacao automatizada em CI.

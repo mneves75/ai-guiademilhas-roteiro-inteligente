@@ -40,21 +40,32 @@ Comandos disponiveis:
 2. Status de divergencia:
    - `pnpm framework:status`
    - Mostra remote configurado e estado local contra `upstream/<branch>`.
-3. Sync (merge) do upstream:
+3. Check de drift (sem mutacao):
+   - `pnpm framework:check`
+   - Falha se `behind > FRAMEWORK_UPSTREAM_MAX_BEHIND` (default `0`).
+4. Sync (merge) do upstream:
    - `pnpm framework:sync`
    - Pre-condicoes: working tree limpo e pelo menos 1 commit local.
-4. Sync + validacao completa:
+5. Sync + validacao completa:
    - `pnpm framework:sync:verify`
    - Executa `pnpm verify` apos merge.
-5. Resolver conflitos priorizando:
+6. Resolver conflitos priorizando:
    - manter customizacoes em `app/page.tsx`, `src/content/landing.ts`, `src/lib/planner/**`
    - aceitar evolucoes de infraestrutura em `proxy.ts`, `scripts/**`, `observability/**`
 
 Variaveis opcionais para customizar automacao:
 
-- `FRAMEWORK_UPSTREAM_PATH` (default: `~/dev/PROJETOS/nextjs-bootstrapped-shipped`)
+- `FRAMEWORK_UPSTREAM_SOURCE` (default: `FRAMEWORK_UPSTREAM_PATH` ou `~/dev/PROJETOS/nextjs-bootstrapped-shipped`)
+- `FRAMEWORK_UPSTREAM_PATH` (compat legado para caminho local)
 - `FRAMEWORK_UPSTREAM_REMOTE` (default: `upstream`)
 - `FRAMEWORK_UPSTREAM_BRANCH` (default: autodetect com fallback em `main`)
+- `FRAMEWORK_UPSTREAM_MAX_BEHIND` (default: `0`, usado em `framework:check`)
+
+## Governanca automatica (CI)
+
+- Workflow: `.github/workflows/upstream-drift.yml`
+- Agenda: diaria (`07:00 UTC`) + gatilho manual.
+- Politica atual: strict (`FRAMEWORK_UPSTREAM_MAX_BEHIND=0`) contra `https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.
 
 ## Estado atual
 
