@@ -371,3 +371,15 @@ Data: 2026-02-11
   - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ✅
   - `pnpm framework:check` ✅
   - `pnpm verify` ✅
+
+## Hardening final request-id + regressao (2026-02-11)
+
+- Ajuste aplicado:
+  - `src/lib/request-id.ts`: removido fallback com `Math.random()`.
+  - novo fallback deterministico para runtimes sem Web Crypto (uso exclusivo de observabilidade).
+- Teste de regressao adicionado:
+  - `src/lib/__tests__/request-id.vitest.ts`.
+- Validacao executada:
+  - `pnpm verify:ci` -> PASS (`23` arquivos de teste, `87` testes, `38` E2E).
+  - `pnpm security:audit` -> PASS.
+  - `gh api repos/.../code-scanning/alerts?state=open | jq 'length'` -> `0`.

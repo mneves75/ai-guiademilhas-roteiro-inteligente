@@ -318,3 +318,16 @@ pnpm db:smoke
 - Resultado:
   - Fluxo de reuso upstream com gate completo e governanca estrita codificados no CI.
   - Security audit local deixa de falhar por refs historicas nao relacionadas ao branch em validacao.
+
+## Regressao: request-id sem aleatoriedade fraca (2026-02-11)
+
+- Mudanca alvo:
+  - `src/lib/request-id.ts` deve gerar request-id sem usar `Math.random()`.
+- Casos cobertos:
+  - preserva `x-request-id` valido recebido no request.
+  - usa `crypto.randomUUID()` quando disponivel.
+  - sem `crypto`, gera fallback deterministico hexadecimal e unicos em chamadas sequenciais.
+- Evidencias:
+  - `pnpm verify:ci` -> PASS (`87` testes unitarios + `38` E2E).
+  - `pnpm security:audit` -> PASS.
+  - Code scanning remoto aberto -> `0`.
