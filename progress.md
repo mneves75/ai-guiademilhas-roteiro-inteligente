@@ -395,3 +395,14 @@ Data: 2026-02-11
   - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
 - Estado:
   - baseline de regressao full atualizado para zero skips.
+
+### Refinamento final de copy + revalidacao total (2026-02-11)
+
+- Ajuste implementado:
+  - `src/content/landing.ts`: copy PT-BR reforcada para conversao (dor -> mecanismo -> clareza -> CTA), sem alterar contratos de navegacao/autenticacao.
+- Evidencias executadas:
+  - `pnpm verify:ci` => sucesso completo (lint + type-check + tests + build + db checks + `test:e2e:ci` com `38 passed`).
+  - `pnpm security:audit` => sucesso completo (`audit` sem vulnerabilidades + `gitleaks` sem leaks + DAST-lite `4 passed` + gates basicos).
+  - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
+- Estado:
+  - alteracao restrita a copy PT-BR da landing, com regressao completa verde.
