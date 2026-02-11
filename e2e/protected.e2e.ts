@@ -35,4 +35,12 @@ test.describe('Protected Routes', () => {
     await page.goto('/dashboard/planner');
     await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
   });
+
+  test('authenticated users hitting localized home are redirected to planner', async ({
+    page,
+  }, testInfo) => {
+    await signUpAndReachWorkspaces(page, { seed: `${testInfo.testId}-home-redirect` });
+    await page.goto('/en', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/\/dashboard\/planner$/);
+  });
 });

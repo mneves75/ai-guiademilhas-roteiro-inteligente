@@ -8,6 +8,7 @@ import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Users, UserPlus } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export default async function TeamPage() {
   const auth = getAuth();
@@ -16,7 +17,7 @@ export default async function TeamPage() {
   });
 
   if (!session) {
-    redirect('/login');
+    redirect(buildLoginRedirectHref('/dashboard/team', { defaultPath: '/dashboard/team' }));
   }
 
   const locale = await getRequestLocale();

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { JsonLd } from '@/components/json-ld';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,9 +53,12 @@ export default async function HomePage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+  if (session) {
+    redirect(plannerPath);
+  }
   const signupHref = plannerSignupHref();
   const loginHref = plannerLoginHref();
-  const primaryHref = session ? plannerPath : signupHref;
+  const primaryHref = signupHref;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -80,20 +84,12 @@ export default async function HomePage() {
           </Link>
           <nav aria-label="Primary" className="flex items-center gap-2">
             <LanguageSwitcher />
-            {session ? (
-              <Button asChild size="sm">
-                <Link href={plannerPath}>{content.finalCta}</Link>
-              </Button>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href={loginHref}>{content.loginCta}</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href={signupHref}>{content.finalCta}</Link>
-                </Button>
-              </>
-            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link href={loginHref}>{content.loginCta}</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href={signupHref}>{content.finalCta}</Link>
+            </Button>
           </nav>
         </div>
       </header>
@@ -112,11 +108,9 @@ export default async function HomePage() {
               <Button asChild size="lg" className="px-8">
                 <Link href={primaryHref}>{content.primaryCta}</Link>
               </Button>
-              {!session && (
-                <Button asChild variant="outline" size="lg" className="px-8">
-                  <Link href={loginHref}>{content.secondaryCta}</Link>
-                </Button>
-              )}
+              <Button asChild variant="outline" size="lg" className="px-8">
+                <Link href={loginHref}>{content.secondaryCta}</Link>
+              </Button>
             </div>
           </div>
         </section>

@@ -41,3 +41,15 @@ export function normalizeCallbackUrl(
 
   return value;
 }
+
+type BuildLoginRedirectOptions = {
+  defaultPath?: string;
+};
+
+export function buildLoginRedirectHref(
+  callbackUrl: string | null | undefined,
+  options: BuildLoginRedirectOptions = {}
+): string {
+  const safeCallback = normalizeCallbackUrl(callbackUrl, { defaultPath: options.defaultPath });
+  return `/login?callbackUrl=${encodeURIComponent(safeCallback)}`;
+}

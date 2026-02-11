@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `framework:doctor` now enforces stricter branch-protection invariants in strict mode: `required_status_checks.strict=true`, required check presence (`FRAMEWORK_DOCTOR_REQUIRED_CHECK`, default `Governance Gate`), `required_conversation_resolution.enabled=true`, and `enforce_admins.enabled=true`
 - Reuse architecture docs were upgraded with first-principles critique and an explicit scale roadmap toward SemVer package consumption
 - Public authentication CTAs now consistently preserve planner intent via `callbackUrl=/dashboard/planner` across landing/pricing/auth screens to reduce drop-off in planner activation
+- Authenticated users visiting localized home (`/en`, `/pt-br`) are now redirected directly to `/dashboard/planner`
+- Protected surfaces now preserve callback intent more consistently by building login redirects from normalized callback URLs
 
 ### Fixed
 

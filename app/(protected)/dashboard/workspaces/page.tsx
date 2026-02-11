@@ -8,6 +8,7 @@ import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Plus, Settings, Users } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export default async function WorkspacesPage() {
   const auth = getAuth();
@@ -16,7 +17,9 @@ export default async function WorkspacesPage() {
   });
 
   if (!session) {
-    redirect('/login');
+    redirect(
+      buildLoginRedirectHref('/dashboard/workspaces', { defaultPath: '/dashboard/workspaces' })
+    );
   }
 
   const locale = await getRequestLocale();

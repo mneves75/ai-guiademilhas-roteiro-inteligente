@@ -1,3 +1,5 @@
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
+
 export const PLANNER_PATH = '/dashboard/planner';
 
 function encode(path: string): string {
@@ -5,7 +7,7 @@ function encode(path: string): string {
 }
 
 export function plannerLoginHref(): string {
-  return `/login?callbackUrl=${encode(PLANNER_PATH)}`;
+  return buildLoginRedirectHref(PLANNER_PATH, { defaultPath: PLANNER_PATH });
 }
 
 export function plannerSignupHref(): string {

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardHeader } from '@/components/dashboard-header';
 import { WorkspaceProvider } from '@/contexts/workspace-context';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -12,13 +13,15 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const requestHeaders = await headers();
   const auth = getAuth();
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: requestHeaders,
   });
 
   if (!session) {
-    redirect('/login');
+    const callbackUrl = requestHeaders.get('x-shipped-callback-url');
+    redirect(buildLoginRedirectHref(callbackUrl, { defaultPath: '/dashboard' }));
   }
 
   return (
