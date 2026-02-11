@@ -9,6 +9,8 @@ Objetivo: substituir um prompt longo e acoplado a ferramentas por um prompt de e
 - Playwright recomenda usar locators + web-first assertions e deixar o framework auto-esperar em vez de timeouts manuais (reduz flakiness): https://playwright.dev/docs/best-practices
 - Next.js documenta que `useSearchParams()` sem `Suspense` pode causar CSR bailout; a pratica recomendada e isolar o uso (ou evitar no topo da pagina): https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
 - GitHub recomenda arquivos de "community health" (Code of Conduct, Code Owners, Support, Security) para repos publicos: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions
+- GitHub sobre Code of Conduct: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-a-code-of-conduct-to-your-project
+- GitHub sobre CODEOWNERS: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 ## Critica (primeiros principios)
 

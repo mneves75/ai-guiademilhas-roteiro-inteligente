@@ -3,11 +3,10 @@
 #
 # NOTE: Update owners to match your GitHub org/users/teams.
 
-* @mneves
+* @mneves75
 
 # Security-sensitive surfaces
-/proxy.ts @mneves
-/app/api/ @mneves
-/src/lib/auth @mneves
-/src/db/ @mneves
-
+/proxy.ts @mneves75
+/app/api/ @mneves75
+/src/lib/auth @mneves75
+/src/db/ @mneves75
