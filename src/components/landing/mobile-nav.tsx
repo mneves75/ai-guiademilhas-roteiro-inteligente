@@ -6,6 +6,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { m } from '@/lib/messages';
+import { plannerLoginHref, plannerSignupHref } from '@/lib/planner/navigation';
 import { useLocale } from '@/contexts/locale-context';
 
 export function MobileNav() {
@@ -13,6 +14,8 @@ export function MobileNav() {
   const { locale } = useLocale();
 
   const t = m(locale);
+  const loginHref = plannerLoginHref();
+  const signupHref = plannerSignupHref();
   const navLinks = [
     { href: '#features', label: t.nav.features },
     { href: '#pricing', label: t.nav.pricing },
@@ -47,12 +50,12 @@ export function MobileNav() {
           ))}
           <div className="my-4 h-px bg-border" />
           <Button asChild variant="ghost" className="w-full justify-start">
-            <Link href="/login" onClick={() => setOpen(false)}>
+            <Link href={loginHref} onClick={() => setOpen(false)}>
               {t.nav.signIn}
             </Link>
           </Button>
           <Button asChild className="w-full">
-            <Link href="/signup" onClick={() => setOpen(false)}>
+            <Link href={signupHref} onClick={() => setOpen(false)}>
               {t.nav.getStarted}
             </Link>
           </Button>

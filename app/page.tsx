@@ -9,6 +9,7 @@ import { getLandingContent } from '@/content/landing';
 import { getAuth } from '@/lib/auth';
 import { publicPathname } from '@/lib/locale-routing';
 import { getRequestLocale } from '@/lib/locale-server';
+import { plannerLoginHref, plannerSignupHref, PLANNER_PATH } from '@/lib/planner/navigation';
 import { publicAlternates } from '@/lib/seo/public-alternates';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
 
@@ -46,14 +47,13 @@ export default async function HomePage() {
   const url = resolvePublicOrigin();
   const appName = content.appName;
   const canonicalPath = publicPathname(locale, '/');
-  const plannerPath = '/dashboard/planner';
+  const plannerPath = PLANNER_PATH;
   const auth = getAuth();
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  const plannerCallback = encodeURIComponent(plannerPath);
-  const signupHref = `/signup?callbackUrl=${plannerCallback}`;
-  const loginHref = `/login?callbackUrl=${plannerCallback}`;
+  const signupHref = plannerSignupHref();
+  const loginHref = plannerLoginHref();
   const primaryHref = session ? plannerPath : signupHref;
 
   return (

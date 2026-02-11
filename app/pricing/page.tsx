@@ -12,6 +12,7 @@ import { getLocalizedPlans } from '@/lib/plan-catalog-localized';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
 import { publicAlternates } from '@/lib/seo/public-alternates';
 import { publicPathname } from '@/lib/locale-routing';
+import { plannerSignupHref } from '@/lib/planner/navigation';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
@@ -41,6 +42,7 @@ export default async function PricingPage() {
   const plans = getLocalizedPlans(locale);
   const url = resolvePublicOrigin();
   const pricingPath = publicPathname(locale, '/pricing');
+  const signupHref = plannerSignupHref();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -59,7 +61,7 @@ export default async function PricingPage() {
           <p className="text-muted-foreground">{t.pricingPage.subtitle}</p>
           <div className="flex justify-center gap-2 pt-2">
             <Button asChild>
-              <Link href="/signup">{t.pricingPage.getStarted}</Link>
+              <Link href={signupHref}>{t.pricingPage.getStarted}</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/login?callbackUrl=/dashboard/billing">
@@ -88,7 +90,7 @@ export default async function PricingPage() {
                     ))}
                   </ul>
                   <Button asChild variant={highlighted ? 'default' : 'outline'} className="w-full">
-                    <Link href="/signup">{t.pricingPage.startWith(plan.name)}</Link>
+                    <Link href={signupHref}>{t.pricingPage.startWith(plan.name)}</Link>
                   </Button>
                 </CardContent>
               </Card>

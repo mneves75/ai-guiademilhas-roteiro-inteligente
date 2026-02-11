@@ -34,6 +34,7 @@ export default function LoginForm({
   const [magicLoading, setMagicLoading] = useState(false);
 
   const t = m(locale).auth;
+  const signupHref = `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -132,26 +133,20 @@ export default function LoginForm({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t.signInTitle}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.signInTitle}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {t.or}{' '}
-          <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
+          <Link href={signupHref} className="font-medium text-primary hover:text-primary/80">
             {t.createAccount}
           </Link>
         </p>
       </div>
 
       {error && (
-        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-          {error}
-        </div>
+        <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
       )}
       {notice && (
-        <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">
-          {notice}
-        </div>
+        <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">{notice}</div>
       )}
 
       <div className="grid grid-cols-2 gap-3">

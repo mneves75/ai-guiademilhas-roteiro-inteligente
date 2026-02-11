@@ -3,10 +3,12 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { plannerSignupHref } from '@/lib/planner/navigation';
 
 export async function FinalCTA() {
   const locale = await getRequestLocale();
   const t = m(locale).landing.finalCta;
+  const signupHref = plannerSignupHref();
 
   return (
     <section className="py-20 md:py-28">
@@ -21,7 +23,7 @@ export async function FinalCTA() {
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">{t.subtitle}</p>
             <div className="mt-8">
               <Button asChild size="lg" className="gap-2">
-                <Link href="/signup">
+                <Link href={signupHref}>
                   {t.button} <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>

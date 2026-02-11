@@ -39,6 +39,7 @@ export default function SignupForm({
   const t = m(locale).auth;
   const termsPath = publicPathname(locale, '/terms');
   const privacyPath = publicPathname(locale, '/privacy');
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   useEffect(() => {
     setHydrated(true);
@@ -99,12 +100,10 @@ export default function SignupForm({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t.signUpTitle}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.signUpTitle}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {t.alreadyHaveAccount}{' '}
-          <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+          <Link href={loginHref} className="font-medium text-primary hover:text-primary/80">
             {m(locale).nav.signIn}
           </Link>
         </p>
@@ -118,9 +117,7 @@ export default function SignupForm({
         noValidate
       >
         {error && (
-          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-            {error}
-          </div>
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
         )}
 
         <div className="space-y-2">

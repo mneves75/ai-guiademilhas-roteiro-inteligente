@@ -11,12 +11,15 @@ import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
 import { publicPathname } from '@/lib/locale-routing';
+import { plannerLoginHref, plannerSignupHref } from '@/lib/planner/navigation';
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const { locale } = useLocale();
   const t = m(locale).nav;
   const homePath = publicPathname(locale, '/');
+  const loginHref = plannerLoginHref();
+  const signupHref = plannerSignupHref();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -69,17 +72,17 @@ export function Header() {
           <ThemeToggle />
 
           <Button asChild variant="ghost" size="icon" className="sm:hidden">
-            <Link href="/login" aria-label={t.signIn}>
+            <Link href={loginHref} aria-label={t.signIn}>
               <LogIn className="h-4 w-4" />
             </Link>
           </Button>
 
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/login">{t.signIn}</Link>
+            <Link href={loginHref}>{t.signIn}</Link>
           </Button>
 
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/signup">{t.getStarted}</Link>
+            <Link href={signupHref}>{t.getStarted}</Link>
           </Button>
 
           <MobileNav />
