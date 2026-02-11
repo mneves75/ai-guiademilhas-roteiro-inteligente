@@ -225,10 +225,10 @@ pnpm db:smoke
 - Criterios de aprovacao do gate:
   - `framework:doctor` com `FRAMEWORK_DOCTOR_STRICT=1`
   - `framework:check` com `FRAMEWORK_UPSTREAM_MAX_BEHIND=0`
-  - `pnpm verify` (lint + type-check + test + build + db:smoke + test:e2e:ci)
+  - `pnpm verify:ci` (lint + type-check + test + build + db:schema-parity + db:smoke:sqlite + test:e2e:ci)
 - Evidencia esperada:
   - Job `Governance Gate` verde em PR e push para `main`.
-  - Quando upstream privado nao estiver acessivel ao runner, warning explicito no log e continuidade do gate de regressao (`pnpm verify`).
+  - Quando upstream privado nao estiver acessivel ao runner, warning explicito no log e continuidade do gate de regressao (`pnpm verify:ci`).
 
 ## Limpeza final do workflow semanal (2026-02-11)
 

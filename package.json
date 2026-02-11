@@ -20,6 +20,7 @@
     "test:e2e:ci": "PW_PROJECT=chromium bash ./scripts/with-e2e-lock.sh node scripts/test-e2e.mjs",
     "security:audit": "bash ./scripts/security-audit.sh",
     "verify": "pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm db:smoke && pnpm test:e2e:ci",
+    "verify:ci": "pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm db:schema-parity && pnpm db:smoke:sqlite && pnpm test:e2e:ci",
     "readiness": "node scripts/readiness-check.mjs",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",

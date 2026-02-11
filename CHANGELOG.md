@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow for upstream drift governance (`.github/workflows/upstream-drift.yml`)
 - CI workflow for weekly upstream sync PR automation (`.github/workflows/upstream-sync-pr.yml`)
 - CI workflow for single-pass governance and regression gate (`.github/workflows/governance-gate.yml`)
+- CI profile quality script (`pnpm verify:ci`) for deterministic runner-compatible gates
 - CODEOWNERS baseline for ownership boundaries (`.github/CODEOWNERS`)
 - Versioned upstream sync checklist with conflict boundaries (`docs/framework-sync-checklist.pt-br.md`)
 
@@ -42,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weekly upstream sync PR is now auto-assigned to the repository owner for explicit operational ownership
 - `security:audit` now scans gitleaks on current branch ancestry by default (`SECURITY_AUDIT_GITLEAKS_SCOPE=head`) with optional full-history mode (`all`)
 - Reuse docs and README now document strict governance gates and a checklist-first sync process
-- 10/10 governance baseline now includes a unified CI blocker (`Governance Gate`) running `framework:doctor` strict + `framework:check` + `pnpm verify` on pushes and PRs to `main`
+- 10/10 governance baseline now includes a unified CI blocker (`Governance Gate`) running `framework:doctor` strict + `framework:check` + `pnpm verify:ci` on pushes and PRs to `main`
 - Upstream workflows now support CI fallback for private upstream access via repository variable `FRAMEWORK_UPSTREAM_SOURCE_URL`, with explicit warning when upstream checks are skipped
 
 ### Fixed

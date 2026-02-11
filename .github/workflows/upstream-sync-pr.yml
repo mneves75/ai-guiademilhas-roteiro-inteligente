@@ -86,7 +86,7 @@ jobs:
 
       - name: Run full quality gate
         if: steps.bootstrap_upstream.outcome == 'success'
-        run: pnpm verify
+        run: pnpm verify:ci
 
       - name: Create pull request if needed
         if: steps.bootstrap_upstream.outcome == 'success'
@@ -103,7 +103,7 @@ jobs:
             - [x] doctor de governanca (`framework:doctor` strict)
             - [x] merge de upstream executado
             - [x] drift resolvido (`framework:check`)
-            - [x] gate de qualidade completo (`pnpm verify`)
+            - [x] gate de qualidade completo (`pnpm verify:ci`)
             - [x] diff pronto para validacao nos checks de CI
           labels: |
             dependencies

@@ -73,7 +73,7 @@ Manter um produto derivado de framework sem degradar:
 ## Estado 10/10 absoluto
 
 1. Branch protection estrita em `main` com CODEOWNERS review e checks obrigatorios.
-2. Gate unico de bloqueio (`Governance Gate`) cobrindo governanca upstream + regressao completa.
+2. Gate unico de bloqueio (`Governance Gate`) cobrindo governanca upstream + regressao completa via perfil CI (`pnpm verify:ci`).
 3. Sync semanal automatizado com PR dedicada e ownership explicito.
 4. Drift diario automatizado para deteccao precoce de atraso contra upstream.
 

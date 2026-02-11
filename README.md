@@ -86,6 +86,7 @@ Para critica de primeiros principios e versao 10/10, veja [docs/reuso-framework-
 - `pnpm framework:doctor`: diagnostica prontidao de reuso (upstream/origin/CODEOWNERS/branch protection quando possivel).
 - `pnpm framework:sync`: aplica merge de `upstream/<branch>`.
 - `pnpm framework:sync:verify`: executa sync + `pnpm verify`.
+- `pnpm verify:ci`: perfil CI sem dependencia de binarios locais de Postgres (mantem lint/type/test/build/schema-parity/sqlite/e2e).
 
 Variaveis uteis:
 
@@ -103,8 +104,8 @@ No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzi
 No CI, o projeto possui:
 - deteccao diaria de drift em `.github/workflows/upstream-drift.yml`;
 - PR semanal automatica de sync upstream em `.github/workflows/upstream-sync-pr.yml`;
-- gate unico de bloqueio para PR/push em `main` (`.github/workflows/governance-gate.yml`) executando `framework:doctor` estrito + `framework:check` + `pnpm verify`.
-Quando o upstream for privado e nao acessivel pelo runner, os workflows de upstream emitem warning explicito e mantem o gate de qualidade (`pnpm verify`) ativo.
+- gate unico de bloqueio para PR/push em `main` (`.github/workflows/governance-gate.yml`) executando `framework:doctor` estrito + `framework:check` + `pnpm verify:ci`.
+Quando o upstream for privado e nao acessivel pelo runner, os workflows de upstream emitem warning explicito e mantem o gate de qualidade (`pnpm verify:ci`) ativo.
 
 ## Health
 
