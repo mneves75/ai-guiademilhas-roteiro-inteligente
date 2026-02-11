@@ -1,9 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { DB_PROVIDER, db, stripeEvents, users, workspaces, workspaceMembers } from './client';
 import { recordStripeEventReceived } from '@/db/queries/stripe-events';
+import { randomUUID } from 'node:crypto';
 
 function uniqueId(prefix: string) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  return `${prefix}_${Date.now()}_${randomUUID()}`;
 }
 
 async function main() {

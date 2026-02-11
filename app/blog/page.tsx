@@ -85,56 +85,59 @@ export default async function BlogPage() {
         </Card>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
-            <Link
-              key={post.slug}
-              href={publicPathname(locale, `/blog/${post.slug}`)}
-              className="block h-full"
-            >
-              <Card className="h-full transition-shadow hover:shadow-lg">
-                {post.image && (
-                  <div className="pointer-events-none relative aspect-video overflow-hidden rounded-t-lg">
-                    <Image
-                      src={post.image}
-                      alt={post.title}
-                      fill
-                      className="pointer-events-none object-cover"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {post.tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <CardTitle className="line-clamp-2">{post.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">{post.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(post.date).toLocaleDateString(intlLocale, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+          {posts.map((post) => {
+            const safeSlug = encodeURIComponent(post.slug);
+            return (
+              <Link
+                key={safeSlug}
+                href={publicPathname(locale, `/blog/${safeSlug}`)}
+                className="block h-full"
+              >
+                <Card className="h-full transition-shadow hover:shadow-lg">
+                  {post.image && (
+                    <div className="pointer-events-none relative aspect-video overflow-hidden rounded-t-lg">
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        fill
+                        className="pointer-events-none object-cover"
+                      />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {post.readingTime}
+                  )}
+                  <CardHeader>
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {post.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-primary/10 px-2 py-1 text-xs text-primary"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    <CardTitle className="line-clamp-2">{post.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">{post.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(post.date).toLocaleDateString(intlLocale, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {post.readingTime}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
