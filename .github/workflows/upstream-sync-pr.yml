@@ -39,22 +39,31 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Probe upstream reachability
+        id: probe_upstream
+        shell: bash
+        run: |
+          if git ls-remote --exit-code "$FRAMEWORK_UPSTREAM_SOURCE" HEAD >/dev/null 2>&1; then
+            echo "reachable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "reachable=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Bootstrap upstream remote
-        id: bootstrap_upstream
-        continue-on-error: true
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
       - name: Upstream access fallback
-        if: steps.bootstrap_upstream.outcome != 'success'
+        if: steps.probe_upstream.outputs.reachable != 'true'
         run: |
           echo "::warning::Upstream source is not reachable from this runner; skipping automated upstream sync PR."
           echo "Set repository variable FRAMEWORK_UPSTREAM_SOURCE_URL to an accessible URL."
 
       - name: Doctor governance (strict)
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
@@ -63,21 +72,21 @@ jobs:
         run: bash ./scripts/framework-upstream.sh doctor
 
       - name: Preview pending upstream changes
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh preview
 
       - name: Merge upstream locally
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh sync
 
       - name: Assert drift resolved after sync
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
@@ -85,11 +94,11 @@ jobs:
         run: bash ./scripts/framework-upstream.sh check
 
       - name: Run full quality gate
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         run: pnpm verify:ci
 
       - name: Create pull request if needed
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/upstream-sync
