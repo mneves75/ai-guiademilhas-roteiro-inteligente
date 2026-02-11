@@ -324,3 +324,19 @@ Data: 2026-02-11
   - `pnpm test:e2e:ci` ✅ (`33 passed`)
   - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ✅ (`ok:9 warn:0 limit:0 fail:0`)
   - `pnpm security:audit` ❌ (falhou por leaks historicos detectados por gitleaks no git history, fora do escopo desta correcao).
+
+### Correcao definitiva de host/callback no CI (2026-02-11)
+
+- Causa raiz identificada por log remoto:
+  - E2E em CI rodava app em `127.0.0.1:<porta>`.
+  - `NEXT_PUBLIC_APP_URL` chegava como `http://localhost:3000` via workflow.
+  - mismatch de origem quebrava sessao/callback do Better Auth, causando timeouts em planner/protected/screens.
+- Correcao aplicada:
+  - `scripts/test-e2e.mjs` agora força origem canonica de auth para o `baseURL` real do run:
+    - `NEXT_PUBLIC_APP_URL = baseURL`
+    - `BETTER_AUTH_BASE_URL = baseURL`
+    - `BETTER_AUTH_URL = baseURL`
+- Evidencia:
+  - reproducao local com conflito proposital de host (`NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000`) + `pnpm test:e2e:ci` ✅ (`33 passed`).
+  - `pnpm lint` ✅
+  - `pnpm type-check` ✅

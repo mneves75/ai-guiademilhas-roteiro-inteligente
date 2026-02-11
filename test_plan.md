@@ -271,3 +271,17 @@ pnpm db:smoke
   - `pnpm security:audit` -> FAIL (gitleaks encontrou leaks no historico; sem relacao com o diff atual)
 - Resultado:
   - Flake de redirect/callback em auth E2E removido localmente no modo CI e full.
+
+## Regressao CI - mismatch de origem auth (2026-02-11)
+
+- Falha observada no GitHub Actions (`CI` run `21896775901`):
+  - `E2E Tests` falhando em `planner/protected/screens` com `auth_e2e_navigation_failed`.
+  - URL final de erro: `/login?callbackUrl=...` apos signup/signin.
+- Causa raiz:
+  - origem de auth configurada para `localhost:3000` enquanto o servidor E2E estava em `127.0.0.1:<porta>`.
+- Correcao:
+  - pin de `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_BASE_URL`, `BETTER_AUTH_URL` para `baseURL` em `scripts/test-e2e.mjs`.
+- Validacao:
+  - `NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000 pnpm test:e2e:ci` -> PASS (`33 passed`).
+  - `pnpm lint` -> PASS.
+  - `pnpm type-check` -> PASS.
