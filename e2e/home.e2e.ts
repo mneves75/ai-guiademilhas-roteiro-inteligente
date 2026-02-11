@@ -65,6 +65,12 @@ test.describe('Blog Page', () => {
     await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
   });
 
+  test('should keep planner callback in blog sign-in CTA', async ({ page }) => {
+    await gotoPage(page, '/en/blog');
+    const signInLink = page.getByRole('link', { name: /sign in|entrar/i }).first();
+    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+  });
+
   test('should display blog posts', async ({ page }) => {
     await gotoPage(page, '/en/blog');
 

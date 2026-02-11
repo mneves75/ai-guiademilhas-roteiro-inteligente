@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public authentication CTAs now consistently preserve planner intent via `callbackUrl=/dashboard/planner` across landing/pricing/auth screens to reduce drop-off in planner activation
 - Authenticated users visiting localized home (`/en`, `/pt-br`) are now redirected directly to `/dashboard/planner`
 - Protected surfaces now preserve callback intent more consistently by building login redirects from normalized callback URLs
+- Blog sign-in CTA and legacy landing components now also route sign-up/sign-in through planner callback helpers for consistent planner-first activation
 
 ### Fixed
 
