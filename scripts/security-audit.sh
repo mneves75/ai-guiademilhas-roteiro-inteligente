@@ -39,7 +39,7 @@ else
 fi
 
 echo "[3/4] DAST-lite (@dast) via Playwright (Chromium)"
-pnpm exec playwright test --project=chromium --grep @dast
+bash ./scripts/with-e2e-lock.sh pnpm exec playwright test --project=chromium --grep @dast
 
 echo "[4/4] Gates basicos"
 pnpm -s lint
