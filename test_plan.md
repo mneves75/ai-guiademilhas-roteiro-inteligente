@@ -228,6 +228,7 @@ pnpm db:smoke
   - `pnpm verify` (lint + type-check + test + build + db:smoke + test:e2e:ci)
 - Evidencia esperada:
   - Job `Governance Gate` verde em PR e push para `main`.
+  - Quando upstream privado nao estiver acessivel ao runner, warning explicito no log e continuidade do gate de regressao (`pnpm verify`).
 
 ## Limpeza final do workflow semanal (2026-02-11)
 

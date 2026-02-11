@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FRAMEWORK_UPSTREAM_SOURCE: ${{ vars.FRAMEWORK_UPSTREAM_SOURCE_URL != '' && vars.FRAMEWORK_UPSTREAM_SOURCE_URL || 'https://github.com/mneves75/nextjs-bootstrapped-shipped.git' }}
+
 concurrency:
   group: governance-gate-${{ github.ref }}
   cancel-in-progress: true
@@ -50,22 +53,32 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Bootstrap upstream remote
+        id: bootstrap_upstream
+        continue-on-error: true
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
+      - name: Upstream access fallback
+        if: steps.bootstrap_upstream.outcome != 'success'
+        run: |
+          echo "::warning::Upstream source is not reachable from this runner; skipping upstream doctor/check in this run."
+          echo "Configure repository variable FRAMEWORK_UPSTREAM_SOURCE_URL with an accessible authenticated URL when upstream is private."
+
       - name: Doctor governance (strict)
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_DOCTOR_STRICT: '1'
         run: bash ./scripts/framework-upstream.sh doctor
 
       - name: Check upstream drift (strict)
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
         run: bash ./scripts/framework-upstream.sh check

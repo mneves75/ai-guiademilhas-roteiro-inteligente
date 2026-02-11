@@ -227,6 +227,9 @@ Data: 2026-02-11
   - Gatilhos: `push` e `pull_request` para `main/master` + `workflow_dispatch`.
 - Objetivo:
   - Consolidar governanca upstream e regressao funcional completa em um unico status check de alto sinal.
+- Robustez CI:
+  - Workflows de upstream agora aceitam `FRAMEWORK_UPSTREAM_SOURCE_URL` (repository variable) para acesso autenticado quando o upstream e privado.
+  - Sem acesso ao upstream, o pipeline emite warning explicito e preserva o gate de regressao (`pnpm verify`).
 
 ### Operacao elegante de sync (2026-02-11)
 

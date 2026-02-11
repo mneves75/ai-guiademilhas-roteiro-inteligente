@@ -95,6 +95,7 @@ Variaveis uteis:
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND`: tolerancia de drift usada por `framework:check` (default `0`).
 - `FRAMEWORK_DOCTOR_STRICT`: em `1`, warnings do `framework:doctor` tambem quebram o comando.
 - `FRAMEWORK_DOCTOR_TARGET_BRANCH`: branch alvo para validar branch protection no `framework:doctor`.
+- `FRAMEWORK_UPSTREAM_SOURCE_URL`: repository variable para CI acessar upstream privado com URL autenticada.
 
 `framework:doctor` pode emitir `[LIMIT]` quando o ambiente/repo nao permite validar branch protection (ex.: repo privado sem plano com suporte), sem mascarar falhas locais.
 
@@ -103,6 +104,7 @@ No CI, o projeto possui:
 - deteccao diaria de drift em `.github/workflows/upstream-drift.yml`;
 - PR semanal automatica de sync upstream em `.github/workflows/upstream-sync-pr.yml`;
 - gate unico de bloqueio para PR/push em `main` (`.github/workflows/governance-gate.yml`) executando `framework:doctor` estrito + `framework:check` + `pnpm verify`.
+Quando o upstream for privado e nao acessivel pelo runner, os workflows de upstream emitem warning explicito e mantem o gate de qualidade (`pnpm verify`) ativo.
 
 ## Health
 

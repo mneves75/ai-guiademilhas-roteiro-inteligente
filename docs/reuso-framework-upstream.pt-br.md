@@ -69,6 +69,7 @@ Variaveis opcionais para customizar automacao:
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND` (default: `0`, usado em `framework:check`)
 - `FRAMEWORK_DOCTOR_STRICT` (default: `0`; em `1`, warning tambem falha)
 - `FRAMEWORK_DOCTOR_TARGET_BRANCH` (branch alvo para validar branch protection)
+- `FRAMEWORK_UPSTREAM_SOURCE_URL` (Repository Variable no GitHub Actions) para fornecer URL acessivel ao runner quando o upstream for privado.
 
 ## Governanca automatica (CI)
 
@@ -78,6 +79,7 @@ Variaveis opcionais para customizar automacao:
 - Gate adicional: validacao de governanca via `framework:doctor` em modo estrito.
 - Workflow: `.github/workflows/governance-gate.yml`
 - Politica: gate unico de bloqueio para PR/push em `main`, executando `framework:doctor` strict + `framework:check` + `pnpm verify`.
+- Resiliencia para upstream privado: se o runner nao conseguir acessar o upstream configurado, o workflow emite `warning` explicito e segue com gate de regressao (`pnpm verify`) sem mascarar o diagnostico.
 - Workflow: `.github/workflows/upstream-sync-pr.yml`
 - Agenda: semanal (segunda, `08:00 UTC`) + gatilho manual.
 - Politica: quando houver diff, abre PR automatica `chore/upstream-sync` com validacao completa no proprio job (`framework:doctor` strict + `framework:check` + `pnpm verify`) e depois checks normais de CI no PR.

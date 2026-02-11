@@ -5,6 +5,9 @@ on:
     - cron: '0 7 * * *'
   workflow_dispatch:
 
+env:
+  FRAMEWORK_UPSTREAM_SOURCE: ${{ vars.FRAMEWORK_UPSTREAM_SOURCE_URL != '' && vars.FRAMEWORK_UPSTREAM_SOURCE_URL || 'https://github.com/mneves75/nextjs-bootstrapped-shipped.git' }}
+
 jobs:
   check-upstream-drift:
     name: Check Upstream Drift
@@ -16,22 +19,32 @@ jobs:
           fetch-depth: 0
 
       - name: Bootstrap upstream remote
+        id: bootstrap_upstream
+        continue-on-error: true
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
+      - name: Upstream access fallback
+        if: steps.bootstrap_upstream.outcome != 'success'
+        run: |
+          echo "::warning::Upstream source is not reachable from this runner; skipping drift check."
+          echo "Set repository variable FRAMEWORK_UPSTREAM_SOURCE_URL to an accessible URL."
+
       - name: Validate governance prerequisites (strict)
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_DOCTOR_STRICT: '1'
         run: bash ./scripts/framework-upstream.sh doctor
 
       - name: Validate behind count (strict)
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
         run: bash ./scripts/framework-upstream.sh check

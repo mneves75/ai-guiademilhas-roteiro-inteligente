@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `security:audit` now scans gitleaks on current branch ancestry by default (`SECURITY_AUDIT_GITLEAKS_SCOPE=head`) with optional full-history mode (`all`)
 - Reuse docs and README now document strict governance gates and a checklist-first sync process
 - 10/10 governance baseline now includes a unified CI blocker (`Governance Gate`) running `framework:doctor` strict + `framework:check` + `pnpm verify` on pushes and PRs to `main`
+- Upstream workflows now support CI fallback for private upstream access via repository variable `FRAMEWORK_UPSTREAM_SOURCE_URL`, with explicit warning when upstream checks are skipped
 
 ### Fixed
 
