@@ -22,17 +22,12 @@ export function normalizeCallbackUrl(
   if (value.length > 2048) return fallback;
   // Reject control characters outright (e.g. newlines) to avoid weird parsing edge cases.
   if (/[\u0000-\u001f\u007f]/.test(value)) return fallback;
+  // Raw whitespace should be percent-encoded in URLs.
+  if (/\s/.test(value)) return fallback;
   if (value.includes('\\')) return fallback;
 
-  // Disallow absolute/protocol URLs.
-  if (
-    value.startsWith('http:') ||
-    value.startsWith('https:') ||
-    value.startsWith('data:') ||
-    value.startsWith('javascript:')
-  ) {
-    return fallback;
-  }
+  // Disallow any absolute URL scheme prefix (case-insensitive).
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)) return fallback;
 
   // Only allow internal relative paths.
   if (!value.startsWith('/')) return fallback;
