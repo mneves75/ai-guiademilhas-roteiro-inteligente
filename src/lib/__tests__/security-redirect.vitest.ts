@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeCallbackUrl } from '@/lib/security/redirect';
+import { buildLoginRedirectHref, normalizeCallbackUrl } from '@/lib/security/redirect';
 
 describe('normalizeCallbackUrl', () => {
   it('falls back when input is empty', () => {
@@ -29,5 +29,19 @@ describe('normalizeCallbackUrl', () => {
     expect(normalizeCallbackUrl('/dashboard\n/evil')).toBe('/dashboard');
     expect(normalizeCallbackUrl('/dashboard\r\n/evil')).toBe('/dashboard');
     expect(normalizeCallbackUrl('/dashboard\u0000evil')).toBe('/dashboard');
+  });
+});
+
+describe('buildLoginRedirectHref', () => {
+  it('builds login URL with encoded safe callback', () => {
+    expect(buildLoginRedirectHref('/dashboard/planner')).toBe(
+      '/login?callbackUrl=%2Fdashboard%2Fplanner'
+    );
+  });
+
+  it('falls back to default path when callback is unsafe', () => {
+    expect(
+      buildLoginRedirectHref('https://evil.example', { defaultPath: '/dashboard/planner' })
+    ).toBe('/login?callbackUrl=%2Fdashboard%2Fplanner');
   });
 });

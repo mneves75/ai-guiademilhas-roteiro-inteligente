@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   });
 
   if (!session) {
-    redirect('/login');
+    redirect(buildLoginRedirectHref('/admin', { defaultPath: '/admin' }));
   }
 
   if (session.user.role !== 'admin') {

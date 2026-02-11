@@ -277,15 +277,13 @@ export async function proxy(request: NextRequest) {
     !isApi && PROTECTED_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (isProtectedPage) {
+    const protectedCallbackUrl = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     const hasSessionCookie = hasBetterAuthSessionCookie(request);
     if (!hasSessionCookie) {
       incProtectedRedirect();
       observeProxyLatencyMs('redirect', Date.now() - startedAt);
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set(
-        'callbackUrl',
-        `${request.nextUrl.pathname}${request.nextUrl.search}`
-      );
+      loginUrl.searchParams.set('callbackUrl', protectedCallbackUrl);
       const res = NextResponse.redirect(loginUrl);
       // Avoid caching redirects from sensitive pages at intermediaries.
       res.headers.set('Cache-Control', 'no-store, max-age=0');
@@ -298,6 +296,7 @@ export async function proxy(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-request-id', requestId);
     requestHeaders.set('x-shipped-locale', getPreferredLocale(request));
+    requestHeaders.set('x-shipped-callback-url', protectedCallbackUrl);
     requestHeaders.set('x-nonce', nonce);
     requestHeaders.set('Content-Security-Policy', cspHeader);
 

@@ -8,6 +8,7 @@ import { getUserWorkspaces } from '@/db/queries/workspaces';
 import { Users, FolderKanban, CreditCard, ArrowRight, Plus } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export default async function DashboardPage() {
   const auth = getAuth();
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
   });
 
   if (!session) {
-    redirect('/login');
+    redirect(buildLoginRedirectHref('/dashboard', { defaultPath: '/dashboard' }));
   }
 
   const locale = await getRequestLocale();
