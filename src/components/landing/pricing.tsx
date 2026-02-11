@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
+import { plannerSignupHref } from '@/lib/planner/navigation';
 
 export function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
   const { locale } = useLocale();
   const t = m(locale).landing.pricing;
+  const signupHref = plannerSignupHref();
 
   return (
     <section id="pricing" className="py-20 md:py-28">
@@ -83,7 +85,7 @@ export function Pricing() {
                   ))}
                 </ul>
                 <Button className="w-full" variant={isFeatured ? 'default' : 'outline'} asChild>
-                  <Link href="/signup">{plan.cta}</Link>
+                  <Link href={signupHref}>{plan.cta}</Link>
                 </Button>
               </div>
             );

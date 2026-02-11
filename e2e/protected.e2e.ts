@@ -43,4 +43,26 @@ test.describe('Protected Routes', () => {
     await page.goto('/en', { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/dashboard\/planner$/);
   });
+
+  test('invalid session cookie still keeps callback on protected redirect', async ({
+    page,
+  }, testInfo) => {
+    const baseURL = testInfo.project.use.baseURL as string;
+    await page.context().addCookies([
+      {
+        name: 'better-auth.session_token',
+        value: 'invalid-token-for-e2e',
+        url: baseURL,
+        httpOnly: true,
+        sameSite: 'Lax',
+      },
+    ]);
+
+    await page.goto('/dashboard/team?source=e2e-invalid-session', {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page).toHaveURL(
+      /\/login\?callbackUrl=%2Fdashboard%2Fteam%3Fsource%3De2e-invalid-session/
+    );
+  });
 });

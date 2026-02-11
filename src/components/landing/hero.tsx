@@ -3,6 +3,7 @@ import { ArrowRight, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
+import { plannerSignupHref } from '@/lib/planner/navigation';
 
 function BrowserMockup() {
   return (
@@ -71,6 +72,7 @@ function BrowserMockup() {
 export async function Hero() {
   const locale = await getRequestLocale();
   const t = m(locale).landing.hero;
+  const signupHref = plannerSignupHref();
 
   return (
     <section className="hero-glow py-28 md:py-36">
@@ -91,7 +93,7 @@ export async function Hero() {
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <Button asChild size="lg" className="gap-2">
-            <Link href="/signup">
+            <Link href={signupHref}>
               {t.primaryCta} <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

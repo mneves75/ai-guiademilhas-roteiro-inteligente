@@ -6,12 +6,14 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { publicPathname } from '@/lib/locale-routing';
+import { plannerLoginHref } from '@/lib/planner/navigation';
 
 export default async function BlogLayout({ children }: { children: React.ReactNode }) {
   const locale = await getRequestLocale();
   const t = m(locale);
   const homePath = publicPathname(locale, '/');
   const blogPath = publicPathname(locale, '/blog');
+  const loginHref = plannerLoginHref();
 
   return (
     <div className="min-h-screen">
@@ -38,7 +40,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
             <LanguageSwitcher />
             <ThemeToggle />
             <Button asChild size="sm">
-              <Link href="/login">{t.blog.signIn}</Link>
+              <Link href={loginHref}>{t.blog.signIn}</Link>
             </Button>
           </nav>
         </div>
