@@ -45,6 +45,7 @@
     "framework:status": "bash ./scripts/framework-upstream.sh status",
     "framework:preview": "bash ./scripts/framework-upstream.sh preview",
     "framework:check": "bash ./scripts/framework-upstream.sh check",
+    "framework:doctor": "bash ./scripts/framework-upstream.sh doctor",
     "framework:sync": "bash ./scripts/framework-upstream.sh sync",
     "framework:sync:verify": "bash ./scripts/framework-upstream.sh sync --verify"
   },

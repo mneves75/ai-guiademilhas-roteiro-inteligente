@@ -38,6 +38,12 @@ Manter um produto derivado de framework sem degradar:
   - lista commits/arquivos que entrariam no proximo sync (sem mutacao)
 - `pnpm framework:check`
   - gate de drift (`behind <= FRAMEWORK_UPSTREAM_MAX_BEHIND`)
+- `pnpm framework:doctor`
+  - diagnostico objetivo de prontidao de governanca:
+    - `upstream` funcional
+    - `origin` configurado
+    - `CODEOWNERS` presente
+    - branch protection (status checks + code owner reviews + approvals) quando `origin` e GitHub com `gh` autenticado
 - `pnpm framework:sync`
   - merge do upstream com precondicoes de integridade
 - `pnpm framework:sync:verify`
@@ -65,11 +71,9 @@ Manter um produto derivado de framework sem degradar:
 
 ## O que falta para 10/10 absoluto
 
-1. Configurar branch protection no repo remoto para:
-   - exigir checks obrigatorios
-   - exigir review de CODEOWNERS
-2. Conectar `origin` neste workspace local para push/PR automatizavel fim-a-fim.
-3. Opcional: workflow de PR automatica de sync upstream (com batch semanal + `pnpm verify` no PR).
+1. Conectar `origin` neste workspace local para push/PR automatizavel fim-a-fim.
+2. Rodar `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` em ambiente com `gh` autenticado e permissao de leitura no repo remoto para validar branch protection real.
+3. Opcional: endurecer workflow semanal para executar `pnpm verify` completo no job de abertura de PR.
 
 ## Fontes
 

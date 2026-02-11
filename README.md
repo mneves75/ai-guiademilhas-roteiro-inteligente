@@ -82,6 +82,7 @@ Para critica de primeiros principios e versao 10/10, veja [docs/reuso-framework-
 - `pnpm framework:status`: mostra branch upstream efetiva e divergencia local.
 - `pnpm framework:preview`: mostra commits/arquivos que entrariam no proximo sync, sem mutacao.
 - `pnpm framework:check`: falha se o repositorio estiver atras do upstream (controle de drift).
+- `pnpm framework:doctor`: diagnostica prontidao de reuso (upstream/origin/CODEOWNERS/branch protection quando possivel).
 - `pnpm framework:sync`: aplica merge de `upstream/<branch>`.
 - `pnpm framework:sync:verify`: executa sync + `pnpm verify`.
 
@@ -91,6 +92,8 @@ Variaveis uteis:
 - `FRAMEWORK_UPSTREAM_PATH`: compat legado para caminho local.
 - `FRAMEWORK_UPSTREAM_BRANCH`: branch alvo (autodetecta via `HEAD` quando necessario).
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND`: tolerancia de drift usada por `framework:check` (default `0`).
+- `FRAMEWORK_DOCTOR_STRICT`: em `1`, warnings do `framework:doctor` tambem quebram o comando.
+- `FRAMEWORK_DOCTOR_TARGET_BRANCH`: branch alvo para validar branch protection no `framework:doctor`.
 
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
 No CI, o projeto possui detecao diaria de drift e PR semanal automatica de sync upstream (`.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`).

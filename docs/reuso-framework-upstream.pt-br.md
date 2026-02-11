@@ -46,13 +46,16 @@ Comandos disponiveis:
 4. Check de drift (sem mutacao):
    - `pnpm framework:check`
    - Falha se `behind > FRAMEWORK_UPSTREAM_MAX_BEHIND` (default `0`).
-5. Sync (merge) do upstream:
+5. Doctor de prontidao (sem mutacao):
+   - `pnpm framework:doctor`
+   - Diagnostica reuso fim-a-fim: Git/upstream, `origin`, `CODEOWNERS` e branch protection no GitHub (quando `gh` autenticado).
+6. Sync (merge) do upstream:
    - `pnpm framework:sync`
    - Pre-condicoes: working tree limpo e pelo menos 1 commit local.
-6. Sync + validacao completa:
+7. Sync + validacao completa:
    - `pnpm framework:sync:verify`
    - Executa `pnpm verify` apos merge.
-7. Resolver conflitos priorizando:
+8. Resolver conflitos priorizando:
    - manter customizacoes em `app/page.tsx`, `src/content/landing.ts`, `src/lib/planner/**`
    - aceitar evolucoes de infraestrutura em `proxy.ts`, `scripts/**`, `observability/**`
 
@@ -63,6 +66,8 @@ Variaveis opcionais para customizar automacao:
 - `FRAMEWORK_UPSTREAM_REMOTE` (default: `upstream`)
 - `FRAMEWORK_UPSTREAM_BRANCH` (default: autodetect com fallback em `main`)
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND` (default: `0`, usado em `framework:check`)
+- `FRAMEWORK_DOCTOR_STRICT` (default: `0`; em `1`, warning tambem falha)
+- `FRAMEWORK_DOCTOR_TARGET_BRANCH` (branch alvo para validar branch protection)
 
 ## Governanca automatica (CI)
 

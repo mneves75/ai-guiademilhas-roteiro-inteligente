@@ -227,3 +227,19 @@ pnpm db:smoke
   - `pnpm framework:check` passou (`ahead:9 behind:0`).
   - `pnpm verify` passou (lint, type-check, vitest, build, db smoke, e2e:ci).
   - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).
+
+## Framework doctor (2026-02-11)
+
+- Escopo:
+  - adicionar diagnostico automatizado de prontidao de reuso/governanca para fechar lacunas de operacao.
+- Criterios:
+  - comando nao mutante (`framework:doctor`) com saida objetiva e codigos de erro previsiveis.
+  - modo estrito para CI (`FRAMEWORK_DOCTOR_STRICT=1`).
+  - evidencia de validacao completa apos a mudanca.
+- Evidencia:
+  - `pnpm framework:doctor` passou (`ok:4 warn:1 fail:0`), warning por `origin` ausente.
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` falhou como esperado por `origin` ausente.
+  - `pnpm framework:check` passou.
+  - `pnpm verify` passou.
+  - `pnpm security:audit` passou.
+  - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).

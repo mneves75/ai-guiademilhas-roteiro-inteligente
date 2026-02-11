@@ -268,3 +268,24 @@ Data: 2026-02-11
   - `pnpm framework:check` ✅
   - `pnpm verify` ✅
   - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)
+
+### Framework doctor + fechamento autonomo (2026-02-11)
+
+- Implementacao:
+  - novo comando `pnpm framework:doctor` em `scripts/framework-upstream.sh`.
+  - diagnostico de prontidao com checks para:
+    - Git inicializado, remote `upstream`, `CODEOWNERS`
+    - remote `origin`
+    - branch protection no GitHub via `gh` (quando aplicavel)
+  - suporte a modo estrito:
+    - `FRAMEWORK_DOCTOR_STRICT=1`
+    - `FRAMEWORK_DOCTOR_TARGET_BRANCH=<branch>`
+- Resultado objetivo:
+  - lacuna residual identificada automaticamente: `origin` ausente neste workspace local.
+- Evidencia:
+  - `pnpm framework:doctor` ✅ (`ok:4 warn:1 fail:0`)
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ❌ esperado (`origin` ausente)
+  - `pnpm framework:check` ✅
+  - `pnpm verify` ✅
+  - `pnpm security:audit` ✅
+  - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)

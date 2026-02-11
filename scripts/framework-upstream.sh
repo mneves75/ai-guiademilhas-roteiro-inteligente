@@ -15,6 +15,7 @@ Uso:
   scripts/framework-upstream.sh status
   scripts/framework-upstream.sh preview
   scripts/framework-upstream.sh check
+  scripts/framework-upstream.sh doctor
   scripts/framework-upstream.sh sync [--verify]
 
 Variaveis opcionais:
@@ -23,6 +24,8 @@ Variaveis opcionais:
   FRAMEWORK_UPSTREAM_PATH    (compat: caminho local legado)
   FRAMEWORK_UPSTREAM_BRANCH  (default: main)
   FRAMEWORK_UPSTREAM_MAX_BEHIND (default: 0, usado em "check")
+  FRAMEWORK_DOCTOR_STRICT (default: 0, warnings tambem quebram no modo estrito)
+  FRAMEWORK_DOCTOR_TARGET_BRANCH (default: branch padrao do repo remoto em "doctor")
 USAGE
 }
 
@@ -67,6 +70,10 @@ is_remote_source() {
       return 1
       ;;
   esac
+}
+
+has_command() {
+  command -v "$1" >/dev/null 2>&1
 }
 
 resolve_upstream_target() {
@@ -215,6 +222,201 @@ check_upstream() {
   echo "Upstream check OK (behind <= $max_behind)."
 }
 
+extract_github_repo_from_remote() {
+  local remote_url="$1"
+
+  case "$remote_url" in
+    git@github.com:*)
+      echo "${remote_url#git@github.com:}" | sed 's/\.git$//'
+      return 0
+      ;;
+    ssh://git@github.com/*)
+      echo "${remote_url#ssh://git@github.com/}" | sed 's/\.git$//'
+      return 0
+      ;;
+    https://github.com/*|http://github.com/*)
+      local without_scheme
+      without_scheme="${remote_url#https://github.com/}"
+      without_scheme="${without_scheme#http://github.com/}"
+      without_scheme="${without_scheme%%\?*}"
+      without_scheme="${without_scheme%%#*}"
+      echo "${without_scheme%/}" | sed 's/\.git$//'
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+doctor_framework() {
+  local strict="${FRAMEWORK_DOCTOR_STRICT:-0}"
+  local failures=0
+  local warnings=0
+  local oks=0
+
+  [[ "$strict" =~ ^[01]$ ]] || die "FRAMEWORK_DOCTOR_STRICT invalido: $strict (use 0 ou 1)"
+
+  doctor_ok() {
+    echo "[OK] $*"
+    oks=$((oks + 1))
+  }
+
+  doctor_warn() {
+    echo "[WARN] $*"
+    warnings=$((warnings + 1))
+  }
+
+  doctor_fail() {
+    echo "[FAIL] $*"
+    failures=$((failures + 1))
+  }
+
+  if ! is_git_repo; then
+    doctor_fail "Repositorio Git nao inicializado."
+  else
+    doctor_ok "Repositorio Git inicializado."
+  fi
+
+  if [ -f ".github/CODEOWNERS" ]; then
+    doctor_ok "CODEOWNERS presente (.github/CODEOWNERS)."
+  else
+    doctor_fail "CODEOWNERS ausente (.github/CODEOWNERS)."
+  fi
+
+  local upstream_url=""
+  if upstream_url="$(git remote get-url "$UPSTREAM_REMOTE" 2>/dev/null)"; then
+    doctor_ok "Remote upstream configurado: $UPSTREAM_REMOTE -> $upstream_url"
+    if fetch_upstream >/dev/null 2>&1; then
+      doctor_ok "Fetch upstream funcional (branch alvo: $UPSTREAM_BRANCH)."
+    else
+      doctor_fail "Falha ao buscar upstream ($UPSTREAM_REMOTE/$UPSTREAM_BRANCH)."
+    fi
+  else
+    doctor_fail "Remote '$UPSTREAM_REMOTE' nao configurado."
+  fi
+
+  local origin_url=""
+  if origin_url="$(git remote get-url origin 2>/dev/null)"; then
+    doctor_ok "Remote origin configurado: $origin_url"
+  else
+    if [ "$strict" = "1" ]; then
+      doctor_fail "Remote origin nao configurado (obrigatorio em modo estrito)."
+    else
+      doctor_warn "Remote origin nao configurado (push/PR automatizavel indisponivel)."
+    fi
+  fi
+
+  local github_repo=""
+  if [ -n "$origin_url" ]; then
+    if github_repo="$(extract_github_repo_from_remote "$origin_url")"; then
+      doctor_ok "Origin aponta para GitHub repo: $github_repo"
+    else
+      if [ "$strict" = "1" ]; then
+        doctor_fail "Origin nao aponta para GitHub (branch protection nao verificavel automaticamente)."
+      else
+        doctor_warn "Origin nao aponta para GitHub; branch protection nao verificada."
+      fi
+    fi
+  fi
+
+  if [ -n "$github_repo" ]; then
+    if ! has_command gh; then
+      if [ "$strict" = "1" ]; then
+        doctor_fail "CLI 'gh' nao encontrada."
+      else
+        doctor_warn "CLI 'gh' nao encontrada; branch protection nao verificada."
+      fi
+    elif ! gh auth status >/dev/null 2>&1; then
+      if [ "$strict" = "1" ]; then
+        doctor_fail "gh sem autenticacao valida."
+      else
+        doctor_warn "gh sem autenticacao valida; branch protection nao verificada."
+      fi
+    else
+      local repo_json
+      local target_branch
+      local protection_json
+      local codeowners_required
+      local status_checks_required
+      local required_review_count
+
+      if repo_json="$(gh api "repos/$github_repo" 2>/dev/null)"; then
+        local default_branch
+        default_branch="$(
+          printf '%s' "$repo_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(j.default_branch ?? ""));'
+        )"
+        target_branch="${FRAMEWORK_DOCTOR_TARGET_BRANCH:-$default_branch}"
+      else
+        target_branch="${FRAMEWORK_DOCTOR_TARGET_BRANCH:-}"
+      fi
+
+      if [ -z "$target_branch" ]; then
+        target_branch="main"
+      fi
+
+      if protection_json="$(gh api -H "Accept: application/vnd.github+json" "repos/$github_repo/branches/$target_branch/protection" 2>/dev/null)"; then
+        codeowners_required="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_pull_request_reviews?.require_code_owner_reviews)));'
+        )"
+        status_checks_required="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_status_checks)));'
+        )"
+        required_review_count="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));const n=j.required_pull_request_reviews?.required_approving_review_count ?? 0;process.stdout.write(String(n));'
+        )"
+
+        if [ "$codeowners_required" = "true" ]; then
+          doctor_ok "Branch protection ($target_branch): CODEOWNERS review obrigatoria."
+        else
+          doctor_fail "Branch protection ($target_branch): CODEOWNERS review NAO obrigatoria."
+        fi
+
+        if [ "$status_checks_required" = "true" ]; then
+          doctor_ok "Branch protection ($target_branch): status checks obrigatorios habilitados."
+        else
+          if [ "$strict" = "1" ]; then
+            doctor_fail "Branch protection ($target_branch): status checks obrigatorios ausentes."
+          else
+            doctor_warn "Branch protection ($target_branch): status checks obrigatorios ausentes."
+          fi
+        fi
+
+        if [ "$required_review_count" -ge 1 ] 2>/dev/null; then
+          doctor_ok "Branch protection ($target_branch): minimo de approvals = $required_review_count."
+        else
+          if [ "$strict" = "1" ]; then
+            doctor_fail "Branch protection ($target_branch): approvals minimos nao configurados."
+          else
+            doctor_warn "Branch protection ($target_branch): approvals minimos nao configurados."
+          fi
+        fi
+      else
+        if [ "$strict" = "1" ]; then
+          doctor_fail "Branch protection nao encontrada/acessivel para $github_repo:$target_branch."
+        else
+          doctor_warn "Branch protection nao encontrada/acessivel para $github_repo:$target_branch."
+        fi
+      fi
+    fi
+  fi
+
+  echo
+  echo "Doctor summary -> ok:$oks warn:$warnings fail:$failures"
+
+  if [ "$failures" -gt 0 ]; then
+    exit 1
+  fi
+
+  if [ "$strict" = "1" ] && [ "$warnings" -gt 0 ]; then
+    die "Doctor strict falhou devido a warnings."
+  fi
+}
+
 sync_upstream() {
   local verify_after="${1:-}"
 
@@ -252,6 +454,9 @@ case "$cmd" in
     ;;
   check)
     check_upstream
+    ;;
+  doctor)
+    doctor_framework
     ;;
   sync)
     sync_upstream "${2:-}"
