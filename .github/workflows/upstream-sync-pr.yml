@@ -1,0 +1,69 @@
+name: Upstream Sync PR
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync-pr
+  cancel-in-progress: false
+
+jobs:
+  open-sync-pr:
+    name: Open Upstream Sync PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Bootstrap upstream remote
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+        run: bash ./scripts/framework-upstream.sh bootstrap
+
+      - name: Preview pending upstream changes
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+        run: bash ./scripts/framework-upstream.sh preview
+
+      - name: Merge upstream locally
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+        run: bash ./scripts/framework-upstream.sh sync
+
+      - name: Create pull request if needed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/upstream-sync
+          delete-branch: true
+          title: 'chore(framework): sync upstream'
+          commit-message: 'chore(framework): sync upstream'
+          body: |
+            PR automatica de sincronizacao com upstream framework.
+
+            Checklist:
+            - [x] merge de upstream executado
+            - [x] diff pronto para validacao nos checks de CI
+          labels: |
+            dependencies
+            upstream-sync

@@ -207,3 +207,12 @@ pnpm db:smoke
 - `pnpm verify` => sucesso completo (lint + type-check + test + build + db smoke + e2e:ci).
 - `pnpm security:audit` => sucesso completo (audit + gitleaks + DAST-lite + gates basicos).
 - `PW_FULL=1 pnpm test:e2e` => `161 passed`, `4 skipped`.
+
+## Automacao de sync upstream (2026-02-11)
+
+- Workflow novo para validacao estrutural:
+  - `.github/workflows/upstream-sync-pr.yml`
+- Criterios:
+  - roda sem erro quando nao ha mudancas (sem PR criada);
+  - cria PR quando houver diff de merge com upstream;
+  - CI existente no PR continua sendo gate de qualidade final.

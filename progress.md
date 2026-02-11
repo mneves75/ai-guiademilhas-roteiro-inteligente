@@ -240,3 +240,13 @@ Data: 2026-02-11
   - `pnpm verify` ✅
   - `pnpm security:audit` ✅
   - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)
+
+### Automacao de PR de sync upstream (2026-02-11)
+
+- Workflow novo:
+  - `.github/workflows/upstream-sync-pr.yml`
+  - agenda semanal + manual
+  - executa `bootstrap` + `preview` + `sync`
+  - abre PR automatica (`chore/upstream-sync`) quando houver diff
+- Objetivo:
+  - fechar o loop "detectar drift -> propor correção" sem intervenção manual.

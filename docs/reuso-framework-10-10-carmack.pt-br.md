@@ -46,6 +46,7 @@ Manter um produto derivado de framework sem degradar:
 ### Governanca
 
 - Workflow diario/manual de drift: `.github/workflows/upstream-drift.yml`
+- Workflow semanal/manual de sync por PR: `.github/workflows/upstream-sync-pr.yml`
 - Ownership por caminho: `.github/CODEOWNERS`
 - Documentacao operacional atualizada:
   - `README.md`

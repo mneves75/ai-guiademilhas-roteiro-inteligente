@@ -93,6 +93,7 @@ Variaveis uteis:
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND`: tolerancia de drift usada por `framework:check` (default `0`).
 
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
+No CI, o projeto possui detecao diaria de drift e PR semanal automatica de sync upstream (`.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`).
 
 ## Health
 

@@ -69,6 +69,9 @@ Variaveis opcionais para customizar automacao:
 - Workflow: `.github/workflows/upstream-drift.yml`
 - Agenda: diaria (`07:00 UTC`) + gatilho manual.
 - Politica atual: strict (`FRAMEWORK_UPSTREAM_MAX_BEHIND=0`) contra `https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.
+- Workflow: `.github/workflows/upstream-sync-pr.yml`
+- Agenda: semanal (segunda, `08:00 UTC`) + gatilho manual.
+- Politica: quando houver diff, abre PR automatica `chore/upstream-sync` para passar pelos checks normais de CI.
 - Ownership: `.github/CODEOWNERS` define fronteiras de revisao para core e dominio.
 
 ## Estado atual

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `pnpm framework:sync`
   - `pnpm framework:sync:verify`
 - CI workflow for upstream drift governance (`.github/workflows/upstream-drift.yml`)
+- CI workflow for weekly upstream sync PR automation (`.github/workflows/upstream-sync-pr.yml`)
 - CODEOWNERS baseline for ownership boundaries (`.github/CODEOWNERS`)
 
 ### Changed
