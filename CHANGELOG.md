@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reuse docs now document executable upstream sync workflow with branch autodetection and local path defaults
 - Upstream automation now supports local path and remote Git URL sources via `FRAMEWORK_UPSTREAM_SOURCE`
 - Bootstrap now enables Git `rerere` to reduce recurring merge-conflict cost
+- Weekly upstream sync PR workflow now runs baseline quality checks (`pnpm lint && pnpm test`) before opening/updating PR
 - Repository now stores a local merge bridge to upstream history, enabling incremental `framework:sync` without unrelated-history errors
 
 ### Fixed

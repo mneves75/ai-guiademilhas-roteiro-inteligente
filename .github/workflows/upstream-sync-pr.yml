@@ -33,6 +33,19 @@ jobs:
         with:
           version: 10
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
       - name: Bootstrap upstream remote
         env:
           FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
@@ -50,6 +63,16 @@ jobs:
           FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh sync
+
+      - name: Assert drift resolved after sync
+        env:
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+          FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
+        run: bash ./scripts/framework-upstream.sh check
+
+      - name: Run baseline quality checks
+        run: pnpm lint && pnpm test
 
       - name: Create pull request if needed
         uses: peter-evans/create-pull-request@v7

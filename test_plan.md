@@ -215,4 +215,5 @@ pnpm db:smoke
 - Criterios:
   - roda sem erro quando nao ha mudancas (sem PR criada);
   - cria PR quando houver diff de merge com upstream;
+  - executa `framework:check` pos-sync e baseline local (`pnpm lint && pnpm test`) antes de abrir/atualizar PR;
   - CI existente no PR continua sendo gate de qualidade final.

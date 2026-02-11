@@ -250,3 +250,12 @@ Data: 2026-02-11
   - abre PR automatica (`chore/upstream-sync`) quando houver diff
 - Objetivo:
   - fechar o loop "detectar drift -> propor correção" sem intervenção manual.
+
+### Hardening do workflow de PR semanal (2026-02-11)
+
+- Ajustes:
+  - `.github/workflows/upstream-sync-pr.yml` agora instala dependencias e executa:
+    - `framework:check` pos-sync (drift resolvido)
+    - `pnpm lint && pnpm test` antes de abrir/atualizar PR
+- Efeito:
+  - reduz probabilidade de PR automatica com regressao basica.
