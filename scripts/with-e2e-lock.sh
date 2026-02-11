@@ -14,9 +14,13 @@ PID_FILE="${LOCK_DIR}/pid"
 start_ts="$(date +%s)"
 acquired="0"
 
+safe_remove_lock() {
+  rm -rf "${LOCK_DIR}" 2>/dev/null || true
+}
+
 cleanup() {
   if [ "${acquired}" = "1" ] && [ -d "${LOCK_DIR}" ]; then
-    rm -rf "${LOCK_DIR}" || true
+    safe_remove_lock
   fi
 }
 trap cleanup EXIT INT TERM
@@ -32,7 +36,7 @@ while true; do
   if [ -f "${PID_FILE}" ]; then
     lock_pid="$(cat "${PID_FILE}" 2>/dev/null || true)"
     if [ -n "${lock_pid}" ] && ! kill -0 "${lock_pid}" 2>/dev/null; then
-      rm -rf "${LOCK_DIR}" || true
+      safe_remove_lock
       continue
     fi
   fi
