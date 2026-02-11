@@ -342,3 +342,14 @@ pnpm db:smoke
   - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
 - Resultado:
   - Matriz E2E completa agora fecha sem lacunas de cobertura por skip condicional.
+
+## Revalidacao apos refinamento de copy da landing (2026-02-11)
+
+- Mudanca alvo:
+  - `src/content/landing.ts` (copy PT-BR de conversao), sem alteracoes de fluxo tecnico.
+- Comandos executados:
+  - `pnpm verify:ci` -> PASS
+  - `pnpm security:audit` -> PASS
+  - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`)
+- Resultado:
+  - nenhuma regressao funcional, de seguranca ou de cobertura E2E apos refinamento de copy.

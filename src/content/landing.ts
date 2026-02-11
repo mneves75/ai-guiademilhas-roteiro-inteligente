@@ -25,56 +25,56 @@ const landingContentByLocale: Record<'en' | 'pt-BR', LandingContent> = {
     skipToContent: 'Pular para o conteúdo',
     metaTitle: 'Guia de Milhas | Planner Inteligente de Viagens',
     metaDescription:
-      'Descubra a melhor estratégia para voar gastando menos pontos e menos dinheiro. Crie seu planejamento inteligente em minutos.',
+      'Planeje viagens com milhas sem achismo: compare cenários, priorize custo-benefício e decida com confiança em poucos minutos.',
     appName: 'Guia de Milhas',
-    badge: 'Planejamento com IA para milhas e passagens',
-    headline: 'Pare de perder milhas em decisões erradas de viagem.',
+    badge: 'Planner estratégico para milhas e passagens',
+    headline: 'Você não precisa mais decidir no escuro como usar suas milhas.',
     subheadline:
-      'Responda algumas perguntas e receba um plano objetivo com rotas, alternativas e prioridades para usar melhor seus pontos.',
+      'Em poucos minutos, você transforma dados soltos em um plano claro de emissão com prioridades, trade-offs e próximos passos.',
     primaryCta: 'Criar meu planejamento agora',
     secondaryCta: 'Já tenho conta',
-    proofTitle: 'Você ganha clareza antes de emitir',
+    proofTitle: 'Decisão estratégica antes da emissão',
     proofPoints: [
-      'Comparação prática de cenários para viajar com milhas.',
-      'Priorização por custo-benefício, tempo de voo e risco climático.',
-      'Relatório acionável para decidir com confiança.',
+      'Comparação objetiva entre cenários de viagem com milhas.',
+      'Priorização por valor, tempo total de deslocamento e risco.',
+      'Plano acionável para executar sem retrabalho.',
     ],
     howTitle: 'Como funciona',
     howSteps: [
       {
-        title: '1. Informe seu contexto',
-        description: 'Datas, origens, destinos, passageiros e seus programas de milhas.',
+        title: '1. Você informa o contexto',
+        description: 'Datas, origens, destinos, passageiros e programas de milhas disponíveis.',
       },
       {
-        title: '2. O planner analisa cenários',
-        description: 'A IA organiza opções e evidencia trade-offs relevantes para a decisão.',
+        title: '2. O planner estrutura os cenários',
+        description:
+          'A análise organiza opções e deixa claros os trade-offs relevantes para decidir melhor.',
       },
       {
-        title: '3. Receba seu plano',
-        description: 'Você sai com um roteiro estratégico pronto para executar.',
+        title: '3. Você executa com clareza',
+        description: 'Receba um plano estratégico com direção prática para a próxima ação.',
       },
     ],
     faqTitle: 'Perguntas frequentes',
     faqs: [
       {
-        question: 'Preciso pagar para testar?',
+        question: 'Preciso pagar para começar?',
         answer:
           'Você pode criar conta e acessar o planner. A política comercial evolutiva será aplicada nas próximas fases.',
       },
       {
-        question: 'O planner substitui minha decisão?',
-        answer:
-          'Não. Ele reduz incerteza e organiza as melhores alternativas, mas a decisão final continua sua.',
+        question: 'O planner decide por mim?',
+        answer: 'Não. Ele organiza cenários e reduz incerteza, mas a decisão final continua sua.',
       },
       {
-        question: 'Funciona para viagens nacionais e internacionais?',
+        question: 'Serve para viagens nacionais e internacionais?',
         answer:
-          'Sim. O fluxo foi pensado para cenários com múltiplas origens, destinos e combinações de programas.',
+          'Sim. O fluxo foi desenhado para múltiplas origens, destinos e combinações de programas de milhas.',
       },
     ],
-    finalTitle: 'Se você quer decisão melhor, comece com um plano melhor.',
+    finalTitle: 'Se você quer economizar milhas com consistência, comece pelo plano.',
     finalSubtitle:
-      'Entre e use o planner para transformar dados soltos em decisão estratégica de viagem.',
+      'Entre agora e use o planner para sair do improviso e tomar decisões de viagem com mais previsibilidade.',
     finalCta: 'Ir para o planner',
     loginCta: 'Entrar',
   },
