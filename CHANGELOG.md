@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reuse docs and README now document strict governance gates and a checklist-first sync process
 - 10/10 governance baseline now includes a unified CI blocker (`Governance Gate`) running `framework:doctor` strict + `framework:check` + `pnpm verify:ci` on pushes and PRs to `main`
 - Upstream workflows now support CI fallback for private upstream access via repository variable `FRAMEWORK_UPSTREAM_SOURCE_URL`, with explicit warning when upstream checks are skipped
+- Upstream workflows now probe upstream reachability before bootstrap to avoid noisy failed-step annotations while preserving explicit fallback warnings
 
 ### Fixed
 

@@ -229,6 +229,7 @@ pnpm db:smoke
 - Evidencia esperada:
   - Job `Governance Gate` verde em PR e push para `main`.
   - Quando upstream privado nao estiver acessivel ao runner, warning explicito no log e continuidade do gate de regressao (`pnpm verify:ci`).
+  - Sem anotacao de falha tecnica de bootstrap no run final (probe-first).
 
 ## Limpeza final do workflow semanal (2026-02-11)
 

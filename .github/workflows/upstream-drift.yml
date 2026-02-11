@@ -18,22 +18,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Probe upstream reachability
+        id: probe_upstream
+        shell: bash
+        run: |
+          if git ls-remote --exit-code "$FRAMEWORK_UPSTREAM_SOURCE" HEAD >/dev/null 2>&1; then
+            echo "reachable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "reachable=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Bootstrap upstream remote
-        id: bootstrap_upstream
-        continue-on-error: true
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
       - name: Upstream access fallback
-        if: steps.bootstrap_upstream.outcome != 'success'
+        if: steps.probe_upstream.outputs.reachable != 'true'
         run: |
           echo "::warning::Upstream source is not reachable from this runner; skipping drift check."
           echo "Set repository variable FRAMEWORK_UPSTREAM_SOURCE_URL to an accessible URL."
 
       - name: Validate governance prerequisites (strict)
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
@@ -42,7 +51,7 @@ jobs:
         run: bash ./scripts/framework-upstream.sh doctor
 
       - name: Validate behind count (strict)
-        if: steps.bootstrap_upstream.outcome == 'success'
+        if: steps.probe_upstream.outputs.reachable == 'true'
         env:
           FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream

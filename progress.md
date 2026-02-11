@@ -230,6 +230,7 @@ Data: 2026-02-11
 - Robustez CI:
   - Workflows de upstream agora aceitam `FRAMEWORK_UPSTREAM_SOURCE_URL` (repository variable) para acesso autenticado quando o upstream e privado.
   - Sem acesso ao upstream, o pipeline emite warning explicito e preserva o gate de regressao (`pnpm verify:ci`).
+  - Refinamento final: probe de conectividade antes do bootstrap para eliminar anotacoes de erro tecnico (`exit 128`) em runs bem-sucedidos.
 
 ### Operacao elegante de sync (2026-02-11)
 
