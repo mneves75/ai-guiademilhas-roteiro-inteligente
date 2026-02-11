@@ -40,6 +40,11 @@ docker compose -f observability/docker-compose.yml up -d --force-recreate promet
 
 As regras em `grafana/alerts/security-alerts.yaml` sao carregadas pelo Prometheus (montadas via compose).
 
+Inclui alertas de funil do planner:
+
+- `AppPlannerFallbackRatioHigh`: alerta quando fallback domina as geracoes (possivel degradacao da IA).
+- `AppPlannerLandingSourceDrop`: alerta quando a origem `landing_planner` zera, apesar de haver geracoes no periodo.
+
 Verifique em:
 
 - `http://localhost:9090/rules`

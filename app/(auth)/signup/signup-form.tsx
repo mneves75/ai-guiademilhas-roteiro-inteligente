@@ -10,15 +10,22 @@ import { m } from '@/lib/messages';
 import { isValidEmail } from '@/lib/validation/email';
 import { mapSignUpError } from '@/lib/auth/ui-errors';
 import { publicPathname } from '@/lib/locale-routing';
+import { plannerFunnelEvents, type FunnelSource, withFunnelSource } from '@/lib/analytics/funnel';
+import {
+  capturePlannerFunnelEvent,
+  rememberPlannerFunnelSource,
+} from '@/lib/analytics/funnel-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 export default function SignupForm({
   callbackUrl,
+  funnelSource,
   initialLocale,
 }: {
   callbackUrl: string;
+  funnelSource: FunnelSource | null;
   initialLocale: Locale;
 }) {
   const router = useRouter();
@@ -39,11 +46,24 @@ export default function SignupForm({
   const t = m(locale).auth;
   const termsPath = publicPathname(locale, '/terms');
   const privacyPath = publicPathname(locale, '/privacy');
-  const loginHref = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  const loginHref = withFunnelSource(
+    `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+    funnelSource
+  );
 
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!funnelSource) return;
+    rememberPlannerFunnelSource(funnelSource);
+    capturePlannerFunnelEvent(plannerFunnelEvents.authViewed, {
+      source: funnelSource,
+      step: 'signup',
+      locale,
+    });
+  }, [funnelSource, locale]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -87,6 +107,14 @@ export default function SignupForm({
         if (mapped.fieldErrors) setFieldErrors(mapped.fieldErrors);
         if (mapped.globalError) setError(mapped.globalError);
       } else {
+        if (funnelSource) {
+          capturePlannerFunnelEvent(plannerFunnelEvents.authCompleted, {
+            source: funnelSource,
+            step: 'signup',
+            method: 'email_password',
+            locale,
+          });
+        }
         router.push(callbackUrl);
         router.refresh();
       }

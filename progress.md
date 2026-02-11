@@ -459,3 +459,151 @@ Data: 2026-02-11
     - campos `num_*` aceitam inteiro ou string numerica (coercao),
     - `locale` documentado como normalizado com fallback seguro.
   - `docs/API.md` atualizado com as mesmas regras do backend.
+
+### Revisao first-principles + SEO semantico (2026-02-11)
+
+- Implementado:
+  - `FAQPage` JSON-LD na landing publica (`app/page.tsx`), derivado de `content.faqs`.
+  - teste E2E para structured data da landing (`e2e/home.e2e.ts`).
+  - invariantes minimos de copy/SEO para os dois locales (`src/lib/__tests__/landing-content.vitest.ts`).
+  - documento tecnico de critica 10/10 com referencias externas:
+    - `docs/solucao-elegante-10-10-first-principles.pt-br.md`
+- Objetivo:
+  - reduzir regressao silenciosa em SEO semantico e copy de conversao;
+  - alinhar critica tecnica com fontes de mercado (Next.js, Google Search, Schema.org, ASVS, GitHub).
+
+### Funil de conversao ponta-a-ponta (2026-02-11)
+
+- Objetivo: sair de validacao apenas tecnica para medicao real de conversao no fluxo principal landing -> auth -> planner.
+- Implementado:
+  - origem de funil em URL (`source=landing_planner`) para CTAs de landing;
+  - propagacao dessa origem entre login e signup sem perder `callbackUrl`;
+  - eventos de funil no cliente:
+    - `planner_funnel_auth_viewed`
+    - `planner_funnel_auth_completed`
+    - `planner_funnel_opened`
+    - `planner_funnel_generated`
+  - persistencia de origem em `sessionStorage` para conectar auth -> planner.
+- Arquivos principais:
+  - `src/lib/analytics/funnel.ts`
+  - `src/lib/analytics/funnel-client.ts`
+  - `src/lib/planner/navigation.ts`
+  - `app/page.tsx`
+  - `app/(auth)/login/page.tsx`
+  - `app/(auth)/signup/page.tsx`
+  - `app/(auth)/login/login-form.tsx`
+  - `app/(auth)/signup/signup-form.tsx`
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+  - `e2e/home.e2e.ts`
+  - `src/lib/__tests__/funnel.vitest.ts`
+  - `docs/solucao-elegante-10-10-first-principles.pt-br.md`
+
+### Confiabilidade de conversao: evento final no backend (2026-02-11)
+
+- Ajuste implementado:
+  - `POST /api/planner/generate` agora aceita `source` opcional (`landing_planner`) no payload;
+  - evento `planner_funnel_generated` também e emitido no servidor com `channel=server`;
+  - auditoria do planner inclui `source` no metadata para correlacao.
+- Motivacao:
+  - reduzir perdas de telemetria da etapa final por bloqueio client-side.
+- Arquivos:
+  - `src/lib/planner/schema.ts`
+  - `app/api/planner/generate/route.ts`
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+  - `docs/openapi.planner.yaml`
+  - `docs/API.md`
+
+### Alertas operacionais de funil (2026-02-11)
+
+- Implementado:
+  - metrica Prometheus `app_planner_funnel_generated_total{source,mode,channel}`;
+  - incremento da metrica no backend do planner (`channel=server`);
+  - alertas no Prometheus:
+    - `AppPlannerFallbackRatioHigh`
+    - `AppPlannerLandingSourceDrop`
+- Objetivo:
+  - converter medicao de funil em acao operacional automatica (detectar degradacao e quebra de tracking).
+- Arquivos:
+  - `src/lib/metrics.ts`
+  - `app/api/planner/generate/route.ts`
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+  - `grafana/alerts/security-alerts.yaml`
+  - `observability/README.pt-br.md`
+
+### Hardening final de conversao + UX publica (2026-02-11)
+
+- Ajustes implementados:
+  - `app/pricing/page.tsx`
+    - remove dependencias visuais da landing do framework (`Header`/`Footer` com branding Shipped);
+    - adota header publico alinhado ao produto (`Guia de Milhas` / `Miles Guide`);
+    - preserva CTA de `signup` para planner com `source=landing_planner`;
+    - ajusta CTA de "gerenciar billing" para login com callback em `/dashboard/billing` e `source=landing_planner`.
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+    - validacao client-side agora espelha `travelPreferencesSchema` (Zod) para reduzir 400 evitavel;
+    - adiciona mensagens de erro por campo e limites HTML (`min/max/maxLength`) nos campos relevantes;
+    - melhora mensagem de erro de submissao aproveitando `title` quando presente no payload de erro.
+  - `src/lib/planner/api-contract.ts`
+    - `parsePlannerGenerateSuccessPayload` passa a validar `report` com `plannerReportSchema` (parse estrito);
+    - `parsePlannerProblemDetails` ganha compatibilidade com payload legado `{ error, requestId }`.
+  - `src/lib/__tests__/planner-api-contract.vitest.ts`
+    - novo teste de retrocompatibilidade para erro legado.
+  - `e2e/home.e2e.ts`
+    - reforco de assertivas de `source=landing_planner` nos CTAs de pricing;
+    - novo teste para CTA "manage billing" mantendo callback + source.
+
+- Evidencias desta rodada:
+  - `pnpm lint` -> PASS
+  - `pnpm test` -> PASS (`97 passed`)
+  - `pnpm verify:ci` -> PASS (`41 passed` em `test:e2e:ci`)
+  - `pnpm test:e2e` -> PASS (`82 passed`)
+
+- Resultado:
+  - fluxo publico/paid pages sem resquicios visuais do framework;
+  - tracking de origem consistente nos CTAs publicos criticos;
+  - contrato e parse do planner mais resilientes sem quebrar retrocompatibilidade;
+  - qualidade comprovada em gate completo + E2E full matrix.
+
+### Padronizacao completa de erro RFC 9457 no planner (2026-02-11)
+
+- Ajustes implementados:
+  - `app/api/planner/generate/route.ts`
+    - padroniza respostas de erro do planner em `application/problem+json` para `400`, `401`, `429` e `500`;
+    - adiciona helper central `plannerProblemResponse` com `type`, `title`, `status`, `detail`, `instance`, `requestId`, `code` (+ `Retry-After` no `429`);
+    - remove dependencia de throw para `401` (retorno explicito problem+json).
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+    - atualiza teste `401` para formato RFC 9457;
+    - adiciona teste novo para `400` quando payload e invalido.
+  - `docs/openapi.planner.yaml`
+    - respostas `400/401/429/500` do planner em `application/problem+json`;
+    - schema `PlannerProblem` ampliado para status `4xx/5xx` e codes:
+      - `planner_invalid_request`
+      - `planner_unauthorized`
+      - `planner_rate_limited`
+      - `planner_internal_error`
+  - `docs/API.md`
+    - documenta padrao de erro RFC 9457 para o endpoint do planner em todos os status de falha.
+
+- Evidencias desta rodada:
+  - `pnpm test -- src/lib/__tests__/planner-generate-route.vitest.ts src/lib/__tests__/planner-api-contract.vitest.ts` -> PASS (`98 passed`)
+  - `pnpm verify:ci` -> PASS (`41 passed` em `test:e2e:ci`)
+  - `pnpm test:e2e` -> PASS (`82 passed`)
+
+- Resultado:
+  - contrato de erro do planner ficou consistente ponta-a-ponta (server, cliente, testes e docs), removendo a principal lacuna residual de confiabilidade/operacao.
+
+### Revalidacao autonoma final desta sessao (2026-02-11)
+
+- Limpeza de artefatos acidentais:
+  - removidos arquivos vazios `planner-` e `success,`.
+- Evidencias executadas em sequencia:
+  - `pnpm verify:ci` -> PASS
+    - unit: `27 files`, `106 passed`
+    - e2e:ci (chromium): `46 passed`
+  - `pnpm security:audit` -> PASS
+    - `pnpm audit --prod`: sem vulnerabilidades conhecidas
+    - `gitleaks git`: sem leaks (`153 commits scanned`)
+    - DAST-lite: `4 passed`
+  - `PW_FULL=1 pnpm test:e2e` -> PASS
+    - `225 passed`, `5 skipped`, `0 failed`
+    - skips mantidos como intencionais em `mobile-safari` para cenarios auth-heavy documentados nos testes.

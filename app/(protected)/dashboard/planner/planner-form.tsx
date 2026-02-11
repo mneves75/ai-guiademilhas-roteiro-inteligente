@@ -1,13 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { initialTravelPreferences } from '@/lib/planner/constants';
 import type { PlannerReport, TravelPreferences } from '@/lib/planner/types';
+import { travelPreferencesSchema } from '@/lib/planner/schema';
 import {
   parsePlannerGenerateSuccessPayload,
   parsePlannerProblemDetails,
 } from '@/lib/planner/api-contract';
+import { plannerFunnelEvents } from '@/lib/analytics/funnel';
+import {
+  capturePlannerFunnelEvent,
+  clearPlannerFunnelSource,
+  readPlannerFunnelSource,
+} from '@/lib/analytics/funnel-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -36,6 +43,67 @@ const labels = {
     fallbackNotice:
       'Relatório gerado em modo resiliente (fallback). Configure a IA para recomendações mais profundas.',
     required: 'Campo obrigatório.',
+    invalidValue: 'Valor inválido.',
+    dateOrderError: 'A data de volta deve ser igual ou posterior à data de ida.',
+    totalPassengers: (count: number) => `Total informado: ${count} passageiro(s).`,
+    assumptionsTitle: 'Assunções',
+    fields: {
+      departureDate: 'Data de ida',
+      returnDate: 'Data de volta',
+      flexibilityDays: 'Flexibilidade (dias)',
+      origin: 'Origem (cidade/aeroporto)',
+      destinations: 'Destinos candidatos',
+      adults: 'Adultos',
+      children: 'Crianças',
+      infants: 'Bebês',
+      childAges: 'Idades das crianças/bebês',
+      flightPreference: 'Preferência de voo',
+      flightPreferencePlaceholder: 'Indiferente',
+      flightPreferenceOptions: {
+        indiferente: 'Indiferente',
+        direto: 'Somente diretos',
+        '1_conexao': 'Até 1 conexão',
+      },
+      schedules: 'Horários',
+      schedulesPlaceholder: 'Qualquer hora',
+      schedulesOptions: {
+        qualquer: 'Qualquer hora',
+        manha: 'Manhã',
+        tarde: 'Tarde',
+        noite: 'Noite',
+        madrugada: 'Madrugada',
+        evitar_madrugada: 'Evitar madrugada',
+      },
+      baggage: 'Bagagem',
+      baggagePlaceholder: 'Bagagem',
+      baggageOptions: {
+        mao: 'Mão',
+        '1_despachada': '1 despachada',
+        mais_despachadas: '2+ despachadas',
+      },
+      milesPrograms: 'Programas de milhas',
+      bankPrograms: 'Bancos com pontos',
+      documents: 'Vistos/documentos existentes',
+      budget: 'Orçamento por pessoa (BRL)',
+      riskTolerance: 'Tolerância a risco',
+      riskTolerancePlaceholder: 'Baixa',
+      riskToleranceOptions: {
+        baixa: 'Baixa',
+        media: 'Média',
+        alta: 'Alta',
+      },
+      accommodation: 'Padrão de hospedagem',
+      accommodationPlaceholder: 'Indiferente',
+      accommodationOptions: {
+        indiferente: 'Indiferente',
+        '3': '3 estrelas',
+        '4': '4 estrelas',
+        '5': '5 estrelas',
+      },
+      neighborhoods: 'Bairros preferidos',
+      profile: 'Preferências de experiência',
+      restrictions: 'Restrições',
+    },
     sections: {
       trip: 'Viagem',
       passengers: 'Passageiros',
@@ -58,6 +126,67 @@ const labels = {
     fallbackNotice:
       'Report generated in resilient fallback mode. Configure AI for deeper recommendations.',
     required: 'Required field.',
+    invalidValue: 'Invalid value.',
+    dateOrderError: 'Return date must be on or after departure date.',
+    totalPassengers: (count: number) => `Total: ${count} passenger(s).`,
+    assumptionsTitle: 'Assumptions',
+    fields: {
+      departureDate: 'Departure date',
+      returnDate: 'Return date',
+      flexibilityDays: 'Flexibility (days)',
+      origin: 'Origin (city/airport)',
+      destinations: 'Candidate destinations',
+      adults: 'Adults',
+      children: 'Children',
+      infants: 'Infants',
+      childAges: 'Children/infants ages',
+      flightPreference: 'Flight preference',
+      flightPreferencePlaceholder: 'No preference',
+      flightPreferenceOptions: {
+        indiferente: 'No preference',
+        direto: 'Direct only',
+        '1_conexao': 'Up to 1 layover',
+      },
+      schedules: 'Schedule',
+      schedulesPlaceholder: 'Any time',
+      schedulesOptions: {
+        qualquer: 'Any time',
+        manha: 'Morning',
+        tarde: 'Afternoon',
+        noite: 'Evening',
+        madrugada: 'Late night',
+        evitar_madrugada: 'Avoid late night',
+      },
+      baggage: 'Baggage',
+      baggagePlaceholder: 'Baggage',
+      baggageOptions: {
+        mao: 'Carry-on only',
+        '1_despachada': '1 checked bag',
+        mais_despachadas: '2+ checked bags',
+      },
+      milesPrograms: 'Miles programs',
+      bankPrograms: 'Banks with points',
+      documents: 'Existing visas/documents',
+      budget: 'Budget per person (BRL)',
+      riskTolerance: 'Risk tolerance',
+      riskTolerancePlaceholder: 'Low',
+      riskToleranceOptions: {
+        baixa: 'Low',
+        media: 'Medium',
+        alta: 'High',
+      },
+      accommodation: 'Accommodation standard',
+      accommodationPlaceholder: 'No preference',
+      accommodationOptions: {
+        indiferente: 'No preference',
+        '3': '3-star',
+        '4': '4-star',
+        '5': '5-star',
+      },
+      neighborhoods: 'Preferred neighborhoods',
+      profile: 'Experience preferences',
+      restrictions: 'Constraints',
+    },
     sections: {
       trip: 'Trip',
       passengers: 'Passengers',
@@ -72,13 +201,22 @@ const labels = {
 
 function validateForm(formData: TravelPreferences, locale: Locale): FieldErrors {
   const t = labels[locale] ?? labels['pt-BR'];
-  const errors: FieldErrors = {};
+  const parsed = travelPreferencesSchema.safeParse(formData);
+  if (parsed.success) return {};
 
-  if (!formData.data_ida) errors.data_ida = t.required;
-  if (!formData.data_volta) errors.data_volta = t.required;
-  if (!formData.origens.trim()) errors.origens = t.required;
-  if (!formData.destinos.trim()) errors.destinos = t.required;
-  if (formData.num_adultos <= 0) errors.num_adultos = t.required;
+  const errors: FieldErrors = {};
+  for (const issue of parsed.error.issues) {
+    const field = issue.path[0];
+    if (typeof field !== 'string') continue;
+    const key = field as keyof TravelPreferences;
+    if (errors[key]) continue;
+    if (issue.code === 'custom' && key === 'data_volta') {
+      errors[key] = t.dateOrderError;
+      continue;
+    }
+    errors[key] =
+      issue.code === 'too_small' || issue.code === 'invalid_type' ? t.required : t.invalidValue;
+  }
 
   return errors;
 }
@@ -92,11 +230,21 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
   const [fallbackNoticeVisible, setFallbackNoticeVisible] = useState(false);
 
   const t = labels[locale] ?? labels['pt-BR'];
+  const f = t.fields;
 
   const totalPassengers = useMemo(
     () => formData.num_adultos + formData.num_chd + formData.num_inf,
     [formData.num_adultos, formData.num_chd, formData.num_inf]
   );
+
+  useEffect(() => {
+    const source = readPlannerFunnelSource();
+    if (!source) return;
+    capturePlannerFunnelEvent(plannerFunnelEvents.plannerOpened, {
+      source,
+      locale,
+    });
+  }, [locale]);
 
   function updateField<K extends keyof TravelPreferences>(key: K, value: TravelPreferences[K]) {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -114,11 +262,13 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     setFallbackNoticeVisible(false);
 
     try {
+      const funnelSource = readPlannerFunnelSource();
       const response = await fetch('/api/planner/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locale,
+          source: funnelSource ?? undefined,
           preferences: formData,
         }),
       });
@@ -127,6 +277,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
       if (!response.ok) {
         const problem = parsePlannerProblemDetails(payload);
+        const errorTitle = problem?.title;
         const requestId = problem?.requestId ?? response.headers.get('x-request-id') ?? undefined;
         const retryAfterSeconds = problem?.retryAfterSeconds;
         const retryHint =
@@ -138,8 +289,8 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
         setSubmitError(
           requestId
-            ? `${t.submitFailed}${retryHint} ${t.requestIdLabel}: ${requestId}`
-            : `${t.submitFailed}${retryHint}`
+            ? `${errorTitle ?? t.submitFailed}${retryHint} ${t.requestIdLabel}: ${requestId}`
+            : `${errorTitle ?? t.submitFailed}${retryHint}`
         );
         return;
       }
@@ -148,6 +299,17 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
       if (!success) {
         setSubmitError(t.invalidResponse);
         return;
+      }
+
+      if (funnelSource) {
+        capturePlannerFunnelEvent(plannerFunnelEvents.plannerGenerated, {
+          source: funnelSource,
+          locale,
+          mode: success.mode,
+          channel: 'client',
+          passengers: totalPassengers,
+        });
+        clearPlannerFunnelSource();
       }
 
       setReport(success.report);
@@ -181,13 +343,17 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {submitError && (
-              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+              >
                 {submitError}
               </div>
             )}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="data_ida">Data de ida</Label>
+                <Label htmlFor="data_ida">{f.departureDate}</Label>
                 <Input
                   id="data_ida"
                   type="date"
@@ -197,7 +363,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                 {errors.data_ida && <p className="text-xs text-destructive">{errors.data_ida}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="data_volta">Data de volta</Label>
+                <Label htmlFor="data_volta">{f.returnDate}</Label>
                 <Input
                   id="data_volta"
                   type="date"
@@ -212,17 +378,24 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="flex_dias">Flexibilidade (dias)</Label>
+                <Label htmlFor="flex_dias">{f.flexibilityDays}</Label>
                 <Input
                   id="flex_dias"
+                  type="number"
+                  min={0}
+                  max={30}
+                  inputMode="numeric"
                   value={formData.flex_dias}
                   onChange={(event) => updateField('flex_dias', event.target.value)}
                 />
+                {errors.flex_dias && <p className="text-xs text-destructive">{errors.flex_dias}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="origens">Origem (cidade/aeroporto)</Label>
+                <Label htmlFor="origens">{f.origin}</Label>
                 <Input
                   id="origens"
+                  minLength={2}
+                  maxLength={200}
                   value={formData.origens}
                   onChange={(event) => updateField('origens', event.target.value)}
                 />
@@ -231,9 +404,11 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="destinos">Destinos candidatos</Label>
+              <Label htmlFor="destinos">{f.destinations}</Label>
               <Input
                 id="destinos"
+                minLength={2}
+                maxLength={200}
                 value={formData.destinos}
                 onChange={(event) => updateField('destinos', event.target.value)}
               />
@@ -244,19 +419,16 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
             <div>
               <h2 className="text-base font-semibold">{t.sections.passengers}</h2>
-              <p className="text-sm text-muted-foreground">
-                {locale === 'pt-BR'
-                  ? `Total informado: ${totalPassengers} passageiro(s).`
-                  : `Total: ${totalPassengers} passenger(s).`}
-              </p>
+              <p className="text-sm text-muted-foreground">{t.totalPassengers(totalPassengers)}</p>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="num_adultos">Adultos</Label>
+                <Label htmlFor="num_adultos">{f.adults}</Label>
                 <Input
                   id="num_adultos"
                   type="number"
                   min={1}
+                  max={9}
                   value={formData.num_adultos}
                   onChange={(event) => updateField('num_adultos', Number(event.target.value) || 0)}
                 />
@@ -265,33 +437,41 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="num_chd">Crianças</Label>
+                <Label htmlFor="num_chd">{f.children}</Label>
                 <Input
                   id="num_chd"
                   type="number"
                   min={0}
+                  max={9}
                   value={formData.num_chd}
                   onChange={(event) => updateField('num_chd', Number(event.target.value) || 0)}
                 />
+                {errors.num_chd && <p className="text-xs text-destructive">{errors.num_chd}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="num_inf">Bebês</Label>
+                <Label htmlFor="num_inf">{f.infants}</Label>
                 <Input
                   id="num_inf"
                   type="number"
                   min={0}
+                  max={9}
                   value={formData.num_inf}
                   onChange={(event) => updateField('num_inf', Number(event.target.value) || 0)}
                 />
+                {errors.num_inf && <p className="text-xs text-destructive">{errors.num_inf}</p>}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="idades_chd_inf">Idades das crianças/bebês</Label>
+              <Label htmlFor="idades_chd_inf">{f.childAges}</Label>
               <Input
                 id="idades_chd_inf"
+                maxLength={120}
                 value={formData.idades_chd_inf}
                 onChange={(event) => updateField('idades_chd_inf', event.target.value)}
               />
+              {errors.idades_chd_inf && (
+                <p className="text-xs text-destructive">{errors.idades_chd_inf}</p>
+              )}
             </div>
 
             <Separator />
@@ -301,59 +481,67 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Preferência de voo</Label>
+                <Label htmlFor="preferencia_voo">{f.flightPreference}</Label>
                 <Select
                   value={formData.preferencia_voo}
                   onValueChange={(value) =>
                     updateField('preferencia_voo', value as TravelPreferences['preferencia_voo'])
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Indiferente" />
+                  <SelectTrigger id="preferencia_voo">
+                    <SelectValue placeholder={f.flightPreferencePlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="indiferente">Indiferente</SelectItem>
-                    <SelectItem value="direto">Somente diretos</SelectItem>
-                    <SelectItem value="1_conexao">Até 1 conexão</SelectItem>
+                    <SelectItem value="indiferente">
+                      {f.flightPreferenceOptions.indiferente}
+                    </SelectItem>
+                    <SelectItem value="direto">{f.flightPreferenceOptions.direto}</SelectItem>
+                    <SelectItem value="1_conexao">
+                      {f.flightPreferenceOptions['1_conexao']}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Horários</Label>
+                <Label htmlFor="horarios_voo">{f.schedules}</Label>
                 <Select
                   value={formData.horarios_voo}
                   onValueChange={(value) =>
                     updateField('horarios_voo', value as TravelPreferences['horarios_voo'])
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Qualquer hora" />
+                  <SelectTrigger id="horarios_voo">
+                    <SelectValue placeholder={f.schedulesPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="qualquer">Qualquer hora</SelectItem>
-                    <SelectItem value="manha">Manhã</SelectItem>
-                    <SelectItem value="tarde">Tarde</SelectItem>
-                    <SelectItem value="noite">Noite</SelectItem>
-                    <SelectItem value="madrugada">Madrugada</SelectItem>
-                    <SelectItem value="evitar_madrugada">Evitar madrugada</SelectItem>
+                    <SelectItem value="qualquer">{f.schedulesOptions.qualquer}</SelectItem>
+                    <SelectItem value="manha">{f.schedulesOptions.manha}</SelectItem>
+                    <SelectItem value="tarde">{f.schedulesOptions.tarde}</SelectItem>
+                    <SelectItem value="noite">{f.schedulesOptions.noite}</SelectItem>
+                    <SelectItem value="madrugada">{f.schedulesOptions.madrugada}</SelectItem>
+                    <SelectItem value="evitar_madrugada">
+                      {f.schedulesOptions.evitar_madrugada}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Bagagem</Label>
+                <Label htmlFor="bagagem">{f.baggage}</Label>
                 <Select
                   value={formData.bagagem}
                   onValueChange={(value) =>
                     updateField('bagagem', value as TravelPreferences['bagagem'])
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Bagagem" />
+                  <SelectTrigger id="bagagem">
+                    <SelectValue placeholder={f.baggagePlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mao">Mão</SelectItem>
-                    <SelectItem value="1_despachada">1 despachada</SelectItem>
-                    <SelectItem value="mais_despachadas">2+ despachadas</SelectItem>
+                    <SelectItem value="mao">{f.baggageOptions.mao}</SelectItem>
+                    <SelectItem value="1_despachada">{f.baggageOptions['1_despachada']}</SelectItem>
+                    <SelectItem value="mais_despachadas">
+                      {f.baggageOptions.mais_despachadas}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -366,38 +554,54 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="programas_milhas">Programas de milhas</Label>
+                <Label htmlFor="programas_milhas">{f.milesPrograms}</Label>
                 <Input
                   id="programas_milhas"
+                  maxLength={240}
                   value={formData.programas_milhas}
                   onChange={(event) => updateField('programas_milhas', event.target.value)}
                 />
+                {errors.programas_milhas && (
+                  <p className="text-xs text-destructive">{errors.programas_milhas}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="programas_bancos">Bancos com pontos</Label>
+                <Label htmlFor="programas_bancos">{f.bankPrograms}</Label>
                 <Input
                   id="programas_bancos"
+                  maxLength={240}
                   value={formData.programas_bancos}
                   onChange={(event) => updateField('programas_bancos', event.target.value)}
                 />
+                {errors.programas_bancos && (
+                  <p className="text-xs text-destructive">{errors.programas_bancos}</p>
+                )}
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="vistos_existentes">Vistos/documentos existentes</Label>
+                <Label htmlFor="vistos_existentes">{f.documents}</Label>
                 <Input
                   id="vistos_existentes"
+                  maxLength={240}
                   value={formData.vistos_existentes}
                   onChange={(event) => updateField('vistos_existentes', event.target.value)}
                 />
+                {errors.vistos_existentes && (
+                  <p className="text-xs text-destructive">{errors.vistos_existentes}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="orcamento_brl">Orçamento por pessoa (BRL)</Label>
+                <Label htmlFor="orcamento_brl">{f.budget}</Label>
                 <Input
                   id="orcamento_brl"
+                  maxLength={120}
                   value={formData.orcamento_brl}
                   onChange={(event) => updateField('orcamento_brl', event.target.value)}
                 />
+                {errors.orcamento_brl && (
+                  <p className="text-xs text-destructive">{errors.orcamento_brl}</p>
+                )}
               </div>
             </div>
 
@@ -408,25 +612,25 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Tolerância a risco</Label>
+                <Label htmlFor="tolerancia_risco">{f.riskTolerance}</Label>
                 <Select
                   value={formData.tolerancia_risco}
                   onValueChange={(value) =>
                     updateField('tolerancia_risco', value as TravelPreferences['tolerancia_risco'])
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Baixa" />
+                  <SelectTrigger id="tolerancia_risco">
+                    <SelectValue placeholder={f.riskTolerancePlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="baixa">Baixa</SelectItem>
-                    <SelectItem value="media">Média</SelectItem>
-                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="baixa">{f.riskToleranceOptions.baixa}</SelectItem>
+                    <SelectItem value="media">{f.riskToleranceOptions.media}</SelectItem>
+                    <SelectItem value="alta">{f.riskToleranceOptions.alta}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Padrão de hospedagem</Label>
+                <Label htmlFor="hospedagem_padrao">{f.accommodation}</Label>
                 <Select
                   value={formData.hospedagem_padrao}
                   onValueChange={(value) =>
@@ -436,33 +640,41 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                     )
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Indiferente" />
+                  <SelectTrigger id="hospedagem_padrao">
+                    <SelectValue placeholder={f.accommodationPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="indiferente">Indiferente</SelectItem>
-                    <SelectItem value="3">3 estrelas</SelectItem>
-                    <SelectItem value="4">4 estrelas</SelectItem>
-                    <SelectItem value="5">5 estrelas</SelectItem>
+                    <SelectItem value="indiferente">
+                      {f.accommodationOptions.indiferente}
+                    </SelectItem>
+                    <SelectItem value="3">{f.accommodationOptions['3']}</SelectItem>
+                    <SelectItem value="4">{f.accommodationOptions['4']}</SelectItem>
+                    <SelectItem value="5">{f.accommodationOptions['5']}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bairros_pref">Bairros preferidos</Label>
+                <Label htmlFor="bairros_pref">{f.neighborhoods}</Label>
                 <Input
                   id="bairros_pref"
+                  maxLength={240}
                   value={formData.bairros_pref}
                   onChange={(event) => updateField('bairros_pref', event.target.value)}
                 />
+                {errors.bairros_pref && (
+                  <p className="text-xs text-destructive">{errors.bairros_pref}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="perfil">Preferências de experiência</Label>
+              <Label htmlFor="perfil">{f.profile}</Label>
               <Input
                 id="perfil"
+                maxLength={240}
                 value={formData.perfil}
                 onChange={(event) => updateField('perfil', event.target.value)}
               />
+              {errors.perfil && <p className="text-xs text-destructive">{errors.perfil}</p>}
             </div>
 
             <Separator />
@@ -471,13 +683,15 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
               <h2 className="text-base font-semibold">{t.sections.constraints}</h2>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="restricoes">Restrições</Label>
+              <Label htmlFor="restricoes">{f.restrictions}</Label>
               <textarea
                 id="restricoes"
+                maxLength={800}
                 className="min-h-[96px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={formData.restricoes}
                 onChange={(event) => updateField('restricoes', event.target.value)}
               />
+              {errors.restricoes && <p className="text-xs text-destructive">{errors.restricoes}</p>}
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -520,9 +734,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
             {report.assumptions.length > 0 && (
               <div className="rounded-md border border-dashed border-muted-foreground/40 p-4">
-                <h4 className="text-sm font-semibold">
-                  {locale === 'pt-BR' ? 'Assunções' : 'Assumptions'}
-                </h4>
+                <h4 className="text-sm font-semibold">{t.assumptionsTitle}</h4>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   {report.assumptions.map((item) => (
                     <li key={item}>{item}</li>

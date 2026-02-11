@@ -485,7 +485,7 @@ const EN_MESSAGES = {
       quickActions: 'Quick Actions',
       quickActionsSubtitle: 'Common tasks you can do right now',
       gettingStarted: 'Getting Started',
-      gettingStartedSubtitle: 'Complete these steps to get the most out of Shipped',
+      gettingStartedSubtitle: 'Complete these steps to get the most out of Guia de Milhas',
       actions: {
         createNewWorkspace: 'Create a new workspace',
         inviteTeamMembers: 'Invite team members',
@@ -611,7 +611,7 @@ const EN_MESSAGES = {
       noneTitle: 'No notifications',
       noneBody: "You're all caught up! Check back later.",
       seed: {
-        title: 'Welcome to Shipped!',
+        title: 'Welcome to Guia de Milhas!',
         description: 'Get started by creating your first workspace.',
         time: 'Just now',
       },
@@ -1334,7 +1334,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       quickActions: 'Ações rápidas',
       quickActionsSubtitle: 'Tarefas comuns que você pode fazer agora',
       gettingStarted: 'Primeiros passos',
-      gettingStartedSubtitle: 'Complete estes passos para aproveitar o Shipped',
+      gettingStartedSubtitle: 'Complete estes passos para aproveitar o Guia de Milhas',
       actions: {
         createNewWorkspace: 'Criar um novo workspace',
         inviteTeamMembers: 'Convidar membros',
@@ -1461,7 +1461,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       noneTitle: 'Sem notificações',
       noneBody: 'Tudo em dia. Volte mais tarde.',
       seed: {
-        title: 'Bem-vindo ao Shipped!',
+        title: 'Bem-vindo ao Guia de Milhas!',
         description: 'Comece criando seu primeiro workspace.',
         time: 'Agora mesmo',
       },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -10,6 +10,11 @@ import { m } from '@/lib/messages';
 import { isValidEmail } from '@/lib/validation/email';
 import { mapSignInError } from '@/lib/auth/ui-errors';
 import { parseBodyFieldErrors } from '@/lib/auth/error-utils';
+import { plannerFunnelEvents, type FunnelSource, withFunnelSource } from '@/lib/analytics/funnel';
+import {
+  capturePlannerFunnelEvent,
+  rememberPlannerFunnelSource,
+} from '@/lib/analytics/funnel-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -17,9 +22,11 @@ import { Separator } from '@/components/ui/separator';
 
 export default function LoginForm({
   callbackUrl,
+  funnelSource,
   initialLocale,
 }: {
   callbackUrl: string;
+  funnelSource: FunnelSource | null;
   initialLocale: Locale;
 }) {
   const router = useRouter();
@@ -34,7 +41,20 @@ export default function LoginForm({
   const [magicLoading, setMagicLoading] = useState(false);
 
   const t = m(locale).auth;
-  const signupHref = `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  const signupHref = withFunnelSource(
+    `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+    funnelSource
+  );
+
+  useEffect(() => {
+    if (!funnelSource) return;
+    rememberPlannerFunnelSource(funnelSource);
+    capturePlannerFunnelEvent(plannerFunnelEvents.authViewed, {
+      source: funnelSource,
+      step: 'login',
+      locale,
+    });
+  }, [funnelSource, locale]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,6 +91,14 @@ export default function LoginForm({
         if (mapped.fieldErrors) setFieldErrors(mapped.fieldErrors);
         if (mapped.globalError) setError(mapped.globalError);
       } else {
+        if (funnelSource) {
+          capturePlannerFunnelEvent(plannerFunnelEvents.authCompleted, {
+            source: funnelSource,
+            step: 'login',
+            method: 'email_password',
+            locale,
+          });
+        }
         router.push(callbackUrl);
         router.refresh();
       }

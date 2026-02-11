@@ -55,12 +55,14 @@ test.describe('Home Page', () => {
       'href',
       /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
     );
+    await expect(primaryCta).toHaveAttribute('href', /source=landing_planner/);
 
     const loginCta = page
       .getByRole('navigation', { name: 'Primary' })
       .locator('a[href^="/login"]')
       .first();
     await expect(loginCta).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(loginCta).toHaveAttribute('href', /source=landing_planner/);
   });
 });
 
@@ -140,18 +142,22 @@ test.describe('Authentication Pages', () => {
     await expect(passwordInput).toBeVisible();
   });
 
-  test('should preserve planner callback between login and signup links', async ({ page }) => {
-    await gotoPage(page, '/login?callbackUrl=%2Fdashboard%2Fplanner');
+  test('should preserve planner callback + source between login and signup links', async ({
+    page,
+  }) => {
+    await gotoPage(page, '/login?callbackUrl=%2Fdashboard%2Fplanner&source=landing_planner');
 
     const createAccountLink = page.locator('a[href^="/signup"]').first();
     await expect(createAccountLink).toHaveAttribute(
       'href',
       /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
     );
+    await expect(createAccountLink).toHaveAttribute('href', /source=landing_planner/);
 
-    await gotoPage(page, '/signup?callbackUrl=%2Fdashboard%2Fplanner');
+    await gotoPage(page, '/signup?callbackUrl=%2Fdashboard%2Fplanner&source=landing_planner');
     const signInLink = page.locator('a[href^="/login"]').first();
     await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(signInLink).toHaveAttribute('href', /source=landing_planner/);
   });
 });
 
@@ -173,7 +179,18 @@ test.describe('Pricing', () => {
         'href',
         /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
       );
+      await expect(signupLinks.nth(i)).toHaveAttribute('href', /source=landing_planner/);
     }
+  });
+
+  test('should keep source in pricing manage-billing login cta', async ({ page }) => {
+    await gotoPage(page, '/en/pricing');
+    const manageBillingLink = page.getByRole('link', { name: /manage billing/i }).first();
+    await expect(manageBillingLink).toHaveAttribute(
+      'href',
+      /\/login\?callbackUrl=%2Fdashboard%2Fbilling/
+    );
+    await expect(manageBillingLink).toHaveAttribute('href', /source=landing_planner/);
   });
 });
 
@@ -201,6 +218,78 @@ test.describe('SEO', () => {
     // RSS autodiscovery should exist (from root metadata alternates)
     const rssAlternate = page.locator('link[rel="alternate"][type="application/rss+xml"]');
     await expect(rssAlternate).toHaveCount(1);
+  });
+
+  test('should expose FAQPage JSON-LD with at least three questions', async ({ page }) => {
+    await gotoPage(page, '/en');
+
+    const faq = await page.evaluate(() => {
+      const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+      for (const script of scripts) {
+        const raw = script.textContent ?? '';
+        try {
+          const parsed = JSON.parse(raw) as {
+            ['@type']?: string;
+            mainEntity?: Array<{ ['@type']?: string; name?: string }>;
+          };
+          if (parsed['@type'] === 'FAQPage') return parsed;
+        } catch {
+          // Ignore malformed blocks and continue scanning.
+        }
+      }
+      return null;
+    });
+
+    expect(faq).not.toBeNull();
+    expect(Array.isArray(faq?.mainEntity)).toBe(true);
+    expect((faq?.mainEntity ?? []).length).toBeGreaterThanOrEqual(3);
+    expect((faq?.mainEntity ?? []).every((q) => q?.['@type'] === 'Question')).toBe(true);
+  });
+
+  test('should expose Service JSON-LD on landing', async ({ page }) => {
+    await gotoPage(page, '/pt-br');
+
+    const service = await page.evaluate(() => {
+      const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+      for (const script of scripts) {
+        const raw = script.textContent ?? '';
+        try {
+          const parsed = JSON.parse(raw) as { ['@type']?: string; offers?: { ['@type']?: string } };
+          if (parsed['@type'] === 'Service') return parsed;
+        } catch {
+          // Ignore malformed blocks and continue scanning.
+        }
+      }
+      return null;
+    });
+
+    expect(service).not.toBeNull();
+    expect(service?.offers?.['@type']).toBe('Offer');
+  });
+
+  test('should expose OfferCatalog JSON-LD on pricing page', async ({ page }) => {
+    await gotoPage(page, '/en/pricing');
+
+    const catalog = await page.evaluate(() => {
+      const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+      for (const script of scripts) {
+        const raw = script.textContent ?? '';
+        try {
+          const parsed = JSON.parse(raw) as {
+            ['@type']?: string;
+            itemListElement?: unknown[];
+          };
+          if (parsed['@type'] === 'OfferCatalog') return parsed;
+        } catch {
+          // Ignore malformed blocks and continue scanning.
+        }
+      }
+      return null;
+    });
+
+    expect(catalog).not.toBeNull();
+    expect(Array.isArray(catalog?.itemListElement)).toBe(true);
+    expect((catalog?.itemListElement ?? []).length).toBeGreaterThanOrEqual(1);
   });
 
   test('should render locale-stable canonicals in pt-BR', async ({ page }) => {

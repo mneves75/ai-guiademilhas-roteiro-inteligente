@@ -38,15 +38,15 @@ paths:
         '400':
           description: Payload inválido
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/PlannerProblem'
         '401':
           description: Não autenticado
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/PlannerProblem'
         '429':
           description: Rate limit excedido
           headers:
@@ -55,6 +55,12 @@ paths:
               schema:
                 type: integer
                 minimum: 1
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/PlannerProblem'
+        '500':
+          description: Erro interno
           content:
             application/problem+json:
               schema:
@@ -76,6 +82,10 @@ components:
           description: >
             Opcional. O backend normaliza para locale suportado (ex.: pt-BR/en).
             Valores fora do conjunto esperado caem em fallback seguro.
+        source:
+          type: string
+          enum: [landing_planner]
+          description: Opcional. Origem de funil para mensuração de conversão.
         preferences:
           type: object
           additionalProperties: false
@@ -243,7 +253,8 @@ components:
           type: string
         status:
           type: integer
-          enum: [429]
+          minimum: 400
+          maximum: 599
         detail:
           type: string
         instance:
@@ -252,7 +263,11 @@ components:
           type: string
         code:
           type: string
-          enum: [planner_rate_limited]
+          enum:
+            - planner_invalid_request
+            - planner_unauthorized
+            - planner_rate_limited
+            - planner_internal_error
         retryAfterSeconds:
           type: integer
           minimum: 1

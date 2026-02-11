@@ -42,7 +42,7 @@ export default async function EmailPreviewPage() {
   const invitationHtml = await render(
     InvitationEmail({
       inviterName: 'Grace Hopper',
-      workspaceName: 'Shipped HQ',
+      workspaceName: 'Guia de Milhas',
       role: 'member',
       inviteUrl: 'http://localhost:3000/invite/example-token',
       expiresAt,

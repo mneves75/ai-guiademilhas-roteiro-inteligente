@@ -1,4 +1,5 @@
 import type { PlannerReport } from './types';
+import { plannerReportSchema } from './schema';
 
 export const PLANNER_API_SCHEMA_VERSION = '2026-02-11';
 
@@ -27,17 +28,6 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-function isPlannerReport(value: unknown): value is PlannerReport {
-  if (!isObjectRecord(value)) return false;
-
-  return (
-    typeof value.title === 'string' &&
-    typeof value.summary === 'string' &&
-    Array.isArray(value.sections) &&
-    Array.isArray(value.assumptions)
-  );
-}
-
 function normalizeMode(value: unknown): PlannerGenerationMode {
   return value === 'ai' ? 'ai' : 'fallback';
 }
@@ -45,7 +35,9 @@ function normalizeMode(value: unknown): PlannerGenerationMode {
 export function parsePlannerGenerateSuccessPayload(
   value: unknown
 ): PlannerGenerateSuccessPayload | null {
-  if (!isObjectRecord(value) || !isPlannerReport(value.report)) return null;
+  if (!isObjectRecord(value)) return null;
+  const reportParsed = plannerReportSchema.safeParse(value.report);
+  if (!reportParsed.success) return null;
 
   return {
     schemaVersion:
@@ -56,7 +48,7 @@ export function parsePlannerGenerateSuccessPayload(
       typeof value.generatedAt === 'string' && value.generatedAt.trim().length > 0
         ? value.generatedAt
         : '',
-    report: value.report,
+    report: reportParsed.data as PlannerReport,
     mode: normalizeMode(value.mode),
   };
 }
@@ -70,7 +62,22 @@ export function parsePlannerProblemDetails(value: unknown): PlannerProblemDetail
     typeof value.detail !== 'string' ||
     typeof value.instance !== 'string'
   ) {
-    return null;
+    if (typeof value.error !== 'string') return null;
+    return {
+      type: 'about:blank',
+      title: value.error,
+      status: typeof value.status === 'number' ? value.status : 0,
+      detail: value.error,
+      instance:
+        typeof value.instance === 'string' && value.instance.trim().length > 0
+          ? value.instance
+          : '/api/planner/generate',
+      requestId: typeof value.requestId === 'string' ? value.requestId : undefined,
+      code: typeof value.code === 'string' ? value.code : undefined,
+      retryAfterSeconds:
+        typeof value.retryAfterSeconds === 'number' ? value.retryAfterSeconds : undefined,
+      error: value.error,
+    };
   }
 
   return {

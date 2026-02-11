@@ -36,3 +36,33 @@ groups:
         annotations:
           summary: 'Latencia p99 alta no proxy (ms)'
           description: 'O proxy esta levando muito tempo para decidir/bloquear/redirecionar. Pode afetar UX e custo.'
+
+  - name: app-funnel
+    rules:
+      - alert: AppPlannerFallbackRatioHigh
+        expr: |
+          (
+            sum(rate(app_planner_funnel_generated_total{channel="server",mode="fallback"}[15m]))
+            /
+            sum(rate(app_planner_funnel_generated_total{channel="server"}[15m]))
+          ) > 0.7
+          and
+          sum(increase(app_planner_funnel_generated_total{channel="server"}[15m])) > 20
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Ratio de fallback alto no planner'
+          description: 'Mais de 70% das geracoes do planner estao em modo fallback (janela 15m). Verifique integracao do provedor de IA.'
+
+      - alert: AppPlannerLandingSourceDrop
+        expr: |
+          sum(increase(app_planner_funnel_generated_total{channel="server",source="landing_planner"}[30m])) == 0
+          and
+          sum(increase(app_planner_funnel_generated_total{channel="server"}[30m])) > 20
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: 'Conversao da origem landing zerada'
+          description: 'Nao houve geracao com source=landing_planner em 30m, apesar de haver geracoes no periodo. Verifique propagacao de source e funil de aquisicao.'

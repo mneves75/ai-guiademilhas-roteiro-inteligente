@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LANDING_PLANNER_SOURCE } from '@/lib/analytics/funnel';
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,11 +33,32 @@ export const travelPreferencesSchema = z
     bairros_pref: boundedText(240),
     restricoes: boundedText(800),
   })
+  .superRefine((value, ctx) => {
+    if (!isoDatePattern.test(value.data_ida) || !isoDatePattern.test(value.data_volta)) {
+      return;
+    }
+
+    const departure = Date.parse(`${value.data_ida}T00:00:00Z`);
+    const returnDate = Date.parse(`${value.data_volta}T00:00:00Z`);
+
+    if (!Number.isFinite(departure) || !Number.isFinite(returnDate)) {
+      return;
+    }
+
+    if (returnDate < departure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['data_volta'],
+        message: 'Return date must be on or after departure date',
+      });
+    }
+  })
   .strict();
 
 export const plannerGenerateRequestSchema = z
   .object({
     locale: z.string().optional(),
+    source: z.enum([LANDING_PLANNER_SOURCE]).optional(),
     preferences: travelPreferencesSchema,
   })
   .strict();

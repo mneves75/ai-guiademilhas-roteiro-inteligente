@@ -14,7 +14,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 export async function sendWelcomeEmail(params: { to: string; name: string }): Promise<EmailResult> {
   return sendEmail({
     to: params.to,
-    subject: 'Welcome to Shipped!',
+    subject: 'Welcome to Guia de Milhas!',
     react: WelcomeEmail({
       name: params.name,
       loginUrl: `${APP_URL}/login`,
@@ -57,7 +57,7 @@ export async function sendPasswordResetEmail(params: {
 }): Promise<EmailResult> {
   return sendEmail({
     to: params.to,
-    subject: 'Reset your Shipped password',
+    subject: 'Reset your Guia de Milhas password',
     react: PasswordResetEmail({
       name: params.name,
       resetUrl: params.resetUrl,
@@ -76,7 +76,7 @@ export async function sendMagicLinkEmail(params: {
 }): Promise<EmailResult> {
   return sendEmail({
     to: params.to,
-    subject: 'Your Shipped magic sign-in link',
+    subject: 'Your Guia de Milhas magic sign-in link',
     react: MagicLinkEmail({
       signInUrl: params.url,
       expiresInMinutes: params.expiresInMinutes ?? 5,

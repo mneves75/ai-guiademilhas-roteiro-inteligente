@@ -75,7 +75,7 @@ const landingContentByLocale: Record<'en' | 'pt-BR', LandingContent> = {
     finalTitle: 'Se você quer economizar milhas com consistência, comece pelo plano.',
     finalSubtitle:
       'Entre agora e use o planner para sair do improviso e tomar decisões de viagem com mais previsibilidade.',
-    finalCta: 'Ir para o planner',
+    finalCta: 'Criar conta e abrir o planner',
     loginCta: 'Entrar',
   },
   en: {
@@ -131,7 +131,7 @@ const landingContentByLocale: Record<'en' | 'pt-BR', LandingContent> = {
     ],
     finalTitle: 'Better decisions start with a better plan.',
     finalSubtitle: 'Sign in and turn scattered data into an actionable travel strategy.',
-    finalCta: 'Go to planner',
+    finalCta: 'Create account and open planner',
     loginCta: 'Sign in',
   },
 };

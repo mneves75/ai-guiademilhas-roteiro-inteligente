@@ -1,23 +1,27 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Header } from '@/components/landing/header';
-import { Footer } from '@/components/landing/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { JsonLd } from '@/components/json-ld';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { getLandingContent } from '@/content/landing';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { getLocalizedPlans } from '@/lib/plan-catalog-localized';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
 import { publicAlternates } from '@/lib/seo/public-alternates';
 import { publicPathname } from '@/lib/locale-routing';
-import { plannerSignupHref } from '@/lib/planner/navigation';
+import { LANDING_PLANNER_SOURCE, withFunnelSource } from '@/lib/analytics/funnel';
+import { plannerLoginHref, plannerSignupHref } from '@/lib/planner/navigation';
+import { buildLoginRedirectHref } from '@/lib/security/redirect';
+import { buildPricingOfferCatalogJsonLd } from '@/lib/seo/structured-data';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const t = m(locale).pricingPage;
   const canonical = publicPathname(locale, '/pricing');
+  const ogLocale = locale === 'pt-BR' ? 'pt_BR' : 'en_US';
 
   return {
     title: t.title,
@@ -26,12 +30,23 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: t.title,
       description: t.subtitle,
+      siteName: locale === 'pt-BR' ? 'Guia de Milhas' : 'Miles Guide',
+      locale: ogLocale,
       url: canonical,
+      images: [
+        {
+          url: '/api/og',
+          width: 1200,
+          height: 630,
+          alt: locale === 'pt-BR' ? 'Guia de Milhas' : 'Miles Guide',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: t.title,
       description: t.subtitle,
+      images: ['/api/og'],
     },
   };
 }
@@ -39,10 +54,22 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PricingPage() {
   const locale = await getRequestLocale();
   const t = m(locale);
+  const content = getLandingContent(locale);
   const plans = getLocalizedPlans(locale);
   const url = resolvePublicOrigin();
   const pricingPath = publicPathname(locale, '/pricing');
-  const signupHref = plannerSignupHref();
+  const signupHref = plannerSignupHref(LANDING_PLANNER_SOURCE);
+  const loginHref = plannerLoginHref(LANDING_PLANNER_SOURCE);
+  const billingLoginHref = withFunnelSource(
+    buildLoginRedirectHref('/dashboard/billing', { defaultPath: '/dashboard/billing' }),
+    LANDING_PLANNER_SOURCE
+  );
+  const homePath = publicPathname(locale, '/');
+  const offerCatalogJsonLd = buildPricingOfferCatalogJsonLd({
+    locale,
+    plans,
+    signupUrl: `${url}${signupHref}`,
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -54,7 +81,23 @@ export default async function PricingPage() {
           url: `${url}${pricingPath}`,
         }}
       />
-      <Header />
+      <JsonLd data={offerCatalogJsonLd} />
+      <header className="glass-header sticky top-0 z-50 w-full border-b">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Link href={homePath} className="text-lg font-semibold">
+            {content.appName}
+          </Link>
+          <nav aria-label="Primary" className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button asChild variant="ghost" size="sm">
+              <Link href={loginHref}>{t.nav.signIn}</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href={signupHref}>{t.nav.getStarted}</Link>
+            </Button>
+          </nav>
+        </div>
+      </header>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-10 px-4 py-12 sm:px-6">
         <div className="space-y-2 text-center">
           <h1 className="text-4xl font-bold tracking-tight">{t.pricingPage.title}</h1>
@@ -64,9 +107,7 @@ export default async function PricingPage() {
               <Link href={signupHref}>{t.pricingPage.getStarted}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/login?callbackUrl=/dashboard/billing">
-                {t.pricingPage.manageBilling}
-              </Link>
+              <Link href={billingLoginHref}>{t.pricingPage.manageBilling}</Link>
             </Button>
           </div>
         </div>
@@ -98,7 +139,11 @@ export default async function PricingPage() {
           })}
         </div>
       </main>
-      <Footer />
+      <footer className="border-t py-8">
+        <div className="mx-auto max-w-6xl px-4 text-center text-sm text-muted-foreground sm:px-6">
+          &copy; {new Date().getFullYear()} {content.appName}
+        </div>
+      </footer>
     </div>
   );
 }
