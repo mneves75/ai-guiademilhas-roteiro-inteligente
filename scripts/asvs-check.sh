@@ -6,6 +6,17 @@ cd "$ROOT_DIR"
 
 DOC="docs/security/asvs-mapping.pt-br.md"
 
+contains() {
+  local needle="$1"
+  local file="$2"
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -F -q "$needle" "$file"
+  else
+    grep -F -q -- "$needle" "$file"
+  fi
+}
+
 if [[ ! -f "$DOC" ]]; then
   echo "ASVS gate FAIL: arquivo ausente: $DOC"
   exit 1
@@ -25,7 +36,7 @@ required_sections=(
 )
 
 for section in "${required_sections[@]}"; do
-  if ! rg -F -q "$section" "$DOC"; then
+  if ! contains "$section" "$DOC"; then
     echo "ASVS gate FAIL: secao obrigatoria ausente no checklist: $section"
     exit 1
   fi
@@ -63,7 +74,7 @@ required_commands=(
 )
 
 for cmd in "${required_commands[@]}"; do
-  if ! rg -F -q "$cmd" "$DOC"; then
+  if ! contains "$cmd" "$DOC"; then
     echo "ASVS gate FAIL: comando obrigatorio ausente no checklist: $cmd"
     exit 1
   fi
