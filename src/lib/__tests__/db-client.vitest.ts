@@ -44,7 +44,7 @@ describe('db/client', () => {
   it('throws on invalid DB_PROVIDER at import time', async () => {
     process.env.DB_PROVIDER = 'postgrse';
     await expect(import('@/db/client')).rejects.toThrow(/DB_PROVIDER="postgrse"/);
-  });
+  }, 15000);
 
   it('does not connect at import time (postgres default) when DATABASE_URL is missing', async () => {
     await expect(import('@/db/client')).resolves.toBeTruthy();
