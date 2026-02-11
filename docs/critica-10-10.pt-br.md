@@ -52,6 +52,7 @@ Invariantes desejadas:
 Comandos:
 
 - E2E completo: `PW_FULL=1 pnpm test:e2e`
+- Gate ASVS: `pnpm security:asvs-check`
 - Auditoria local: `pnpm security:audit`
 
 ## 4) O que falta para 10/10 operacional (depende de deploy real)
@@ -65,7 +66,7 @@ Comandos:
 
 - CSP reporting (`report-to`) + coleta de violacoes.
 - Assinar `security.txt` (OpenPGP) e monitorar integridade (recomendado pela RFC).
-- Checklist ASVS versionado (IDs + evidencias) como criterio de release.
+- Expandir cobertura ASVS (controles adicionais por nivel) com evidencia de deploy real.
 
 ## 6) Evidencia de fechamento (estado atual)
 
@@ -77,6 +78,8 @@ Comandos:
   - `pnpm audit --prod`: sem vulnerabilidades conhecidas.
   - DAST-lite `@dast`: `4 passed`.
   - Gates basicos (`lint`, `type-check`, `test`) verdes.
+- Gate ASVS versionado:
+  - `pnpm security:asvs-check` valida checklist + evidencias obrigatorias e foi integrado no `Governance Gate` da CI.
 - Contrato do planner atualizado:
   - `docs/API.md` documenta resposta versionada e `problem+json`.
   - `src/lib/planner/api-contract.ts` centraliza parse resiliente (v2 + legado).

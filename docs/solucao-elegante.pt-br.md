@@ -131,7 +131,7 @@ Gates executados e verdes:
 
 1. DAST real contra preview/prod (onde CDN/proxy mexe em headers/cookies).
 2. Observabilidade/alertas de abuso (picos 401/403/429, falhas de webhook, correlacao via `x-request-id`).
-3. Checklist ASVS versionado (IDs + evidencia por controle) como criterio de release.
+3. Expandir cobertura ASVS por nivel com evidencias de ambiente real de deploy.
 
 ## Anti-padroes (explicitamente evitados)
 
