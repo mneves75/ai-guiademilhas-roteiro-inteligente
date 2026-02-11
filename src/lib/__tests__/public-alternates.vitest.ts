@@ -12,6 +12,6 @@ describe('publicAlternates', () => {
     expect(multi.canonical).toBe('/en/pricing');
     expect(multi.languages?.['en-US']).toBe('/en/pricing');
     expect(multi.languages?.['pt-BR']).toBe('/pt-br/pricing');
-    expect(multi.languages?.['x-default']).toBe('/en/pricing');
+    expect(multi.languages?.['x-default']).toBe('/pt-br/pricing');
   });
 });

@@ -71,7 +71,7 @@ Nota: isto nao e certificacao ASVS completa. E um gate pragmatico para release.
 
 - V9.x (TLS/HSTS)
   - Evidencia: politica definida em docs e exigida no deploy
-  - Validacao: DAST em ambiente real (pendente de pipeline de deploy)
+  - Validacao: DAST em ambiente real via `.github/workflows/dast-on-deploy.yml` (depende da integracao de deploy publicar `deployment_status` com URL)
   - Status: parcialmente implementado (depende de infra)
 
 ## V12: Seguranca de Arquivos

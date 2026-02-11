@@ -57,10 +57,9 @@ Comandos:
 
 ## 4) O que falta para 10/10 operacional (depende de deploy real)
 
-- DAST automatico em preview/prod precisa de `deployment_status.target_url` (ou `environment_url`) no GitHub Actions.
-- Rate limit "hard" em producao: configurar store compartilhado (Upstash) quando multi-instancia/serverless.
+- DAST automatico em preview/prod ja esta implementado (`.github/workflows/dast-on-deploy.yml`) e depende do provedor publicar `deployment_status.target_url`/`environment_url`.
+- Rate limit "hard" em producao: garantir `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` no ambiente final quando houver multi-instancia/serverless.
 - Observabilidade real: conectar Prometheus/Alertmanager/Grafana no ambiente (tokens, scrape, alert routes).
-- Reuso de framework com rotina upstream formalizada (`origin` + `upstream`) e sync recorrente com gates.
 
 ## 5) Melhorias futuras (opcionais, mas "elite")
 
@@ -80,6 +79,7 @@ Comandos:
   - Gates basicos (`lint`, `type-check`, `test`) verdes.
 - Gate ASVS versionado:
   - `pnpm security:asvs-check` valida checklist + evidencias obrigatorias e foi integrado no `Governance Gate` da CI.
+  - `pnpm security:audit` e `pnpm verify:ci` tambem rodam no `Governance Gate` como criterio de release executavel.
 - Contrato do planner atualizado:
   - `docs/API.md` documenta resposta versionada e `problem+json`.
   - `src/lib/planner/api-contract.ts` centraliza parse resiliente (v2 + legado).

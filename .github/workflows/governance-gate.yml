@@ -98,5 +98,8 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Security audit gate
+        run: pnpm security:audit
+
       - name: Full quality and regression gate (CI profile)
         run: pnpm verify:ci

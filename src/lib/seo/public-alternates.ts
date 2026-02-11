@@ -20,8 +20,10 @@ function buildLanguages(
     if (l === 'pt-BR') languages['pt-BR'] = publicPathname('pt-BR', pathname);
   }
 
-  // Prefer `x-default` to point at English when available.
-  if (availableLocales.includes('en')) languages['x-default'] = publicPathname('en', pathname);
+  // Product default locale: pt-BR first, then English as fallback.
+  if (availableLocales.includes('pt-BR'))
+    languages['x-default'] = publicPathname('pt-BR', pathname);
+  else if (availableLocales.includes('en')) languages['x-default'] = publicPathname('en', pathname);
 
   return Object.keys(languages).length > 0 ? languages : undefined;
 }

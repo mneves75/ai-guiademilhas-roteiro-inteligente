@@ -33,9 +33,9 @@ function getPreferredLocale(request: NextRequest): Locale {
   const fromCookie = request.cookies.get(LOCALE_COOKIE)?.value;
   if (fromCookie) return normalizeLocale(fromCookie);
 
-  // SEO + determinism: do not redirect based on inferred language. Default to English unless
+  // SEO + determinism: do not redirect based on inferred language. Default to pt-BR unless
   // the user explicitly chose a locale (cookie) or visited a locale-prefixed URL.
-  return 'en';
+  return 'pt-BR';
 }
 
 function isPublicLocalizedPath(pathname: string): boolean {

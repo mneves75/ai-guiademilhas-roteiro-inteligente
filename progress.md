@@ -424,3 +424,38 @@ Data: 2026-02-11
   - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`, `0 failed`)
   - `pnpm framework:doctor --strict` -> PASS (`ok:13 warn:0 fail:0`)
   - code scanning aberto -> `0`
+
+### Hardening final pt-BR default + consistencia de release (2026-02-11)
+
+- Mudancas implementadas:
+  - locale default do produto alterado para `pt-BR`:
+    - `src/lib/locale.ts`
+    - `src/lib/locale-server.ts`
+    - `proxy.ts`
+  - `x-default` de alternates SEO alinhado ao default pt-BR:
+    - `src/lib/seo/public-alternates.ts`
+    - `src/lib/__tests__/public-alternates.vitest.ts`
+  - cobertura E2E ampliada para o comportamento esperado:
+    - `e2e/home.e2e.ts` (novo teste de redirect de `/` para `/pt-br`)
+  - governanca de release endurecida:
+    - `.github/workflows/governance-gate.yml` agora executa `pnpm security:audit` alem de `security:asvs-check` e `verify:ci`.
+  - docs alinhadas ao estado real:
+    - `docs/critica-10-10.pt-br.md`
+    - `docs/security/asvs-mapping.pt-br.md`
+    - `docs/solucao-elegante.pt-br.md`
+    - `relatorio_seguranca.pt-br.md`
+- Evidencias desta rodada:
+  - `pnpm test` -> PASS (`23` files, `87` tests)
+  - `pnpm test:e2e:ci` -> PASS (`39 passed`)
+  - `pnpm verify:ci` -> PASS
+  - `pnpm security:audit` -> PASS (`4 passed` em `@dast`)
+  - `pnpm framework:doctor --strict` -> PASS (`ok:13 warn:0 fail:0`)
+  - `PW_FULL=1 pnpm test:e2e` -> PASS (`195 passed`, `0 skipped`, `0 failed`)
+  - code scanning aberto -> `0`
+
+- Ajuste final de contrato (documentacao):
+  - `docs/openapi.planner.yaml` alinhado ao runtime:
+    - `flex_dias` limitado a `0..30`,
+    - campos `num_*` aceitam inteiro ou string numerica (coercao),
+    - `locale` documentado como normalizado com fallback seguro.
+  - `docs/API.md` atualizado com as mesmas regras do backend.

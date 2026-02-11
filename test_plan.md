@@ -365,3 +365,23 @@ pnpm db:smoke
   - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`)
 - Resultado:
   - checklist ASVS deixou de ser apenas documento e virou criterio tecnico obrigatorio de release.
+
+## Revalidacao final pt-BR default + governanca (2026-02-11)
+
+- Mudancas cobertas:
+  - default locale para `pt-BR` em `locale`, `locale-server` e `proxy`.
+  - `x-default` SEO ajustado para `/pt-br/*`.
+  - novo teste E2E de redirect raiz (`/` -> `/pt-br`).
+  - `Governance Gate` atualizado para incluir `pnpm security:audit`.
+- Comandos executados:
+  - `pnpm test` -> PASS (`87` testes)
+  - `pnpm test:e2e:ci` -> PASS (`39 passed`)
+  - `pnpm verify:ci` -> PASS
+  - `pnpm security:audit` -> PASS (`@dast 4 passed`)
+  - `pnpm framework:doctor --strict` -> PASS (`ok:13 warn:0 fail:0`)
+  - `PW_FULL=1 pnpm test:e2e` -> PASS (`195 passed`, `0 skipped`, `0 failed`)
+
+- Contrato formal alinhado ao runtime:
+  - `docs/openapi.planner.yaml` (locale normalizado, `flex_dias` `0..30`, `num_*` como inteiro ou string numerica).
+  - `docs/API.md` com as mesmas regras.
+  - `pnpm security:asvs-check` -> PASS apos os ajustes de contrato.
