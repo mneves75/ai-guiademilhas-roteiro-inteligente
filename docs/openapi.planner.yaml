@@ -73,7 +73,9 @@ components:
       properties:
         locale:
           type: string
-          enum: [pt-BR, en]
+          description: >
+            Opcional. O backend normaliza para locale suportado (ex.: pt-BR/en).
+            Valores fora do conjunto esperado caem em fallback seguro.
         preferences:
           type: object
           additionalProperties: false
@@ -108,7 +110,7 @@ components:
               pattern: '^\d{4}-\d{2}-\d{2}$'
             flex_dias:
               type: string
-              pattern: '^\d{1,2}$'
+              pattern: '^(?:[0-9]|[12][0-9]|30)$'
             origens:
               type: string
               minLength: 2
@@ -118,17 +120,29 @@ components:
               minLength: 2
               maxLength: 200
             num_adultos:
-              type: integer
-              minimum: 1
-              maximum: 9
+              oneOf:
+                - type: integer
+                  minimum: 1
+                  maximum: 9
+                - type: string
+                  pattern: '^[1-9]$'
+              description: Backend aceita inteiro ou string numerica (coercao segura).
             num_chd:
-              type: integer
-              minimum: 0
-              maximum: 9
+              oneOf:
+                - type: integer
+                  minimum: 0
+                  maximum: 9
+                - type: string
+                  pattern: '^[0-9]$'
+              description: Backend aceita inteiro ou string numerica (coercao segura).
             num_inf:
-              type: integer
-              minimum: 0
-              maximum: 9
+              oneOf:
+                - type: integer
+                  minimum: 0
+                  maximum: 9
+                - type: string
+                  pattern: '^[0-9]$'
+              description: Backend aceita inteiro ou string numerica (coercao segura).
             idades_chd_inf:
               type: string
               maxLength: 120

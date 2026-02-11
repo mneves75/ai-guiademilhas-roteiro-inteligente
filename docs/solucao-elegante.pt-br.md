@@ -129,7 +129,7 @@ Gates executados e verdes:
 
 ## O que falta para 10/10 absoluto
 
-1. DAST real contra preview/prod (onde CDN/proxy mexe em headers/cookies).
+1. Garantir integracao de deploy emitindo `deployment_status` com URL em todos os ambientes (para acionar automaticamente `.github/workflows/dast-on-deploy.yml`).
 2. Observabilidade/alertas de abuso (picos 401/403/429, falhas de webhook, correlacao via `x-request-id`).
 3. Expandir cobertura ASVS por nivel com evidencias de ambiente real de deploy.
 

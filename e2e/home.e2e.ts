@@ -16,6 +16,11 @@ async function gotoPage(page: Page, url: string) {
 }
 
 test.describe('Home Page', () => {
+  test('should redirect root to pt-BR canonical home', async ({ page }) => {
+    await gotoPage(page, '/');
+    await expect(page).toHaveURL(/\/pt-br\/?$/);
+  });
+
   test('should load the home page', async ({ page }) => {
     await gotoPage(page, '/en');
     await expect(page).toHaveTitle(/Miles Guide|Guia de Milhas/);
@@ -102,12 +107,16 @@ test.describe('Blog Page', () => {
 test.describe('Authentication Pages', () => {
   test('should load the login page', async ({ page }) => {
     await gotoPage(page, '/login');
-    await expect(page.getByRole('heading', { name: /sign in|login|welcome/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /sign in|login|welcome|entre na sua conta|entrar/i })
+    ).toBeVisible();
   });
 
   test('should load the signup page', async ({ page }) => {
     await gotoPage(page, '/signup');
-    await expect(page.getByRole('heading', { name: /sign up|register|create/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /sign up|register|create|crie sua conta|criar conta/i })
+    ).toBeVisible();
   });
 
   test('should load the forgot password page', async ({ page }) => {
@@ -125,7 +134,7 @@ test.describe('Authentication Pages', () => {
 
     // Login page also contains a magic-link email input; select the primary login input explicitly.
     const emailInput = page.locator('#email');
-    const passwordInput = page.getByLabel(/password/i);
+    const passwordInput = page.getByLabel(/password|senha/i);
 
     await expect(emailInput).toBeVisible();
     await expect(passwordInput).toBeVisible();

@@ -47,5 +47,5 @@ export const getRequestLocale = cache(async (): Promise<Locale> => {
   if (fromCookie) return normalizeLocale(fromCookie);
 
   const fromHeader = localeFromAcceptLanguage(h.get('accept-language'));
-  return fromHeader ?? 'en';
+  return fromHeader ?? 'pt-BR';
 });

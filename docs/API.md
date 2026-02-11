@@ -80,6 +80,9 @@ Notas:
 
 - Requer sessao autenticada.
 - Aplica rate limit por usuario autenticado.
+- `locale` e normalizado no backend para locale suportado (fallback seguro quando invalido).
+- `num_adultos`, `num_chd` e `num_inf` aceitam inteiro ou string numerica (coercao segura no schema).
+- `flex_dias` aceita `0..30` (string numerica).
 - Resposta de sucesso (versionada):  
   `{ "schemaVersion": "2026-02-11", "generatedAt": "ISO-8601", "report": { ... }, "mode": "ai|fallback" }`.
 - Sem chave de IA, o endpoint continua funcional em `mode: "fallback"` com plano resiliente.

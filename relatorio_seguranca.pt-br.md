@@ -1,6 +1,6 @@
-# Revisao de Seguranca (Next.js 16 / React 19) - Atualizado em 2026-02-09
+# Revisao de Seguranca (Next.js 16 / React 19) - Atualizado em 2026-02-11
 
-Repo: `/Users/mneves/dev/nextjs-bootstrapped-shipped`
+Repo: `/Users/mneves/dev/PROJETOS_GUIADEMILHAS/ai-guiademilhas-roteiro-inteligente`
 
 ## 0) Resumo executivo (direto ao ponto)
 
@@ -9,7 +9,7 @@ Este repo esta com um baseline forte de seguranca para um app Next.js moderno (A
 - Superficies criticas tratadas por desenho: redirects, fetch server-side, arquivos, cookies/sessao, multi-tenant (RBAC), billing (Stripe).
 - Defesas em profundidade: CSP com nonce em rotas sensiveis, headers baseline, validacao de input em rotas, CI com audit + SAST + secret scanning.
 
-O que ainda separa de um 10/10 "operacional" (na pratica, em producao) e principalmente observabilidade + validacao em runtime (DAST/headers/cookies reais no deploy) e controles externos (WAF/CDN/rate limit global). O codigo ja suporta rate limiting distribuido se voce configurar Upstash.
+O que ainda separa de um 10/10 "operacional" (na pratica, em producao) e principalmente observabilidade + validacao em runtime (integracao de deploy emitindo deployment_status com URL para DAST automatico) e controles externos (WAF/CDN/rate limit global). O codigo ja suporta rate limiting distribuido se voce configurar Upstash.
 
 Status (gates locais):
 
@@ -21,7 +21,8 @@ Status (gates locais):
 - `PW_FULL=1 pnpm test:e2e`: OK (matriz completa Playwright)
 - `gitleaks git --redact`: OK (sem leaks no historico)
 - DAST-lite: OK (headers/cookies basicos validados por E2E em `e2e/security-headers.e2e.ts`)
-  - Execucao externa (preview/staging): `.github/workflows/dast.yml` (workflow_dispatch)
+  - Execucao externa manual: `.github/workflows/dast.yml` (workflow_dispatch)
+  - Execucao automatica em deploy: `.github/workflows/dast-on-deploy.yml` (`deployment_status`)
 
 ## 1) Metodologia (padrao de industria) e referencias
 
