@@ -68,10 +68,11 @@ function computeWebServerEnv(baseURL) {
   env.PORT = serverPort;
   env.DB_PROVIDER = dbProvider;
 
-  // Production start requires a canonical origin for Better Auth.
-  env.NEXT_PUBLIC_APP_URL ||= baseURL;
-  env.BETTER_AUTH_BASE_URL ||= env.BETTER_AUTH_URL || baseURL;
-  env.BETTER_AUTH_URL ||= env.BETTER_AUTH_BASE_URL;
+  // Production auth requires one canonical origin. Always pin to the ephemeral test baseURL
+  // so CI env defaults (e.g. localhost:3000) cannot drift from the Playwright origin.
+  env.NEXT_PUBLIC_APP_URL = baseURL;
+  env.BETTER_AUTH_BASE_URL = baseURL;
+  env.BETTER_AUTH_URL = baseURL;
   env.BETTER_AUTH_SECRET ||= 'e2e-secret-please-override-this-in-prod-32chars';
 
   // Keep E2E output isolated from any concurrently running `pnpm dev` build.

@@ -304,3 +304,39 @@ Data: 2026-02-11
   - `pnpm framework:check` ✅
   - `pnpm verify` ✅
   - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)
+
+### Stabilizacao E2E + branch protection real (2026-02-11)
+
+- Correcoes em `e2e/helpers/auth.ts` para eliminar flake de callback em CI:
+  - `callbackPattern` ancorado com fim de URL/query/hash.
+  - `Promise.all` em submit/login para evitar race entre click e navegacao.
+  - fallback de login mantido para cenarios de signup sem redirect imediato.
+- Governanca remota fechada:
+  - branch protection aplicada em `main` no repo `mneves75/ai-guiademilhas-roteiro-inteligente` com:
+    - `require_code_owner_reviews=true`
+    - `required_approving_review_count=1`
+    - status checks obrigatorios (`Quality`, `Unit Tests + DB Smokes`, `E2E Tests`, `Build`, `gitleaks`, `Analyze (javascript-typescript)`).
+- Evidencia local desta rodada:
+  - `pnpm lint` ✅
+  - `pnpm type-check` ✅
+  - `pnpm test` ✅ (`79 passed`)
+  - `pnpm test:e2e` ✅ (`65 passed`, `1 skipped`)
+  - `pnpm test:e2e:ci` ✅ (`33 passed`)
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` ✅ (`ok:9 warn:0 limit:0 fail:0`)
+  - `pnpm security:audit` ❌ (falhou por leaks historicos detectados por gitleaks no git history, fora do escopo desta correcao).
+
+### Correcao definitiva de host/callback no CI (2026-02-11)
+
+- Causa raiz identificada por log remoto:
+  - E2E em CI rodava app em `127.0.0.1:<porta>`.
+  - `NEXT_PUBLIC_APP_URL` chegava como `http://localhost:3000` via workflow.
+  - mismatch de origem quebrava sessao/callback do Better Auth, causando timeouts em planner/protected/screens.
+- Correcao aplicada:
+  - `scripts/test-e2e.mjs` agora força origem canonica de auth para o `baseURL` real do run:
+    - `NEXT_PUBLIC_APP_URL = baseURL`
+    - `BETTER_AUTH_BASE_URL = baseURL`
+    - `BETTER_AUTH_URL = baseURL`
+- Evidencia:
+  - reproducao local com conflito proposital de host (`NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000`) + `pnpm test:e2e:ci` ✅ (`33 passed`).
+  - `pnpm lint` ✅
+  - `pnpm type-check` ✅

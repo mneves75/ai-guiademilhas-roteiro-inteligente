@@ -256,3 +256,32 @@ pnpm db:smoke
   - `pnpm framework:check` passou.
   - `pnpm verify` passou.
   - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).
+
+## Regressao final - estabilizacao auth E2E (2026-02-11)
+
+- Alteracao validada:
+  - `e2e/helpers/auth.ts` (regex de callback ancorado + sincronizacao click/navegacao com `Promise.all`).
+- Comandos executados:
+  - `pnpm lint` -> PASS
+  - `pnpm type-check` -> PASS
+  - `pnpm test` -> PASS (`79 passed`)
+  - `pnpm test:e2e` -> PASS (`65 passed`, `1 skipped`)
+  - `pnpm test:e2e:ci` -> PASS (`33 passed`)
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` -> PASS (`ok:9 warn:0 limit:0 fail:0`)
+  - `pnpm security:audit` -> FAIL (gitleaks encontrou leaks no historico; sem relacao com o diff atual)
+- Resultado:
+  - Flake de redirect/callback em auth E2E removido localmente no modo CI e full.
+
+## Regressao CI - mismatch de origem auth (2026-02-11)
+
+- Falha observada no GitHub Actions (`CI` run `21896775901`):
+  - `E2E Tests` falhando em `planner/protected/screens` com `auth_e2e_navigation_failed`.
+  - URL final de erro: `/login?callbackUrl=...` apos signup/signin.
+- Causa raiz:
+  - origem de auth configurada para `localhost:3000` enquanto o servidor E2E estava em `127.0.0.1:<porta>`.
+- Correcao:
+  - pin de `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_BASE_URL`, `BETTER_AUTH_URL` para `baseURL` em `scripts/test-e2e.mjs`.
+- Validacao:
+  - `NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000 pnpm test:e2e:ci` -> PASS (`33 passed`).
+  - `pnpm lint` -> PASS.
+  - `pnpm type-check` -> PASS.
