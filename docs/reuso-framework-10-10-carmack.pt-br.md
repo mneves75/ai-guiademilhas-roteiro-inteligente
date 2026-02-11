@@ -53,6 +53,7 @@ Manter um produto derivado de framework sem degradar:
 
 - Workflow diario/manual de drift: `.github/workflows/upstream-drift.yml`
 - Workflow semanal/manual de sync por PR: `.github/workflows/upstream-sync-pr.yml`
+- Workflow unico de bloqueio em PR/push para `main`: `.github/workflows/governance-gate.yml`
 - Ownership por caminho: `.github/CODEOWNERS`
 - Documentacao operacional atualizada:
   - `README.md`
@@ -69,10 +70,12 @@ Manter um produto derivado de framework sem degradar:
   - aprendizado de merge automatizado (`rerere`)
   - drift gate automatizado em CI
 
-## O que falta para 10/10 absoluto
+## Estado 10/10 absoluto
 
-1. Resolver limite de plataforma para branch protection em repo privado (upgrade de plano com suporte ou repo publico), hoje sinalizado como `[LIMIT]` pelo `framework:doctor`.
-2. Opcional: endurecer workflow semanal para executar `pnpm verify` completo no job de abertura de PR.
+1. Branch protection estrita em `main` com CODEOWNERS review e checks obrigatorios.
+2. Gate unico de bloqueio (`Governance Gate`) cobrindo governanca upstream + regressao completa via perfil CI (`pnpm verify:ci`).
+3. Sync semanal automatizado com PR dedicada e ownership explicito.
+4. Drift diario automatizado para deteccao precoce de atraso contra upstream.
 
 ## Fontes
 

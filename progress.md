@@ -219,6 +219,18 @@ Data: 2026-02-11
 - Estado:
   - Reuso deixou de depender de path local e agora possui verificacao automatizada em CI.
 
+### Gate unico de bloqueio 10/10 (2026-02-11)
+
+- Nova automacao de governanca unificada:
+  - Workflow novo: `.github/workflows/governance-gate.yml`.
+  - Escopo do gate: `framework:doctor` estrito + `framework:check` estrito + `pnpm verify:ci`.
+  - Gatilhos: `push` e `pull_request` para `main/master` + `workflow_dispatch`.
+- Objetivo:
+  - Consolidar governanca upstream e regressao funcional completa em um unico status check de alto sinal.
+- Robustez CI:
+  - Workflows de upstream agora aceitam `FRAMEWORK_UPSTREAM_SOURCE_URL` (repository variable) para acesso autenticado quando o upstream e privado.
+  - Sem acesso ao upstream, o pipeline emite warning explicito e preserva o gate de regressao (`pnpm verify:ci`).
+
 ### Operacao elegante de sync (2026-02-11)
 
 - Melhoria de ergonomia e controle de risco:

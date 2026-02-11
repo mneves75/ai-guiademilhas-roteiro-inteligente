@@ -9,6 +9,9 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  FRAMEWORK_UPSTREAM_SOURCE: ${{ vars.FRAMEWORK_UPSTREAM_SOURCE_URL != '' && vars.FRAMEWORK_UPSTREAM_SOURCE_URL || 'https://github.com/mneves75/nextjs-bootstrapped-shipped.git' }}
+
 concurrency:
   group: upstream-sync-pr
   cancel-in-progress: false
@@ -37,42 +40,56 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Bootstrap upstream remote
+        id: bootstrap_upstream
+        continue-on-error: true
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
+      - name: Upstream access fallback
+        if: steps.bootstrap_upstream.outcome != 'success'
+        run: |
+          echo "::warning::Upstream source is not reachable from this runner; skipping automated upstream sync PR."
+          echo "Set repository variable FRAMEWORK_UPSTREAM_SOURCE_URL to an accessible URL."
+
       - name: Doctor governance (strict)
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_DOCTOR_STRICT: '1'
         run: bash ./scripts/framework-upstream.sh doctor
 
       - name: Preview pending upstream changes
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh preview
 
       - name: Merge upstream locally
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh sync
 
       - name: Assert drift resolved after sync
+        if: steps.bootstrap_upstream.outcome == 'success'
         env:
-          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_SOURCE: ${{ env.FRAMEWORK_UPSTREAM_SOURCE }}
           FRAMEWORK_UPSTREAM_REMOTE: upstream
           FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
         run: bash ./scripts/framework-upstream.sh check
 
       - name: Run full quality gate
-        run: pnpm verify
+        if: steps.bootstrap_upstream.outcome == 'success'
+        run: pnpm verify:ci
 
       - name: Create pull request if needed
+        if: steps.bootstrap_upstream.outcome == 'success'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: chore/upstream-sync
@@ -86,7 +103,7 @@ jobs:
             - [x] doctor de governanca (`framework:doctor` strict)
             - [x] merge de upstream executado
             - [x] drift resolvido (`framework:check`)
-            - [x] gate de qualidade completo (`pnpm verify`)
+            - [x] gate de qualidade completo (`pnpm verify:ci`)
             - [x] diff pronto para validacao nos checks de CI
           labels: |
             dependencies
