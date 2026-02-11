@@ -21,6 +21,14 @@ jobs:
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
+      - name: Validate governance prerequisites (strict)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+          FRAMEWORK_DOCTOR_STRICT: '1'
+        run: bash ./scripts/framework-upstream.sh doctor
+
       - name: Validate behind count (strict)
         env:
           FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git

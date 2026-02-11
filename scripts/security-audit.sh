@@ -3,13 +3,29 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+GITLEAKS_SCOPE="${SECURITY_AUDIT_GITLEAKS_SCOPE:-head}"
+
 echo "[1/4] pnpm audit (--prod)"
 pnpm -s audit --prod
 
 echo "[2/4] gitleaks (se instalado)"
 if command -v gitleaks >/dev/null 2>&1; then
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git rev-parse --verify HEAD >/dev/null 2>&1; then
-    gitleaks git --redact --no-banner
+    case "$GITLEAKS_SCOPE" in
+      head)
+        # Keep local signal actionable: scan only the current branch ancestry.
+        # This avoids false negatives caused by unrelated remote refs fetched locally.
+        gitleaks git --redact --no-banner --log-opts="HEAD"
+        ;;
+      all)
+        # Full-history mode matches a strict repository-wide audit.
+        gitleaks git --redact --no-banner
+        ;;
+      *)
+        echo "ERROR: SECURITY_AUDIT_GITLEAKS_SCOPE invalido: $GITLEAKS_SCOPE (use: head|all)" >&2
+        exit 1
+        ;;
+    esac
   else
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       echo "WARN: repositorio git sem commits; executando secret scan por diretorios-fonte."

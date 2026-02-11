@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow for upstream drift governance (`.github/workflows/upstream-drift.yml`)
 - CI workflow for weekly upstream sync PR automation (`.github/workflows/upstream-sync-pr.yml`)
 - CODEOWNERS baseline for ownership boundaries (`.github/CODEOWNERS`)
+- Versioned upstream sync checklist with conflict boundaries (`docs/framework-sync-checklist.pt-br.md`)
 
 ### Changed
 
@@ -35,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weekly upstream sync PR workflow now runs baseline quality checks (`pnpm lint && pnpm test`) before opening/updating PR
 - Repository now stores a local merge bridge to upstream history, enabling incremental `framework:sync` without unrelated-history errors
 - Framework upstream automation now includes `doctor` governance diagnostics (origin, CODEOWNERS, branch protection checks via `gh`), with explicit `[LIMIT]` reporting for platform constraints
+- Upstream drift workflow now enforces governance prerequisites via `framework:doctor` in strict mode before drift check
+- Weekly upstream sync PR workflow now runs `framework:doctor` (strict) and full `pnpm verify` gate before opening/updating PR
+- Weekly upstream sync PR is now auto-assigned to the repository owner for explicit operational ownership
+- `security:audit` now scans gitleaks on current branch ancestry by default (`SECURITY_AUDIT_GITLEAKS_SCOPE=head`) with optional full-history mode (`all`)
+- Reuse docs and README now document strict governance gates and a checklist-first sync process
 
 ### Fixed
 

@@ -75,10 +75,13 @@ Variaveis opcionais para customizar automacao:
 - Workflow: `.github/workflows/upstream-drift.yml`
 - Agenda: diaria (`07:00 UTC`) + gatilho manual.
 - Politica atual: strict (`FRAMEWORK_UPSTREAM_MAX_BEHIND=0`) contra `https://github.com/mneves75/nextjs-bootstrapped-shipped.git`.
+- Gate adicional: validacao de governanca via `framework:doctor` em modo estrito.
 - Workflow: `.github/workflows/upstream-sync-pr.yml`
 - Agenda: semanal (segunda, `08:00 UTC`) + gatilho manual.
-- Politica: quando houver diff, abre PR automatica `chore/upstream-sync` com validacao baseline no proprio job (`pnpm lint && pnpm test`) e depois checks normais de CI no PR.
+- Politica: quando houver diff, abre PR automatica `chore/upstream-sync` com validacao completa no proprio job (`framework:doctor` strict + `framework:check` + `pnpm verify`) e depois checks normais de CI no PR.
+- Ownership de cadencia: PR semanal autoatribuida para `mneves75`.
 - Ownership: `.github/CODEOWNERS` define fronteiras de revisao para core e dominio.
+- Checklist versionado de conflitos/sync: `docs/framework-sync-checklist.pt-br.md`.
 
 ## Estado atual
 

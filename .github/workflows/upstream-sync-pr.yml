@@ -42,6 +42,14 @@ jobs:
           FRAMEWORK_UPSTREAM_REMOTE: upstream
         run: bash ./scripts/framework-upstream.sh bootstrap
 
+      - name: Doctor governance (strict)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
+          FRAMEWORK_UPSTREAM_REMOTE: upstream
+          FRAMEWORK_DOCTOR_STRICT: '1'
+        run: bash ./scripts/framework-upstream.sh doctor
+
       - name: Preview pending upstream changes
         env:
           FRAMEWORK_UPSTREAM_SOURCE: https://github.com/mneves75/nextjs-bootstrapped-shipped.git
@@ -61,8 +69,8 @@ jobs:
           FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
         run: bash ./scripts/framework-upstream.sh check
 
-      - name: Run baseline quality checks
-        run: pnpm lint && pnpm test
+      - name: Run full quality gate
+        run: pnpm verify
 
       - name: Create pull request if needed
         uses: peter-evans/create-pull-request@v7
@@ -75,8 +83,13 @@ jobs:
             PR automatica de sincronizacao com upstream framework.
 
             Checklist:
+            - [x] doctor de governanca (`framework:doctor` strict)
             - [x] merge de upstream executado
+            - [x] drift resolvido (`framework:check`)
+            - [x] gate de qualidade completo (`pnpm verify`)
             - [x] diff pronto para validacao nos checks de CI
           labels: |
             dependencies
             upstream-sync
+          assignees: |
+            mneves75

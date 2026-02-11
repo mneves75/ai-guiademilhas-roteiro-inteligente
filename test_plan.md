@@ -285,3 +285,23 @@ pnpm db:smoke
   - `NEXT_PUBLIC_APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000 pnpm test:e2e:ci` -> PASS (`33 passed`).
   - `pnpm lint` -> PASS.
   - `pnpm type-check` -> PASS.
+
+## Reforco de governanca upstream + auditoria local (2026-02-11)
+
+- Escopo validado:
+  - `.github/workflows/upstream-drift.yml`
+  - `.github/workflows/upstream-sync-pr.yml`
+  - `scripts/security-audit.sh`
+  - `docs/framework-sync-checklist.pt-br.md`
+  - `docs/reuso-framework-upstream.pt-br.md`
+  - `README.md`
+- Comandos executados:
+  - `pnpm lint` -> PASS
+  - `pnpm type-check` -> PASS
+  - `pnpm security:audit` -> PASS
+  - `FRAMEWORK_DOCTOR_STRICT=1 pnpm framework:doctor` -> PASS
+  - `pnpm framework:check` -> PASS
+  - `pnpm verify` -> PASS
+- Resultado:
+  - Fluxo de reuso upstream com gate completo e governanca estrita codificados no CI.
+  - Security audit local deixa de falhar por refs historicas nao relacionadas ao branch em validacao.

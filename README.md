@@ -74,6 +74,7 @@ pnpm format        # Format with Prettier
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
 Para estrategia de sincronizacao com framework base, veja [docs/reuso-framework-upstream.pt-br.md](./docs/reuso-framework-upstream.pt-br.md).
+Checklist operacional de conflitos/sync: [docs/framework-sync-checklist.pt-br.md](./docs/framework-sync-checklist.pt-br.md).
 Para critica de primeiros principios e versao 10/10, veja [docs/reuso-framework-10-10-carmack.pt-br.md](./docs/reuso-framework-10-10-carmack.pt-br.md).
 
 ## Framework Upstream
@@ -98,7 +99,7 @@ Variaveis uteis:
 `framework:doctor` pode emitir `[LIMIT]` quando o ambiente/repo nao permite validar branch protection (ex.: repo privado sem plano com suporte), sem mascarar falhas locais.
 
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
-No CI, o projeto possui detecao diaria de drift e PR semanal automatica de sync upstream (`.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`).
+No CI, o projeto possui detecao diaria de drift com `framework:doctor` estrito e PR semanal automatica de sync upstream com gate completo (`pnpm verify`) em `.github/workflows/upstream-drift.yml` e `.github/workflows/upstream-sync-pr.yml`.
 
 ## Health
 
