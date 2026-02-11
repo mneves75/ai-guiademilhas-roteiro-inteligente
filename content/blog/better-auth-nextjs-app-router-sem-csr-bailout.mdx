@@ -1,0 +1,50 @@
+---
+title: 'Better Auth no App Router: login/signup sem CSR bailout e E2E deterministico'
+description: 'Como evitar a classe de bugs de hydration/timing em auth no Next.js: parse de searchParams no server, props estaveis e formularios deterministas.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['nextjs', 'auth', 'better-auth', 'testing', 'architecture']
+published: true
+---
+
+Auth vira flakey quando voce mistura estado critico com timing de hidratacao. A classe de bug e simples:
+
+- o usuario preenche,
+- a UI re-renderiza/remonta,
+- o submit envia vazio,
+- o teste falha "intermitente".
+
+Nao conserta isso com timeout. Conserta com invariantes.
+
+## Invariantes (pass/fail)
+
+1. `searchParams` nao e dependencia do client no topo da pagina.
+2. Valores como `callbackUrl` e `token` sao normalizados no server e passados como props estaveis.
+3. Validacao e deterministica (nao depende do tooltip HTML5).
+
+## Onde olhar no repo
+
+- `(auth)` wrapper + forms client:
+  - `app/(auth)/login/page.tsx` + `app/(auth)/login/login-form.tsx`
+  - `app/(auth)/signup/page.tsx` + `app/(auth)/signup/signup-form.tsx`
+  - `app/(auth)/forgot-password/**`
+  - `app/(auth)/reset-password/**`
+- Normalizacao de origem/callback (anti open-redirect):
+  - `src/lib/security/origin.ts`
+
+## Por que isso e "elegante"
+
+Porque remove a causa raiz:
+
+- o server resolve input nao confiavel,
+- o client so faz UI,
+- e o teste deixa de sincronizar com timing.
+
+## Teste minimo
+
+- E2E: signup e acesso a rota protegida sem sleeps (`e2e/protected.e2e.ts`).
+- Unit: parsing/mapeamento de erros (ver `src/lib/__tests__/auth-*.vitest.ts`).
+
+O objetivo nao e "passar no teste". E tornar a falha impossivel por arquitetura.

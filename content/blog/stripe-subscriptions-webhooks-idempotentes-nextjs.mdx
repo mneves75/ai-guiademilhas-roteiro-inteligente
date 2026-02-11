@@ -1,0 +1,64 @@
+---
+title: 'Stripe subscriptions em Next.js: checkout, portal e webhooks idempotentes'
+description: 'Como estruturar billing com Stripe em Next.js 16 sem perder eventos: idempotencia, estados, portal e falhas comuns.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['stripe', 'nextjs', 'billing', 'webhooks', 'architecture']
+published: true
+---
+
+Billing e uma area onde "funciona no happy path" e igual a "vai dar prejuizo". O objetivo e ter um sistema que aguenta:
+
+- reenvio de eventos,
+- duplicacao,
+- latencia,
+- falha parcial,
+- e cobranca em transicao (trial, cancel, resume).
+
+## Invariantes (pass/fail)
+
+1. Webhook e idempotente (eventId nao processa duas vezes).
+2. O estado de assinatura e derivado de eventos/Stripe, nao de "flag" manual.
+3. Operacoes que criam sessoes (checkout/portal) sao autenticadas e tenant-aware (`workspaceId`).
+
+## Onde olhar no repo
+
+- API: `app/api/stripe/*`
+  - `app/api/stripe/checkout/route.ts`
+  - `app/api/stripe/portal/route.ts`
+  - `app/api/stripe/subscription/route.ts`
+  - `app/api/stripe/webhook/route.ts`
+- Helpers: `src/lib/stripe-helpers.ts`
+- UI: `app/(protected)/dashboard/billing/page.tsx`
+
+## Webhook: idempotencia nao e opcional
+
+Se voce processar o mesmo evento duas vezes, voce cria estados impossiveis (ex.: creditos duplicados, upgrades inconsistentes).
+
+Padrao esperado:
+
+- extrair `event.id`
+- checar se ja foi processado
+- gravar o "processed marker" na mesma transacao do efeito
+
+## Portal vs UI propria
+
+Em SaaS pequeno, o portal resolve 80% com risco baixo. Mas:
+
+- voce ainda precisa refletir o estado localmente (dashboard)
+- e precisa lidar com atrasos de propagacao (eventual consistency)
+
+## O que costuma quebrar (e como detectar)
+
+- Secret errado (webhook signature) -> 400/401 e perda de eventos.
+- Assumir ordem de eventos -> flake em prod.
+- Usar `customer.email` como chave -> muda, e nao e um identificador forte.
+
+## Teste minimo
+
+- E2E: `/dashboard/billing` renderiza e consegue criar sessao (mock/keys de teste).
+- Unit: parser de metadata/ids e helpers (ex.: workspaceId em metadata) com casos invalidos.
+
+Se billing nao for boring, ele vai te punir.

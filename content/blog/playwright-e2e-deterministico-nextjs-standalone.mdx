@@ -1,0 +1,40 @@
+---
+title: 'Playwright E2E deterministico em Next.js (standalone): o que realmente reduz flakiness'
+description: 'E2E em Next.js falha por timing, reuse de build dir e dependencia externa. Aqui esta o minimo para tornar o suite deterministico.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['playwright', 'testing', 'nextjs', 'architecture']
+published: true
+---
+
+E2E flakey e sintoma. A causa quase sempre e uma destas:
+
+- dependencia em timing de hidracao
+- navegacao esperando `load` com subresource que pendura
+- reuse acidental de `.next/` entre dev server e e2e
+- banco compartilhado em paralelo (sqlite file + concorrencia)
+
+## O que este repo faz (invariantes)
+
+1. Navegacao com `waitUntil: 'domcontentloaded'` (menos flake).
+2. `NEXT_DIST_DIR` isolado para Playwright (sem brigar com `.next/lock`).
+3. DB sqlite deterministico por default (1 worker).
+4. Suite roda em build de producao (`pnpm build && pnpm start`), nao em `pnpm dev`.
+
+## Onde olhar no repo
+
+- Config: `playwright.config.ts`
+- E2E: `e2e/*.e2e.ts`
+- Helpers: `e2e/helpers/**`
+
+## Teste que vale dinheiro
+
+Se o flow de auth + rota protegida e deterministico, metade das regresssoes grandes morre cedo.
+
+Veja `e2e/protected.e2e.ts`.
+
+## Bonus: asserts de SEO e headers sem navegar
+
+Arquivos como `robots.txt` e `sitemap.xml` nao sao HTML. Use `request.get()` e valide status/body, como em `e2e/home.e2e.ts`.

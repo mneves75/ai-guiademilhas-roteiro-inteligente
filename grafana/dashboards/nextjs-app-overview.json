@@ -1,0 +1,20 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["nextjs", "prometheus"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Next.js App Overview (Starter)",
+  "uid": "nextjs-app-overview-starter",
+  "version": 1,
+  "weekStart": ""
+}

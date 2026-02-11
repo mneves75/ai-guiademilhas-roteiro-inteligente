@@ -1,0 +1,80 @@
+---
+title: 'Next.js SaaS boilerplate 10/10: o que importa de verdade (auth, Stripe, multi-tenancy)'
+description: 'Uma visao hostil a wishful thinking sobre como montar um SaaS com Next.js 16 com invariantes verificaveis: auth, billing, multi-tenancy, testes e operacao.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['nextjs', 'saas', 'architecture', 'auth', 'stripe', 'multi-tenancy']
+published: true
+---
+
+Se voce esta escolhendo um boilerplate, tem uma forma rapida de perder semanas: otimizar detalhes (UI, copy, "meta tags") antes de garantir invariantes. Um SaaS falha quase sempre pelos mesmos motivos: auth instavel, billing fraco, multi-tenancy improvisado, e zero verificabilidade.
+
+Este post define o criterio 10/10 para um SaaS em Next.js 16 e como este repo tenta tornar isso **verificavel**.
+
+## Primeiros principios (o criterio 10/10)
+
+1. **Invariavel > timing**: se o fluxo depende de "dar tempo" para hidratar, ele vai falhar.
+2. **Auth e billing sao infra, nao feature**: devem ser boring e testados.
+3. **Multi-tenancy precisa ser atomica**: workspace, membership, roles, convites; sem TOCTOU.
+4. **Observabilidade minima**: health/metrics/logs. Sem isso, voce debuga no escuro.
+5. **Gates locais**: lint + type-check + unit + build + e2e. "Passa no meu PC" nao existe.
+
+## O que este repo entrega (mapa rapido)
+
+- Auth: Better Auth com login/signup/reset/magic link e rotas `(auth)` em `app/(auth)/**`.
+- Billing: Stripe checkout/portal/webhooks em `app/api/stripe/**` e helpers em `src/lib/stripe-helpers.ts`.
+- Multi-tenancy: workspaces/members/roles/invitations em `app/(protected)/dashboard/**` e `app/api/workspaces/**`.
+- Admin: superfice separada em `app/(protected)/admin/**`.
+- Blog: MDX em `content/blog/**` com rotas `app/blog/**`.
+
+## O que "production-grade" significa na pratica
+
+### 1) Nunca indexar o que e sensivel
+
+Dashboard/admin/invite sao superficies privadas. Este repo aplica:
+
+- `metadata.robots = { index: false, follow: false }` em layouts protegidos.
+- Header `X-Robots-Tag: noindex, nofollow` via `next.config.ts` (defesa em profundidade).
+
+Se voce depender de `robots.txt` para "noindex", voce esta usando o mecanismo errado.
+
+### 2) URLs canonicas consistentes (sem bug de origin)
+
+Em prod, `NEXT_PUBLIC_APP_URL` pode ter path, proxy, etc. Entao o repo centraliza a origem:
+
+`src/lib/seo/base-url.ts`:
+
+```ts
+export function resolvePublicOrigin(): string {
+  // ... tenta NEXT_PUBLIC_APP_URL/BETTER_AUTH_* e cai no default do template
+}
+```
+
+Tudo que gera URL publica (sitemap/robots/rss/metadata) deve derivar disso.
+
+### 3) Testes e gates sao parte do produto
+
+O "produto" aqui inclui a capacidade de nao regredir:
+
+- Unit: `pnpm test`
+- Build: `pnpm build`
+- E2E: `pnpm test:e2e:ci`
+
+Sem isso, o boilerplate vira um conjunto de arquivos que apodrece.
+
+## Como adaptar sem destruir os invariantes
+
+- Mude 1 coisa por vez (ex.: auth -> depois billing -> depois multi-tenancy).
+- Sempre feche o loop com gates.
+- Sempre escreva 1 teste que pegaria sua regressao.
+
+## O que falta para virar 10/10 de verdade
+
+Um boilerplate nao compra crescimento. Para 10/10 fora do codigo:
+
+- Search Console + 4-8 semanas de dados.
+- 1 pagina pilar + 6-12 artigos satelites (com prova) + distribuicao repetivel.
+
+O resto e ruido.

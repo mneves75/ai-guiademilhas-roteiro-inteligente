@@ -1,0 +1,86 @@
+name: Nightly E2E (Full Matrix)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # 03:17 UTC daily
+    - cron: '17 3 * * *'
+
+env:
+  NODE_ENV: test
+  CI: '1'
+  PW_FULL: '1'
+
+jobs:
+  e2e-full:
+    name: E2E Full Matrix
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nextjs_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (Chromium + Firefox + WebKit)
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Build application
+        run: pnpm build
+        env:
+          DB_PROVIDER: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
+          BETTER_AUTH_SECRET: test-secret-key-for-ci-32-chars-minimum
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      - name: Run E2E tests (full matrix)
+        run: pnpm test:e2e
+        env:
+          DB_PROVIDER: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextjs_test
+          BETTER_AUTH_SECRET: test-secret-key-for-ci-32-chars-minimum
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-full
+          path: playwright-report/
+          retention-days: 7

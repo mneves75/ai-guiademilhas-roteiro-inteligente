@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shipped
+    ports:
+      - '5432:5432'
+    volumes:
+      - shipped-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d shipped']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DB_PROVIDER: postgres
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/shipped
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: change-me-to-a-32-char-minimum-secret
+    ports:
+      - '3000:3000'
+
+volumes:
+  shipped-postgres:

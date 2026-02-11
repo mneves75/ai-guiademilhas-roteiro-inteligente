@@ -1,0 +1,185 @@
+import Link from 'next/link';
+import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { JsonLd } from '@/components/json-ld';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { getLandingContent } from '@/content/landing';
+import { getAuth } from '@/lib/auth';
+import { publicPathname } from '@/lib/locale-routing';
+import { getRequestLocale } from '@/lib/locale-server';
+import { publicAlternates } from '@/lib/seo/public-alternates';
+import { resolvePublicOrigin } from '@/lib/seo/base-url';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const content = getLandingContent(locale);
+  const canonical = publicPathname(locale, '/');
+
+  return {
+    title: content.metaTitle,
+    description: content.metaDescription,
+    alternates: {
+      ...publicAlternates(locale, '/'),
+      types: {
+        'application/rss+xml': '/rss.xml',
+      },
+    },
+    openGraph: {
+      title: content.metaTitle,
+      description: content.metaDescription,
+      type: 'website',
+      url: canonical,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: content.metaTitle,
+      description: content.metaDescription,
+    },
+  };
+}
+
+export default async function HomePage() {
+  const locale = await getRequestLocale();
+  const content = getLandingContent(locale);
+  const url = resolvePublicOrigin();
+  const appName = content.appName;
+  const canonicalPath = publicPathname(locale, '/');
+  const plannerPath = '/dashboard/planner';
+  const auth = getAuth();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const plannerCallback = encodeURIComponent(plannerPath);
+  const signupHref = `/signup?callbackUrl=${plannerCallback}`;
+  const loginHref = `/login?callbackUrl=${plannerCallback}`;
+  const primaryHref = session ? plannerPath : signupHref;
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: appName,
+          url: `${url}${canonicalPath}`,
+        }}
+      />
+      {/* Skip link for accessibility */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-[14px] focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg"
+      >
+        {content.skipToContent}
+      </a>
+      <header className="glass-header sticky top-0 z-50 w-full border-b">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Link href={publicPathname(locale, '/')} className="text-lg font-semibold">
+            {appName}
+          </Link>
+          <nav aria-label="Primary" className="flex items-center gap-2">
+            <LanguageSwitcher />
+            {session ? (
+              <Button asChild size="sm">
+                <Link href={plannerPath}>{content.finalCta}</Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={loginHref}>{content.loginCta}</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link href={signupHref}>{content.finalCta}</Link>
+                </Button>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      <main id="main" className="flex-1">
+        <section className="hero-glow border-b py-20 md:py-28">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 text-center sm:px-6">
+            <span className="glass-card rounded-full px-4 py-2 text-xs font-medium text-muted-foreground">
+              {content.badge}
+            </span>
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+              {content.headline}
+            </h1>
+            <p className="max-w-2xl text-lg text-muted-foreground">{content.subheadline}</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg" className="px-8">
+                <Link href={primaryHref}>{content.primaryCta}</Link>
+              </Button>
+              {!session && (
+                <Button asChild variant="outline" size="lg" className="px-8">
+                  <Link href={loginHref}>{content.secondaryCta}</Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">{content.proofTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid gap-3 sm:grid-cols-3">
+                {content.proofPoints.map((point) => (
+                  <li key={point} className="rounded-lg border bg-muted/20 p-4 text-sm">
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
+          <h2 className="mb-6 text-center text-3xl font-bold tracking-tight">{content.howTitle}</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {content.howSteps.map((step) => (
+              <Card key={step.title}>
+                <CardHeader>
+                  <CardTitle>{step.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
+          <h2 className="mb-6 text-center text-3xl font-bold tracking-tight">{content.faqTitle}</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {content.faqs.map((faq) => (
+              <Card key={faq.question}>
+                <CardHeader>
+                  <CardTitle className="text-base">{faq.question}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{faq.answer}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t bg-muted/20 py-14">
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 px-4 text-center sm:px-6">
+            <h2 className="text-3xl font-bold tracking-tight">{content.finalTitle}</h2>
+            <p className="max-w-2xl text-muted-foreground">{content.finalSubtitle}</p>
+            <Button asChild size="lg" className="px-8">
+              <Link href={primaryHref}>{content.finalCta}</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

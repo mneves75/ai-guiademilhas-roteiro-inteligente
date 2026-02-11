@@ -1,0 +1,37 @@
+---
+title: 'Headers em Next.js: baseline de seguranca e noindex em superficies sensiveis'
+description: 'Como aplicar headers baseline (nosniff, frame-ancestors, HSTS correto) e reforcar noindex com X-Robots-Tag em rotas privadas.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['security', 'nextjs', 'headers', 'seo']
+published: true
+---
+
+Headers sao boring por design. Bom. A meta e reduzir classes inteiras de falhas sem quebrar o runtime do Next.js.
+
+## Baseline (o minimo que presta)
+
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `X-Frame-Options: DENY` (ou CSP frame-ancestors)
+- HSTS apenas em HTTPS/producao (nao em dev)
+- CSP minimalista que nao quebra Next.js
+
+No repo isso esta em `next.config.ts`.
+
+## Noindex em rotas privadas: meta + header
+
+SEO nao e um problema de "robots.txt". E um problema de indexacao acidental.
+
+Este repo faz:
+
+- `metadata.robots = { index: false, follow: false }` em layouts privados.
+- `X-Robots-Tag: noindex, nofollow` via `next.config.ts` para reforco.
+
+Motivo: o header aparece mesmo em respostas nao-HTML (redirects, etc) e e dificil de ignorar por acidente.
+
+## Teste (DAST-lite)
+
+Veja `e2e/security-headers.e2e.ts` e `e2e/home.e2e.ts` (assert de `X-Robots-Tag`).

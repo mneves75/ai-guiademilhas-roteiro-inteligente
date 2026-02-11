@@ -1,0 +1,12 @@
+# See GitHub CODEOWNERS docs:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# NOTE: Update owners to match your GitHub org/users/teams.
+
+* @mneves75
+
+# Security-sensitive surfaces
+/proxy.ts @mneves75
+/app/api/ @mneves75
+/src/lib/auth @mneves75
+/src/db/ @mneves75

@@ -1,0 +1,55 @@
+---
+title: 'Multi-tenancy em Next.js: workspaces, roles e convites sem improviso'
+description: 'Um guia pratico para modelar multi-tenancy com workspaces, membership e convites (RBAC) de forma verificavel, com foco em invariantes e falhas comuns.'
+locale: 'pt-BR'
+date: '2026-02-10'
+author:
+  name: 'Shipped Team'
+tags: ['nextjs', 'architecture', 'multi-tenancy', 'rbac', 'drizzle']
+published: true
+---
+
+Multi-tenancy e onde SaaS morre em silencio: acesso cruzado entre tenants, convites aceitos fora de ordem, e roles que viram "if admin" espalhado.
+
+Este repo tenta tratar multi-tenancy como infraestrutura, nao feature.
+
+## Invariantes (pass/fail)
+
+1. Toda operacao sensivel precisa de `workspaceId` resolvido no server.
+2. Membership e role sao verificadas antes de qualquer acao.
+3. Aceite de convite precisa ser atomico (evita TOCTOU: convite revogado/expirado/aceito ao mesmo tempo).
+
+## Onde olhar no repo
+
+- UI: `app/(protected)/dashboard/workspaces/**` e `app/(protected)/dashboard/team/page.tsx`
+- API: `app/api/workspaces/**` e `app/api/invitations/accept/route.ts`
+- Queries: `src/db/queries/**`
+
+## Convites: o bug classico e TOCTOU
+
+Bug tipico:
+
+1. GET valida convite
+2. POST aceita convite
+3. Entre 1 e 2, o convite foi revogado/expirou/ja foi aceito
+
+Solucao: aceite atomico no banco (uma transacao que valida e marca aceito, ou falha).
+
+No repo, procure comentarios/queries que mencionam atomicidade em `src/db/queries/invitations.ts`.
+
+## RBAC: o anti-padrao "role no client"
+
+Nao confie no client para gating. No repo, layouts protegidos fazem `getSession()` no server:
+
+- `app/(protected)/dashboard/layout.tsx`
+- `app/(protected)/admin/layout.tsx`
+
+Esses layouts tambem sao `noindex` por design (SEO e irrelevante aqui; privacidade e obrigatoria).
+
+## Checklist para nao regredir
+
+- Teste E2E: usuario nao autenticado deve ser redirecionado ao tentar `/dashboard`.
+- Unit: queries de workspace/members devem falhar sem membership.
+- Observabilidade: logar/contar 401/403 (sem vazar dados).
+
+Multi-tenancy nao e um lugar para "ser criativo". E um lugar para ser boring.

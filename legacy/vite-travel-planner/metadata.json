@@ -1,0 +1,5 @@
+{
+  "name": "Agente de Viagens IA",
+  "description": "Um assistente de IA para planejar suas viagens, que gera um relatório completo com base em suas preferências. A interface moderna e intuitiva coleta seus dados para criar a viagem perfeita.",
+  "requestFramePermissions": []
+}

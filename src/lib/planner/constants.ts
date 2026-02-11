@@ -1,0 +1,25 @@
+import type { TravelPreferences } from './types';
+
+export const initialTravelPreferences: TravelPreferences = {
+  data_ida: '',
+  data_volta: '',
+  flex_dias: '2',
+  origens: '',
+  destinos: '',
+  num_adultos: 1,
+  num_chd: 0,
+  num_inf: 0,
+  idades_chd_inf: '',
+  preferencia_voo: 'indiferente',
+  horarios_voo: 'qualquer',
+  bagagem: '1_despachada',
+  programas_milhas: '',
+  programas_bancos: '',
+  vistos_existentes: '',
+  orcamento_brl: '',
+  tolerancia_risco: 'baixa',
+  perfil: '',
+  hospedagem_padrao: 'indiferente',
+  bairros_pref: '',
+  restricoes: '',
+};

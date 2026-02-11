@@ -1,0 +1,38 @@
+groups:
+  - name: app-security
+    rules:
+      - alert: AppAuthRateLimitedSpike
+        expr: increase(app_auth_rate_limited_total[5m]) > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Spike de rate limiting em /api/auth'
+          description: 'Muitos requests de auth foram bloqueados por rate limiting. Possivel brute force/abuso.'
+
+      - alert: AppBlockedRequestsSpike
+        expr: increase(app_blocked_requests_total[5m]) > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Spike de requests bloqueados no proxy (CSRF hardening)'
+          description: 'Muitos requests foram bloqueados por protecoes cross-site/origin. Possivel campanha CSRF.'
+
+      - alert: AppProtectedRedirectsSpike
+        expr: increase(app_protected_redirects_total[5m]) > 200
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: 'Muitos redirects de paginas protegidas para /login'
+          description: 'Pode indicar bots ou navegacao sem sessao. Verifique correlacao com 401/403/429 e origem.'
+
+      - alert: AppProxyLatencyP99High
+        expr: histogram_quantile(0.99, sum by (le, outcome) (rate(app_proxy_latency_ms_bucket[5m]))) > 250
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Latencia p99 alta no proxy (ms)'
+          description: 'O proxy esta levando muito tempo para decidir/bloquear/redirecionar. Pode afetar UX e custo.'

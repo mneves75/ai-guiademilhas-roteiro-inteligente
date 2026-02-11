@@ -1,0 +1,47 @@
+export type PreferenciaVoo = 'direto' | '1_conexao' | 'indiferente';
+export type Bagagem = 'mao' | '1_despachada' | 'mais_despachadas';
+export type ToleranciaRisco = 'baixa' | 'media' | 'alta';
+export type HospedagemPadrao = '3' | '4' | '5' | 'indiferente';
+export type HorariosVoo =
+  | 'qualquer'
+  | 'manha'
+  | 'tarde'
+  | 'noite'
+  | 'madrugada'
+  | 'evitar_madrugada';
+
+export interface TravelPreferences {
+  data_ida: string;
+  data_volta: string;
+  flex_dias: string;
+  origens: string;
+  destinos: string;
+  num_adultos: number;
+  num_chd: number;
+  num_inf: number;
+  idades_chd_inf: string;
+  preferencia_voo: PreferenciaVoo;
+  horarios_voo: HorariosVoo;
+  bagagem: Bagagem;
+  programas_milhas: string;
+  programas_bancos: string;
+  vistos_existentes: string;
+  orcamento_brl: string;
+  tolerancia_risco: ToleranciaRisco;
+  perfil: string;
+  hospedagem_padrao: HospedagemPadrao;
+  bairros_pref: string;
+  restricoes: string;
+}
+
+export interface ReportSection {
+  title: string;
+  items: string[];
+}
+
+export interface PlannerReport {
+  title: string;
+  summary: string;
+  sections: ReportSection[];
+  assumptions: string[];
+}
