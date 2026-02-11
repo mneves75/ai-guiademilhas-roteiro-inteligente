@@ -21,9 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Rocket className="h-6 w-6" />
         Guia de Milhas
       </Link>
-      <Card className="glass-card-elevated reveal-visible w-full max-w-md p-8">
-        {children}
-      </Card>
+      <Card className="glass-card-elevated reveal-visible w-full max-w-md p-8">{children}</Card>
     </div>
   );
 }

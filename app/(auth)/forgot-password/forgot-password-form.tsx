@@ -68,22 +68,16 @@ export default function ForgotPasswordForm({ initialLocale }: { initialLocale: L
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t.resetTitle}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.resetTitle}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{t.resetHint}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error && (
-          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-            {error}
-          </div>
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
         )}
         {notice && (
-          <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">
-            {notice}
-          </div>
+          <div className="rounded-md bg-primary/10 p-3 text-sm text-foreground">{notice}</div>
         )}
 
         <div className="space-y-2">

@@ -9,5 +9,7 @@ export default async function ResetPasswordPage({
   const { token, error } = await searchParams;
   const locale = await getRequestLocale();
 
-  return <ResetPasswordForm token={token ?? ''} errorParam={error ?? null} initialLocale={locale} />;
+  return (
+    <ResetPasswordForm token={token ?? ''} errorParam={error ?? null} initialLocale={locale} />
+  );
 }

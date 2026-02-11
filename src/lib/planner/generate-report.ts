@@ -166,7 +166,9 @@ function buildFallbackReport({
   locale,
   preferences,
   reason,
-}: GeneratePlannerReportInput & { reason?: 'missing_api_key' | 'provider_failure' }): PlannerReport {
+}: GeneratePlannerReportInput & {
+  reason?: 'missing_api_key' | 'provider_failure';
+}): PlannerReport {
   const isPt = locale === 'pt-BR';
   const totalPassengers = preferences.num_adultos + preferences.num_chd + preferences.num_inf;
   const assumptions: string[] = [];
@@ -287,7 +289,9 @@ function buildFallbackReport({
         {
           title: isPt ? 'Acoes sugeridas' : 'Suggested actions',
           items: [
-            isPt ? 'Revise origem, destino e datas antes de emitir.' : 'Review origin, destination, and dates before issuing.',
+            isPt
+              ? 'Revise origem, destino e datas antes de emitir.'
+              : 'Review origin, destination, and dates before issuing.',
             isPt ? 'Compare milhas versus tarifa em dinheiro.' : 'Compare miles versus cash fares.',
           ],
         },
@@ -297,21 +301,27 @@ function buildFallbackReport({
             isPt
               ? 'A indisponibilidade temporaria da IA reduz a profundidade da analise.'
               : 'Temporary AI unavailability reduces analysis depth.',
-            isPt ? 'Use verificacao manual antes da compra.' : 'Use manual verification before booking.',
+            isPt
+              ? 'Use verificacao manual antes da compra.'
+              : 'Use manual verification before booking.',
           ],
         },
         {
           title: isPt ? 'Prioridade' : 'Priority',
           items: [
             isPt ? 'Defina teto de custo por pessoa.' : 'Set per-passenger cost cap.',
-            isPt ? 'Confirme regras de bagagem e conexao.' : 'Confirm baggage and connection rules.',
+            isPt
+              ? 'Confirme regras de bagagem e conexao.'
+              : 'Confirm baggage and connection rules.',
           ],
         },
         {
           title: isPt ? 'Proximo passo' : 'Next step',
           items: [
             isPt ? 'Tente novamente em alguns minutos.' : 'Retry in a few minutes.',
-            isPt ? 'Persistindo, acione suporte tecnico.' : 'If persistent, contact technical support.',
+            isPt
+              ? 'Persistindo, acione suporte tecnico.'
+              : 'If persistent, contact technical support.',
           ],
         },
       ],
