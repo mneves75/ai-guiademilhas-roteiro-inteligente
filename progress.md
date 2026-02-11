@@ -406,3 +406,21 @@ Data: 2026-02-11
   - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
 - Estado:
   - alteracao restrita a copy PT-BR da landing, com regressao completa verde.
+
+### Gate ASVS executavel + criterio de release (2026-02-11)
+
+- Implementacao:
+  - script novo `scripts/asvs-check.sh` para validar checklist ASVS versionado, secoes obrigatorias e evidencias de codigo.
+  - comando novo `pnpm security:asvs-check`.
+  - `Governance Gate` (CI) atualizado para executar `security:asvs-check` como etapa obrigatoria.
+  - documentacao atualizada:
+    - `docs/security/asvs-mapping.pt-br.md` (agora com criterio de release explicito),
+    - `docs/critica-10-10.pt-br.md`,
+    - `docs/solucao-elegante.pt-br.md`.
+- Evidencias desta rodada:
+  - `pnpm security:asvs-check` -> PASS
+  - `pnpm verify:ci` -> PASS
+  - `pnpm security:audit` -> PASS
+  - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`, `0 failed`)
+  - `pnpm framework:doctor --strict` -> PASS (`ok:13 warn:0 fail:0`)
+  - code scanning aberto -> `0`

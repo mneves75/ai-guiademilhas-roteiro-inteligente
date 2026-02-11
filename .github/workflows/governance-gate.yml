@@ -92,6 +92,9 @@ jobs:
           FRAMEWORK_UPSTREAM_MAX_BEHIND: '0'
         run: bash ./scripts/framework-upstream.sh check
 
+      - name: ASVS checklist gate
+        run: pnpm security:asvs-check
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 

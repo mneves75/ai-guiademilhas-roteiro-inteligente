@@ -353,3 +353,15 @@ pnpm db:smoke
   - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`)
 - Resultado:
   - nenhuma regressao funcional, de seguranca ou de cobertura E2E apos refinamento de copy.
+
+## Gate ASVS como criterio de release (2026-02-11)
+
+- Mudanca alvo:
+  - novo gate executavel `pnpm security:asvs-check` e integracao no workflow `Governance Gate`.
+- Comandos executados:
+  - `pnpm security:asvs-check` -> PASS
+  - `pnpm verify:ci` -> PASS
+  - `pnpm security:audit` -> PASS
+  - `PW_FULL=1 pnpm test:e2e` -> PASS (`190 passed`, `0 skipped`)
+- Resultado:
+  - checklist ASVS deixou de ser apenas documento e virou criterio tecnico obrigatorio de release.
