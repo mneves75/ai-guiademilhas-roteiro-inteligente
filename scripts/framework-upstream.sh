@@ -105,12 +105,14 @@ print_status() {
   echo "Branch upstream alvo: $UPSTREAM_BRANCH"
 
   if has_head_commit; then
-    local counts
-    counts="$(git rev-list --left-right --count "HEAD...$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" 2>/dev/null || echo "n/a n/a")"
     local ahead
     local behind
-    ahead="${counts%% *}"
-    behind="${counts##* }"
+    if read -r ahead behind < <(git rev-list --left-right --count "HEAD...$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" 2>/dev/null); then
+      :
+    else
+      ahead="n/a"
+      behind="n/a"
+    fi
     echo "Divergencia vs $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -> ahead:$ahead behind:$behind"
     git status --short
   else

@@ -61,6 +61,8 @@ Variaveis opcionais para customizar automacao:
 - Git local inicializado neste workspace.
 - Remote `upstream` configurado para `~/dev/PROJETOS/nextjs-bootstrapped-shipped`.
 - Branch upstream efetiva detectada automaticamente: `master`.
+- Historico local ja foi ligado ao upstream via merge de historicos (`--allow-unrelated-histories`).
+- `pnpm framework:sync` executa sem erro e aplica `merge` incremental quando houver novos commits no upstream.
 
 ## Criterio 10/10 para reuso sustentavel
 

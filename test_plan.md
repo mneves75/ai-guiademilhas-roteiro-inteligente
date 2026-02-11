@@ -157,3 +157,17 @@ pnpm db:smoke
   - `pnpm verify`: `33 passed` em E2E CI.
   - `pnpm security:audit`: DAST-lite `4 passed` + `pnpm audit --prod` sem vulnerabilidades.
   - `PW_FULL=1 pnpm test:e2e`: `161 passed`, `4 skipped`, `0 failed`.
+
+## Fechamento estrutural de reuso (2026-02-11)
+
+- Objetivo desta rodada:
+  - Remover o bloqueio final de sync upstream por falta de historico compartilhado.
+- Acoes executadas:
+  - Commit inicial do estado do produto.
+  - Merge de historicos com upstream (`--allow-unrelated-histories -s ours`) para estabelecer ancestral comum.
+  - Reexecucao de `framework:status` e `framework:sync`.
+- Evidencia:
+  - `pnpm framework:status` => `ahead:2`, `behind:0`.
+  - `pnpm framework:sync` => `Already up to date`.
+- Resultado:
+  - Fluxo de reuso upstream esta funcional de ponta a ponta.

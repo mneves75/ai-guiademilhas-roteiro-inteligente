@@ -183,3 +183,14 @@ Data: 2026-02-11
   - `pnpm verify` ✅ (`33 passed` em `test:e2e:ci`).
   - `pnpm security:audit` ✅ (`4 passed` em DAST-lite, sem vulnerabilidades conhecidas, gitleaks limpo).
   - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`).
+
+### Fechamento estrutural de reuso (2026-02-11)
+
+- Historico Git consolidado para sync real com upstream:
+  - Commit inicial criado: `chore(repo): snapshot inicial do produto`.
+  - Historico upstream ligado por merge de historicos com estrategia `ours`.
+- Resultado operacional:
+  - `pnpm framework:status` ✅ (`ahead:2`, `behind:0` vs `upstream/master`).
+  - `pnpm framework:sync` ✅ (`Already up to date`).
+- Ajuste final de robustez:
+  - `scripts/framework-upstream.sh` corrigido para parse correto de `ahead/behind` quando `git rev-list --count` retorna separado por tab.
