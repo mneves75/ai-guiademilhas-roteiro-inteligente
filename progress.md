@@ -194,3 +194,16 @@ Data: 2026-02-11
   - `pnpm framework:sync` ✅ (`Already up to date`).
 - Ajuste final de robustez:
   - `scripts/framework-upstream.sh` corrigido para parse correto de `ahead/behind` quando `git rev-list --count` retorna separado por tab.
+
+### Validacao final pos-ancoragem (2026-02-11)
+
+- `pnpm framework:sync:verify` ✅
+  - Sync com upstream: `Already up to date`.
+  - Verify completo: sucesso (incluindo `test:e2e:ci` com `33 passed`).
+- `pnpm security:audit` ✅ apos ancoragem de historico
+  - `gitleaks git` executado sobre historico (`119 commits scanned`, sem leaks).
+  - DAST-lite: `4 passed`.
+- `PW_FULL=1 pnpm test:e2e` ✅ (sequencial)
+  - `161 passed`, `4 skipped`, `0 failed`.
+- Nota de engenharia:
+  - Uma tentativa de executar `security:audit` e E2E full em paralelo gerou corrida no SQLite; rerun sequencial confirmou estabilidade completa.

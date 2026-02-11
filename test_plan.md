@@ -171,3 +171,17 @@ pnpm db:smoke
   - `pnpm framework:sync` => `Already up to date`.
 - Resultado:
   - Fluxo de reuso upstream esta funcional de ponta a ponta.
+
+## Validacao final pos-ancoragem (2026-02-11)
+
+- Comandos executados:
+  - `pnpm framework:sync:verify`
+  - `pnpm security:audit`
+  - `PW_FULL=1 pnpm test:e2e`
+- Evidencia:
+  - Sync upstream: `Already up to date`.
+  - Verify: sucesso completo (`33 passed` em E2E CI).
+  - Security audit: sucesso (`gitleaks git` no historico + DAST-lite `4 passed`).
+  - E2E full: `161 passed`, `4 skipped`, `0 failed`.
+- Observacao de confiabilidade:
+  - Execucao paralela de audit + E2E full nao e recomendada por contencao de banco local; execucao sequencial validada como baseline.
