@@ -96,16 +96,19 @@ Variaveis uteis:
 - `FRAMEWORK_UPSTREAM_MAX_BEHIND`: tolerancia de drift usada por `framework:check` (default `0`).
 - `FRAMEWORK_DOCTOR_STRICT`: em `1`, warnings do `framework:doctor` tambem quebram o comando.
 - `FRAMEWORK_DOCTOR_TARGET_BRANCH`: branch alvo para validar branch protection no `framework:doctor`.
+- `FRAMEWORK_DOCTOR_REQUIRED_CHECK`: check obrigatorio que deve existir no branch protection (default: `Governance Gate`).
 - `FRAMEWORK_UPSTREAM_SOURCE_URL`: repository variable para CI acessar upstream privado com URL autenticada.
 
 `framework:doctor` pode emitir `[LIMIT]` quando o ambiente/repo nao permite validar branch protection (ex.: repo privado sem plano com suporte), sem mascarar falhas locais.
+Em modo estrito, o doctor tambem valida invariantes de branch protection: `strict=true`, presenca do check obrigatorio, `conversation resolution` e `enforce admins`.
 
 No `bootstrap`, o repositório habilita `git rerere` automaticamente para reduzir custo de resolucao de conflitos recorrentes em merges de upstream.
 No CI, o projeto possui:
+
 - deteccao diaria de drift em `.github/workflows/upstream-drift.yml`;
 - PR semanal automatica de sync upstream em `.github/workflows/upstream-sync-pr.yml`;
 - gate unico de bloqueio para PR/push em `main` (`.github/workflows/governance-gate.yml`) executando `framework:doctor` estrito + `framework:check` + `pnpm verify:ci`.
-Quando o upstream for privado e nao acessivel pelo runner, os workflows de upstream emitem warning explicito e mantem o gate de qualidade (`pnpm verify:ci`) ativo.
+  Quando o upstream for privado e nao acessivel pelo runner, os workflows de upstream emitem warning explicito e mantem o gate de qualidade (`pnpm verify:ci`) ativo.
 
 ## Health
 

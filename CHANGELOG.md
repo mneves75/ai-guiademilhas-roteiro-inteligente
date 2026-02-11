@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 10/10 governance baseline now includes a unified CI blocker (`Governance Gate`) running `framework:doctor` strict + `framework:check` + `pnpm verify:ci` on pushes and PRs to `main`
 - Upstream workflows now support CI fallback for private upstream access via repository variable `FRAMEWORK_UPSTREAM_SOURCE_URL`, with explicit warning when upstream checks are skipped
 - Upstream workflows now probe upstream reachability before bootstrap to avoid noisy failed-step annotations while preserving explicit fallback warnings
+- `framework:doctor` now enforces stricter branch-protection invariants in strict mode: `required_status_checks.strict=true`, required check presence (`FRAMEWORK_DOCTOR_REQUIRED_CHECK`, default `Governance Gate`), `required_conversation_resolution.enabled=true`, and `enforce_admins.enabled=true`
+- Reuse architecture docs were upgraded with first-principles critique and an explicit scale roadmap toward SemVer package consumption
 
 ### Fixed
 

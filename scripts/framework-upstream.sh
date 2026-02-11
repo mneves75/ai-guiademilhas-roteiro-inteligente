@@ -26,6 +26,7 @@ Variaveis opcionais:
   FRAMEWORK_UPSTREAM_MAX_BEHIND (default: 0, usado em "check")
   FRAMEWORK_DOCTOR_STRICT (default: 0, warnings tambem quebram no modo estrito)
   FRAMEWORK_DOCTOR_TARGET_BRANCH (default: branch padrao do repo remoto em "doctor")
+  FRAMEWORK_DOCTOR_REQUIRED_CHECK (default: "Governance Gate")
 USAGE
 }
 
@@ -345,7 +346,12 @@ doctor_framework() {
       local protection_json
       local codeowners_required
       local status_checks_required
+      local status_checks_strict
       local required_review_count
+      local required_conversation_resolution
+      local enforce_admins_enabled
+      local required_check_name
+      local required_check_present
 
       if repo_json="$(gh api "repos/$github_repo" 2>/dev/null)"; then
         local default_branch
@@ -374,9 +380,26 @@ doctor_framework() {
           printf '%s' "$protection_json" \
             | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_status_checks)));'
         )"
+        status_checks_strict="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_status_checks?.strict)));'
+        )"
         required_review_count="$(
           printf '%s' "$protection_json" \
             | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));const n=j.required_pull_request_reviews?.required_approving_review_count ?? 0;process.stdout.write(String(n));'
+        )"
+        required_conversation_resolution="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.required_conversation_resolution?.enabled)));'
+        )"
+        enforce_admins_enabled="$(
+          printf '%s' "$protection_json" \
+            | node -e 'const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(String(Boolean(j.enforce_admins?.enabled)));'
+        )"
+        required_check_name="${FRAMEWORK_DOCTOR_REQUIRED_CHECK:-Governance Gate}"
+        required_check_present="$(
+          printf '%s' "$protection_json" \
+            | REQUIRED_CHECK="$required_check_name" node -e 'const fs=require("node:fs");const required=process.env.REQUIRED_CHECK ?? "";const j=JSON.parse(fs.readFileSync(0,"utf8"));if (!required) { process.stdout.write("true"); process.exit(0); } const contexts=[...(j.required_status_checks?.contexts ?? [])]; const checks=(j.required_status_checks?.checks ?? []).map((c)=>String(c.context ?? "")); const merged=[...contexts,...checks]; process.stdout.write(String(merged.includes(required)));'
         )"
 
         if [ "$codeowners_required" = "true" ]; then
@@ -395,6 +418,28 @@ doctor_framework() {
           fi
         fi
 
+        if [ "$status_checks_strict" = "true" ]; then
+          doctor_ok "Branch protection ($target_branch): strict status checks habilitado."
+        else
+          if [ "$strict" = "1" ]; then
+            doctor_fail "Branch protection ($target_branch): strict status checks desabilitado."
+          else
+            doctor_warn "Branch protection ($target_branch): strict status checks desabilitado."
+          fi
+        fi
+
+        if [ -n "$required_check_name" ]; then
+          if [ "$required_check_present" = "true" ]; then
+            doctor_ok "Branch protection ($target_branch): check obrigatorio presente ($required_check_name)."
+          else
+            if [ "$strict" = "1" ]; then
+              doctor_fail "Branch protection ($target_branch): check obrigatorio ausente ($required_check_name)."
+            else
+              doctor_warn "Branch protection ($target_branch): check obrigatorio ausente ($required_check_name)."
+            fi
+          fi
+        fi
+
         if [ "$required_review_count" -ge 1 ] 2>/dev/null; then
           doctor_ok "Branch protection ($target_branch): minimo de approvals = $required_review_count."
         else
@@ -402,6 +447,26 @@ doctor_framework() {
             doctor_fail "Branch protection ($target_branch): approvals minimos nao configurados."
           else
             doctor_warn "Branch protection ($target_branch): approvals minimos nao configurados."
+          fi
+        fi
+
+        if [ "$required_conversation_resolution" = "true" ]; then
+          doctor_ok "Branch protection ($target_branch): conversation resolution obrigatoria."
+        else
+          if [ "$strict" = "1" ]; then
+            doctor_fail "Branch protection ($target_branch): conversation resolution NAO obrigatoria."
+          else
+            doctor_warn "Branch protection ($target_branch): conversation resolution NAO obrigatoria."
+          fi
+        fi
+
+        if [ "$enforce_admins_enabled" = "true" ]; then
+          doctor_ok "Branch protection ($target_branch): enforce admins habilitado."
+        else
+          if [ "$strict" = "1" ]; then
+            doctor_fail "Branch protection ($target_branch): enforce admins desabilitado."
+          else
+            doctor_warn "Branch protection ($target_branch): enforce admins desabilitado."
           fi
         fi
       else
