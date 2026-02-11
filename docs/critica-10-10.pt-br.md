@@ -70,7 +70,7 @@ Comandos:
 ## 6) Evidencia de fechamento (estado atual)
 
 - `PW_FULL=1 pnpm test:e2e`:
-  - `161 passed`, `4 skipped` (skips intencionais de smoke amplo fora de chromium).
+  - `190 passed`, `0 skipped` (matriz completa sem lacunas de cobertura por skip condicional).
 - `pnpm verify`:
   - `lint`, `type-check`, `test`, `build`, `db:smoke`, `test:e2e:ci` todos verdes.
 - `pnpm security:audit`:
