@@ -5,12 +5,8 @@ test.describe('Screens Smoke', () => {
   test('public + core protected screens render in pt-BR (route-level smoke)', async ({
     page,
   }, testInfo) => {
-    // This is intentionally a "wide" test. Running it on every engine/device is redundant and slow;
-    // the full matrix already covers core flows elsewhere.
-    test.skip(
-      testInfo.project.name !== 'chromium',
-      'Run wide screen smoke only on desktop chromium.'
-    );
+    // Keep this smoke active on all projects to avoid hidden browser/device blind spots.
+    // Runtime remains bounded by using a small, fixed route set.
 
     const baseURL = testInfo.project.use.baseURL as string;
     await page.context().addCookies([

@@ -331,3 +331,14 @@ pnpm db:smoke
   - `pnpm verify:ci` -> PASS (`87` testes unitarios + `38` E2E).
   - `pnpm security:audit` -> PASS.
   - Code scanning remoto aberto -> `0`.
+
+## Revalidacao full sem skips (2026-02-11)
+
+- Mudanca aplicada:
+  - `e2e/screens.e2e.ts`: removido `test.skip` por projeto no smoke de telas.
+- Evidencia desta rodada:
+  - `pnpm verify:ci` => sucesso completo (inclui `test:e2e:ci` com `38 passed`).
+  - `pnpm security:audit` => sucesso completo (`audit` sem vulnerabilidades + `gitleaks` limpo + DAST-lite `4 passed`).
+  - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
+- Resultado:
+  - Matriz E2E completa agora fecha sem lacunas de cobertura por skip condicional.

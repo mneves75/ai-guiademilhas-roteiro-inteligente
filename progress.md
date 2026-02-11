@@ -383,3 +383,15 @@ Data: 2026-02-11
   - `pnpm verify:ci` -> PASS (`23` arquivos de teste, `87` testes, `38` E2E).
   - `pnpm security:audit` -> PASS.
   - `gh api repos/.../code-scanning/alerts?state=open | jq 'length'` -> `0`.
+
+### Hardening final de cobertura E2E (2026-02-11)
+
+- Ajuste implementado:
+  - `e2e/screens.e2e.ts`: remoção de `test.skip` fora de `chromium` para executar smoke de telas em toda a matriz.
+- Verificacoes executadas:
+  - `PW_FULL=1 pnpm exec playwright test e2e/screens.e2e.ts` => `5 passed` (chromium, mobile-chrome, firefox, webkit, mobile-safari).
+  - `pnpm verify:ci` => `ok` (E2E CI com `38 passed`).
+  - `pnpm security:audit` => `ok`.
+  - `PW_FULL=1 pnpm test:e2e` => `190 passed`, `0 skipped`, `0 failed`.
+- Estado:
+  - baseline de regressao full atualizado para zero skips.
