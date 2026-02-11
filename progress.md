@@ -259,3 +259,12 @@ Data: 2026-02-11
     - `pnpm lint && pnpm test` antes de abrir/atualizar PR
 - Efeito:
   - reduz probabilidade de PR automatica com regressao basica.
+
+### Limpeza final do workflow semanal (2026-02-11)
+
+- Ajuste:
+  - Remocao de duplicidade de `Setup Node.js` e `Setup pnpm` em `.github/workflows/upstream-sync-pr.yml`.
+- Validacao da rodada:
+  - `pnpm framework:check` ✅
+  - `pnpm verify` ✅
+  - `PW_FULL=1 pnpm test:e2e` ✅ (`161 passed`, `4 skipped`)

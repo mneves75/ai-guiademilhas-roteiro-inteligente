@@ -217,3 +217,13 @@ pnpm db:smoke
   - cria PR quando houver diff de merge com upstream;
   - executa `framework:check` pos-sync e baseline local (`pnpm lint && pnpm test`) antes de abrir/atualizar PR;
   - CI existente no PR continua sendo gate de qualidade final.
+
+## Limpeza final do workflow semanal (2026-02-11)
+
+- Escopo:
+  - remover duplicacao de setup de runtime no workflow de PR semanal.
+- Evidencia:
+  - `.github/workflows/upstream-sync-pr.yml` sem passos duplicados de Node/pnpm.
+  - `pnpm framework:check` passou (`ahead:9 behind:0`).
+  - `pnpm verify` passou (lint, type-check, vitest, build, db smoke, e2e:ci).
+  - `PW_FULL=1 pnpm test:e2e` passou (`161 passed`, `4 skipped`).
