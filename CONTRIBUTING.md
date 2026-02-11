@@ -118,5 +118,6 @@ This repository uses git tags and `CHANGELOG.md` for releases.
 
 - Open a [Discussion](https://github.com/mneves75/nextjs-bootstrapped-shipped/discussions)
 - Check existing [Issues](https://github.com/mneves75/nextjs-bootstrapped-shipped/issues)
+- See [SUPPORT.md](./SUPPORT.md)
 
 Thank you for contributing!

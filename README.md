@@ -85,6 +85,8 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
 
 Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md) first.
 
+Need help? See [SUPPORT.md](./SUPPORT.md).
+
 ## Security
 
 Found a vulnerability? Please report it responsibly. See [SECURITY.md](./SECURITY.md) for details.
