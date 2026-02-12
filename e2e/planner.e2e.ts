@@ -23,10 +23,10 @@ test.describe('Planner', () => {
 
     await signUpAndReachWorkspaces(page, {
       seed: `${testInfo.testId}-planner`,
-      callbackUrl: '/dashboard/planner',
+      callbackUrl: '/planner',
     });
 
-    await expect(page).toHaveURL(/\/dashboard\/planner/);
+    await expect(page).toHaveURL(/\/planner/);
     await expect(
       page.getByRole('heading', { name: /planner de viagens com milhas|miles travel planner/i })
     ).toBeVisible();
@@ -66,11 +66,11 @@ test.describe('Planner', () => {
     await page.goto('/pt-br', { waitUntil: 'domcontentloaded' });
 
     const heroCta = page.getByRole('link', { name: /criar meu planejamento agora/i }).first();
-    await expect(heroCta).toHaveAttribute('href', /callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(heroCta).toHaveAttribute('href', /callbackUrl=%2Fplanner/);
     await expect(heroCta).toHaveAttribute('href', /source=landing_planner/);
 
     await heroCta.click();
-    await expect(page).toHaveURL(/\/signup\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(page).toHaveURL(/\/signup\?callbackUrl=%2Fplanner/);
     await expect(page).toHaveURL(/source=landing_planner/);
 
     const email = uniqueEmail(`${testInfo.testId}-landing-cta`);
@@ -79,10 +79,10 @@ test.describe('Planner', () => {
     await page.getByLabel(/^(password|senha)$/i).fill('TestPassword123!');
 
     await Promise.all([
-      page.waitForURL(/\/dashboard\/planner(?:[?#]|$)/, { timeout: 15_000 }),
+      page.waitForURL(/\/planner(?:[?#]|$)/, { timeout: 15_000 }),
       page.getByRole('button', { name: /create account|criar conta/i }).click(),
     ]);
-    await expect(page).toHaveURL(/\/dashboard\/planner/);
+    await expect(page).toHaveURL(/\/planner/);
     await expect(
       page.getByRole('heading', { name: /planner de viagens com milhas|miles travel planner/i })
     ).toBeVisible();
@@ -109,9 +109,9 @@ test.describe('Planner', () => {
 
     await signUpAndReachWorkspaces(page, {
       seed: `${testInfo.testId}-planner-rate-limit`,
-      callbackUrl: '/dashboard/planner',
+      callbackUrl: '/planner',
     });
-    await expect(page).toHaveURL(/\/dashboard\/planner/);
+    await expect(page).toHaveURL(/\/planner/);
 
     await page.route('**/api/planner/generate', async (route) => {
       await route.fulfill({
@@ -161,9 +161,9 @@ test.describe('Planner', () => {
 
     await signUpAndReachWorkspaces(page, {
       seed: `${testInfo.testId}-planner-malformed`,
-      callbackUrl: '/dashboard/planner',
+      callbackUrl: '/planner',
     });
-    await expect(page).toHaveURL(/\/dashboard\/planner/);
+    await expect(page).toHaveURL(/\/planner/);
 
     await page.route('**/api/planner/generate', async (route) => {
       await route.fulfill({

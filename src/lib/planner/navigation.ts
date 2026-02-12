@@ -1,7 +1,7 @@
 import { buildLoginRedirectHref } from '@/lib/security/redirect';
 import { withFunnelSource, type FunnelSource } from '@/lib/analytics/funnel';
 
-export const PLANNER_PATH = '/dashboard/planner';
+export const PLANNER_PATH = '/planner';
 
 function encode(path: string): string {
   return encodeURIComponent(path);

@@ -37,8 +37,8 @@ test.describe('Protected Routes', () => {
   });
 
   test('planner route redirect keeps callbackUrl for unauthenticated users', async ({ page }) => {
-    await page.goto('/dashboard/planner');
-    await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await page.goto('/planner');
+    await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fplanner/);
   });
 
   test('authenticated users hitting localized home are redirected to planner', async ({

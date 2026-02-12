@@ -14,17 +14,17 @@ describe('funnel analytics helpers', () => {
   });
 
   it('adds source to urls and preserves existing query parameters', () => {
-    expect(
-      withFunnelSource('/signup?callbackUrl=%2Fdashboard%2Fplanner', LANDING_PLANNER_SOURCE)
-    ).toBe('/signup?callbackUrl=%2Fdashboard%2Fplanner&source=landing_planner');
+    expect(withFunnelSource('/signup?callbackUrl=%2Fplanner', LANDING_PLANNER_SOURCE)).toBe(
+      '/signup?callbackUrl=%2Fplanner&source=landing_planner'
+    );
   });
 
   it('returns original href when source is missing or invalid', () => {
-    expect(withFunnelSource('/login?callbackUrl=%2Fdashboard%2Fplanner', null)).toBe(
-      '/login?callbackUrl=%2Fdashboard%2Fplanner'
+    expect(withFunnelSource('/login?callbackUrl=%2Fplanner', null)).toBe(
+      '/login?callbackUrl=%2Fplanner'
     );
-    expect(withFunnelSource('/login?callbackUrl=%2Fdashboard%2Fplanner', 'invalid')).toBe(
-      '/login?callbackUrl=%2Fdashboard%2Fplanner'
+    expect(withFunnelSource('/login?callbackUrl=%2Fplanner', 'invalid')).toBe(
+      '/login?callbackUrl=%2Fplanner'
     );
   });
 });

@@ -11,7 +11,7 @@ import {
 } from '@/lib/metrics';
 
 // Only protect actual app pages here. API routes must always enforce authz in the handler.
-const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/admin'] as const;
+const PROTECTED_PAGE_PREFIXES = ['/dashboard', '/admin', '/planner'] as const;
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -64,6 +64,7 @@ function isNeverLocalizedPath(pathname: string): boolean {
     pathname.startsWith('/reset-password') ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin') ||
+    pathname.startsWith('/planner') ||
     pathname.startsWith('/.well-known/')
   );
 }
@@ -178,6 +179,7 @@ export async function proxy(request: NextRequest) {
       if (
         prefixed.restPathname.startsWith('/dashboard') ||
         prefixed.restPathname.startsWith('/admin') ||
+        prefixed.restPathname.startsWith('/planner') ||
         prefixed.restPathname.startsWith('/invite') ||
         prefixed.restPathname === '/emails/preview'
       ) {

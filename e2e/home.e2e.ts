@@ -51,17 +51,14 @@ test.describe('Home Page', () => {
     await gotoPage(page, '/pt-br');
 
     const primaryCta = page.getByRole('link', { name: /criar meu planejamento agora/i }).first();
-    await expect(primaryCta).toHaveAttribute(
-      'href',
-      /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
-    );
+    await expect(primaryCta).toHaveAttribute('href', /\/signup\?callbackUrl=%2Fplanner/);
     await expect(primaryCta).toHaveAttribute('href', /source=landing_planner/);
 
     const loginCta = page
       .getByRole('navigation', { name: 'Primary' })
       .locator('a[href^="/login"]')
       .first();
-    await expect(loginCta).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(loginCta).toHaveAttribute('href', /\/login\?callbackUrl=%2Fplanner/);
     await expect(loginCta).toHaveAttribute('href', /source=landing_planner/);
   });
 });
@@ -75,7 +72,7 @@ test.describe('Blog Page', () => {
   test('should keep planner callback in blog sign-in CTA', async ({ page }) => {
     await gotoPage(page, '/en/blog');
     const signInLink = page.getByRole('link', { name: /sign in|entrar/i }).first();
-    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fplanner/);
   });
 
   test('should display blog posts', async ({ page }) => {
@@ -145,18 +142,15 @@ test.describe('Authentication Pages', () => {
   test('should preserve planner callback + source between login and signup links', async ({
     page,
   }) => {
-    await gotoPage(page, '/login?callbackUrl=%2Fdashboard%2Fplanner&source=landing_planner');
+    await gotoPage(page, '/login?callbackUrl=%2Fplanner&source=landing_planner');
 
     const createAccountLink = page.locator('a[href^="/signup"]').first();
-    await expect(createAccountLink).toHaveAttribute(
-      'href',
-      /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
-    );
+    await expect(createAccountLink).toHaveAttribute('href', /\/signup\?callbackUrl=%2Fplanner/);
     await expect(createAccountLink).toHaveAttribute('href', /source=landing_planner/);
 
-    await gotoPage(page, '/signup?callbackUrl=%2Fdashboard%2Fplanner&source=landing_planner');
+    await gotoPage(page, '/signup?callbackUrl=%2Fplanner&source=landing_planner');
     const signInLink = page.locator('a[href^="/login"]').first();
-    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fdashboard%2Fplanner/);
+    await expect(signInLink).toHaveAttribute('href', /\/login\?callbackUrl=%2Fplanner/);
     await expect(signInLink).toHaveAttribute('href', /source=landing_planner/);
   });
 });
@@ -175,10 +169,7 @@ test.describe('Pricing', () => {
     const count = await signupLinks.count();
 
     for (let i = 0; i < count; i += 1) {
-      await expect(signupLinks.nth(i)).toHaveAttribute(
-        'href',
-        /\/signup\?callbackUrl=%2Fdashboard%2Fplanner/
-      );
+      await expect(signupLinks.nth(i)).toHaveAttribute('href', /\/signup\?callbackUrl=%2Fplanner/);
       await expect(signupLinks.nth(i)).toHaveAttribute('href', /source=landing_planner/);
     }
   });

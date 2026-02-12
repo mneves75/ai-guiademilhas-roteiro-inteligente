@@ -1,12 +1,5 @@
-import { getRequestLocale } from '@/lib/locale-server';
-import PlannerForm from './planner-form';
+import { redirect } from 'next/navigation';
 
-export default async function PlannerPage() {
-  const locale = await getRequestLocale();
-
-  return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
-      <PlannerForm locale={locale} />
-    </div>
-  );
+export default function LegacyDashboardPlannerPage() {
+  redirect('/planner');
 }

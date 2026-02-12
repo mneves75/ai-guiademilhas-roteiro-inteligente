@@ -25,56 +25,55 @@ const landingContentByLocale: Record<'en' | 'pt-BR', LandingContent> = {
     skipToContent: 'Pular para o conteúdo',
     metaTitle: 'Guia de Milhas | Planner Inteligente de Viagens',
     metaDescription:
-      'Planeje viagens com milhas sem achismo: compare cenários, priorize custo-benefício e decida com confiança em poucos minutos.',
+      'Crie roteiros inteligentes de viagem com milhas: compare cenários, reduza custo total e escolha a melhor emissão em minutos.',
     appName: 'Guia de Milhas',
-    badge: 'Planner estratégico para milhas e passagens',
-    headline: 'Você não precisa mais decidir no escuro como usar suas milhas.',
+    badge: 'Roteiro inteligente para milhas e passagens',
+    headline: 'Pare de desperdiçar milhas em emissões mal planejadas.',
     subheadline:
-      'Em poucos minutos, você transforma dados soltos em um plano claro de emissão com prioridades, trade-offs e próximos passos.',
+      'Em poucos minutos, o planner transforma datas, rotas e programas em um roteiro objetivo com prioridades, trade-offs e próximos passos.',
     primaryCta: 'Criar meu planejamento agora',
     secondaryCta: 'Já tenho conta',
-    proofTitle: 'Decisão estratégica antes da emissão',
+    proofTitle: 'Decisão clara antes da emissão',
     proofPoints: [
-      'Comparação objetiva entre cenários de viagem com milhas.',
-      'Priorização por valor, tempo total de deslocamento e risco.',
-      'Plano acionável para executar sem retrabalho.',
+      'Comparação prática entre rotas, custos em milhas e taxas.',
+      'Priorização por valor líquido, tempo total e risco operacional.',
+      'Plano acionável para emitir com menos retrabalho.',
     ],
     howTitle: 'Como funciona',
     howSteps: [
       {
-        title: '1. Você informa o contexto',
-        description: 'Datas, origens, destinos, passageiros e programas de milhas disponíveis.',
+        title: '1. Você informa os dados da viagem',
+        description: 'Datas, origem, destinos, passageiros e programas de milhas disponíveis.',
       },
       {
-        title: '2. O planner estrutura os cenários',
+        title: '2. O planner organiza os cenários',
         description:
-          'A análise organiza opções e deixa claros os trade-offs relevantes para decidir melhor.',
+          'A análise compara alternativas e destaca os trade-offs que realmente importam.',
       },
       {
-        title: '3. Você executa com clareza',
-        description: 'Receba um plano estratégico com direção prática para a próxima ação.',
+        title: '3. Você executa com confiança',
+        description: 'Receba um roteiro com direção prática para a próxima ação.',
       },
     ],
     faqTitle: 'Perguntas frequentes',
     faqs: [
       {
-        question: 'Preciso pagar para começar?',
-        answer:
-          'Você pode criar conta e acessar o planner. A política comercial evolutiva será aplicada nas próximas fases.',
+        question: 'Preciso pagar para testar?',
+        answer: 'Não. Você pode criar conta agora e gerar seu primeiro roteiro.',
       },
       {
         question: 'O planner decide por mim?',
         answer: 'Não. Ele organiza cenários e reduz incerteza, mas a decisão final continua sua.',
       },
       {
-        question: 'Serve para viagens nacionais e internacionais?',
+        question: 'Funciona para viagens nacionais e internacionais?',
         answer:
-          'Sim. O fluxo foi desenhado para múltiplas origens, destinos e combinações de programas de milhas.',
+          'Sim. O fluxo suporta múltiplas origens, destinos e combinações de programas de milhas.',
       },
     ],
-    finalTitle: 'Se você quer economizar milhas com consistência, comece pelo plano.',
+    finalTitle: 'Quem economiza milhas com consistência começa com um bom roteiro.',
     finalSubtitle:
-      'Entre agora e use o planner para sair do improviso e tomar decisões de viagem com mais previsibilidade.',
+      'Entre agora e use o planner para sair do improviso e decidir sua viagem com mais previsibilidade.',
     finalCta: 'Criar conta e abrir o planner',
     loginCta: 'Entrar',
   },

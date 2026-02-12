@@ -59,7 +59,7 @@ describe('structured data helpers', () => {
   it('builds pricing offer catalog with numeric plans only', () => {
     const jsonLd = buildPricingOfferCatalogJsonLd({
       locale: 'en',
-      signupUrl: 'https://guiademilhas.app/signup?callbackUrl=%2Fdashboard%2Fplanner',
+      signupUrl: 'https://guiademilhas.app/signup?callbackUrl=%2Fplanner',
       plans: [
         {
           name: 'Free',

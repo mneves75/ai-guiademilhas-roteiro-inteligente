@@ -487,6 +487,7 @@ const EN_MESSAGES = {
       gettingStarted: 'Getting Started',
       gettingStartedSubtitle: 'Complete these steps to get the most out of Guia de Milhas',
       actions: {
+        planTrip: 'Plan a trip with miles',
         createNewWorkspace: 'Create a new workspace',
         inviteTeamMembers: 'Invite team members',
         updateProfile: 'Update your profile',
@@ -494,6 +495,7 @@ const EN_MESSAGES = {
       steps: {
         createAccount: 'Create your account',
         createFirstWorkspace: 'Create your first workspace',
+        planFirstTrip: 'Create your first trip plan',
         inviteTeam: 'Invite your team',
         setupBilling: 'Set up billing',
       },
@@ -715,6 +717,12 @@ const EN_MESSAGES = {
         disabled: 'Disabled',
         alwaysOn: 'Always On',
       },
+    },
+  },
+
+  planner: {
+    header: {
+      backToDashboard: 'Back to dashboard',
     },
   },
 
@@ -1336,6 +1344,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       gettingStarted: 'Primeiros passos',
       gettingStartedSubtitle: 'Complete estes passos para aproveitar o Guia de Milhas',
       actions: {
+        planTrip: 'Planejar viagem com milhas',
         createNewWorkspace: 'Criar um novo workspace',
         inviteTeamMembers: 'Convidar membros',
         updateProfile: 'Atualizar seu perfil',
@@ -1343,6 +1352,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       steps: {
         createAccount: 'Criar sua conta',
         createFirstWorkspace: 'Criar seu primeiro workspace',
+        planFirstTrip: 'Crie seu primeiro roteiro',
         inviteTeam: 'Convidar sua equipe',
         setupBilling: 'Configurar cobrança',
       },
@@ -1565,6 +1575,12 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
         disabled: 'Desativado',
         alwaysOn: 'Sempre ativo',
       },
+    },
+  },
+
+  planner: {
+    header: {
+      backToDashboard: 'Voltar ao painel',
     },
   },
 

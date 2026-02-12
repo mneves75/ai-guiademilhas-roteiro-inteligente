@@ -34,14 +34,12 @@ describe('normalizeCallbackUrl', () => {
 
 describe('buildLoginRedirectHref', () => {
   it('builds login URL with encoded safe callback', () => {
-    expect(buildLoginRedirectHref('/dashboard/planner')).toBe(
-      '/login?callbackUrl=%2Fdashboard%2Fplanner'
-    );
+    expect(buildLoginRedirectHref('/planner')).toBe('/login?callbackUrl=%2Fplanner');
   });
 
   it('falls back to default path when callback is unsafe', () => {
-    expect(
-      buildLoginRedirectHref('https://evil.example', { defaultPath: '/dashboard/planner' })
-    ).toBe('/login?callbackUrl=%2Fdashboard%2Fplanner');
+    expect(buildLoginRedirectHref('https://evil.example', { defaultPath: '/planner' })).toBe(
+      '/login?callbackUrl=%2Fplanner'
+    );
   });
 });

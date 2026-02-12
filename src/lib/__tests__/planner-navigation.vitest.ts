@@ -3,14 +3,14 @@ import { plannerLoginHref, plannerSignupHref, PLANNER_PATH } from '@/lib/planner
 
 describe('planner navigation', () => {
   it('uses planner path as callback target', () => {
-    expect(PLANNER_PATH).toBe('/dashboard/planner');
+    expect(PLANNER_PATH).toBe('/planner');
   });
 
   it('builds login href with encoded callback', () => {
-    expect(plannerLoginHref()).toBe('/login?callbackUrl=%2Fdashboard%2Fplanner');
+    expect(plannerLoginHref()).toBe('/login?callbackUrl=%2Fplanner');
   });
 
   it('builds signup href with encoded callback', () => {
-    expect(plannerSignupHref()).toBe('/signup?callbackUrl=%2Fdashboard%2Fplanner');
+    expect(plannerSignupHref()).toBe('/signup?callbackUrl=%2Fplanner');
   });
 });
