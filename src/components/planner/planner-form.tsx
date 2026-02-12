@@ -297,6 +297,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
   function handleReset() {
     resetStream();
     setSubmitError('');
+    setShareStatus('idle');
     setErrors({});
     setFormData(initialTravelPreferences);
   }

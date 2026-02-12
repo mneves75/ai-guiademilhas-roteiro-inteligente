@@ -21,15 +21,16 @@ export async function createSharedReport(data: {
 }) {
   const fingerprint = fingerprintReport(data.creatorUserId, data.reportJson);
 
-  // Idempotent: return existing share for same user + report content
-  const existing = await db.query.sharedReports.findFirst({
+  // Idempotent: scan all user shares to find matching content hash
+  const userShares = await db.query.sharedReports.findMany({
     where: (sr, { eq, and }) =>
       and(eq(sr.creatorUserId, data.creatorUserId), withSoftDeleteFilter(sr)),
   });
 
-  if (existing && fingerprintReport(data.creatorUserId, existing.reportJson) === fingerprint) {
-    return existing;
-  }
+  const match = userShares.find(
+    (sr) => fingerprintReport(data.creatorUserId, sr.reportJson) === fingerprint
+  );
+  if (match) return match;
 
   const token = generateShareToken();
   const now = new Date();
