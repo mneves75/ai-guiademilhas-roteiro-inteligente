@@ -4,37 +4,9 @@ import { getAuth } from '@/lib/auth';
 import { withApiLogging } from '@/lib/logging';
 import { getOrCreateRequestId } from '@/lib/request-id';
 import { getUserPlans } from '@/db/queries/plans';
+import { problemJson } from '@/lib/planner/problem-response';
 
 export const runtime = 'nodejs';
-
-function problemJson(options: {
-  status: number;
-  title: string;
-  detail: string;
-  type: string;
-  instance: string;
-  requestId: string;
-  code: string;
-}): Response {
-  const body = {
-    type: options.type,
-    title: options.title,
-    status: options.status,
-    detail: options.detail,
-    instance: options.instance,
-    requestId: options.requestId,
-    code: options.code,
-    error: options.title,
-  };
-
-  return new Response(JSON.stringify(body), {
-    status: options.status,
-    headers: {
-      'Content-Type': 'application/problem+json; charset=utf-8',
-      'x-request-id': options.requestId,
-    },
-  });
-}
 
 export const GET = withApiLogging('api.planner.plans.list', async (request: NextRequest) => {
   const requestId = getOrCreateRequestId(request);

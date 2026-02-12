@@ -8,109 +8,21 @@ import { withApiLogging } from '@/lib/logging';
 import { normalizeLocale } from '@/lib/locale';
 import { getOrCreateRequestId } from '@/lib/request-id';
 import { checkRateLimit } from '@/lib/security/rate-limit';
-import { streamPlannerReport, resolvePlannerApiKey } from '@/lib/planner/stream-report';
+import { streamPlannerReport } from '@/lib/planner/stream-report';
+import { resolvePlannerApiKey } from '@/lib/planner/prompt';
 import { buildFallbackReport } from '@/lib/planner/generate-report';
 import { plannerGenerateRequestSchema } from '@/lib/planner/schema';
 import { plannerReportSchema } from '@/lib/planner/schema';
 import { captureServerEvent } from '@/lib/analytics/posthog-server';
 import { plannerFunnelEvents } from '@/lib/analytics/funnel';
 import { incPlannerFunnelGenerated } from '@/lib/metrics';
+import { plannerProblemResponse } from '@/lib/planner/problem-response';
 import type { PlannerStreamEvent, ReportSection } from '@/lib/planner/types';
 
 const RATE_LIMIT_MAX = 6;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
 export const runtime = 'nodejs';
-
-function problemJson(options: {
-  status: number;
-  title: string;
-  detail: string;
-  type: string;
-  instance: string;
-  requestId: string;
-  code: string;
-  retryAfterSeconds?: number;
-}): Response {
-  const body = {
-    type: options.type,
-    title: options.title,
-    status: options.status,
-    detail: options.detail,
-    instance: options.instance,
-    requestId: options.requestId,
-    code: options.code,
-    retryAfterSeconds: options.retryAfterSeconds,
-    error: options.title,
-  };
-
-  const responseHeaders = new Headers({
-    'Content-Type': 'application/problem+json; charset=utf-8',
-    'x-request-id': options.requestId,
-  });
-  if (typeof options.retryAfterSeconds === 'number') {
-    responseHeaders.set('Retry-After', String(options.retryAfterSeconds));
-  }
-
-  return new Response(JSON.stringify(body), { status: options.status, headers: responseHeaders });
-}
-
-function plannerProblemResponse(options: {
-  status: number;
-  requestId: string;
-  instance: string;
-  detail?: string;
-  retryAfterSeconds?: number;
-}): Response {
-  if (options.status === 400) {
-    return problemJson({
-      status: 400,
-      title: 'Invalid Request',
-      detail: options.detail ?? 'Invalid request body.',
-      type: 'https://guiademilhas.app/problems/planner-invalid-request',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_invalid_request',
-    });
-  }
-
-  if (options.status === 401) {
-    return problemJson({
-      status: 401,
-      title: 'Unauthorized',
-      detail: options.detail ?? 'Authentication is required to generate planner reports.',
-      type: 'https://guiademilhas.app/problems/planner-unauthorized',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_unauthorized',
-    });
-  }
-
-  if (options.status === 429) {
-    return problemJson({
-      status: 429,
-      title: 'Too Many Requests',
-      detail:
-        options.detail ??
-        'Rate limit exceeded for planner generation. Retry after the informed interval.',
-      type: 'https://guiademilhas.app/problems/planner-rate-limit',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_rate_limited',
-      retryAfterSeconds: options.retryAfterSeconds,
-    });
-  }
-
-  return problemJson({
-    status: 500,
-    title: 'Internal Server Error',
-    detail: options.detail ?? 'Unexpected error while generating planner report.',
-    type: 'https://guiademilhas.app/problems/planner-internal-error',
-    instance: options.instance,
-    requestId: options.requestId,
-    code: 'planner_internal_error',
-  });
-}
 
 export const POST = withApiLogging('api.planner.generate-stream', async (request: NextRequest) => {
   const requestId = getOrCreateRequestId(request);
@@ -198,7 +110,7 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
     }
 
     // --- Iniciar streaming ---
-    const streamResult = streamPlannerReport({ locale, preferences });
+    const streamResult = streamPlannerReport({ locale, preferences, signal: request.signal });
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
@@ -256,8 +168,10 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
               });
               planId = plan.id;
             } catch (dbError) {
-              // Plan save e best-effort - nao falhar o stream
-              void dbError;
+              console.warn('[planner.generate-stream] plan save failed (best-effort)', {
+                requestId,
+                error: dbError instanceof Error ? dbError.message : String(dbError),
+              });
             }
 
             // Analytics
@@ -311,7 +225,10 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
             send({ type: 'complete', report: fallbackReport, mode: 'fallback' });
           }
         } catch (streamError) {
-          void streamError;
+          console.warn('[planner.generate-stream] stream failed', {
+            requestId,
+            error: streamError instanceof Error ? streamError.message : String(streamError),
+          });
           send({
             type: 'error',
             code: 'stream_failed',

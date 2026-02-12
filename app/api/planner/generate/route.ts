@@ -14,102 +14,12 @@ import { plannerGenerateRequestSchema } from '@/lib/planner/schema';
 import { captureServerEvent } from '@/lib/analytics/posthog-server';
 import { plannerFunnelEvents } from '@/lib/analytics/funnel';
 import { incPlannerFunnelGenerated } from '@/lib/metrics';
+import { plannerProblemResponse } from '@/lib/planner/problem-response';
 
 const RATE_LIMIT_MAX = 6;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
 export const runtime = 'nodejs';
-
-function problemJson(options: {
-  status: number;
-  title: string;
-  detail: string;
-  type: string;
-  instance: string;
-  requestId: string;
-  code: string;
-  retryAfterSeconds?: number;
-}): Response {
-  const body = {
-    type: options.type,
-    title: options.title,
-    status: options.status,
-    detail: options.detail,
-    instance: options.instance,
-    requestId: options.requestId,
-    code: options.code,
-    retryAfterSeconds: options.retryAfterSeconds,
-    // Backward compatibility for existing clients that only look for `error`.
-    error: options.title,
-  };
-
-  const headers = new Headers({
-    'Content-Type': 'application/problem+json; charset=utf-8',
-    'x-request-id': options.requestId,
-  });
-  if (typeof options.retryAfterSeconds === 'number') {
-    headers.set('Retry-After', String(options.retryAfterSeconds));
-  }
-
-  return new Response(JSON.stringify(body), { status: options.status, headers });
-}
-
-function plannerProblemResponse(options: {
-  status: number;
-  requestId: string;
-  instance: string;
-  detail?: string;
-  retryAfterSeconds?: number;
-}): Response {
-  if (options.status === 400) {
-    return problemJson({
-      status: 400,
-      title: 'Invalid Request',
-      detail: options.detail ?? 'Invalid request body.',
-      type: 'https://guiademilhas.app/problems/planner-invalid-request',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_invalid_request',
-    });
-  }
-
-  if (options.status === 401) {
-    return problemJson({
-      status: 401,
-      title: 'Unauthorized',
-      detail: options.detail ?? 'Authentication is required to generate planner reports.',
-      type: 'https://guiademilhas.app/problems/planner-unauthorized',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_unauthorized',
-    });
-  }
-
-  if (options.status === 429) {
-    return problemJson({
-      status: 429,
-      title: 'Too Many Requests',
-      detail:
-        options.detail ??
-        'Rate limit exceeded for planner generation. Retry after the informed interval.',
-      type: 'https://guiademilhas.app/problems/planner-rate-limit',
-      instance: options.instance,
-      requestId: options.requestId,
-      code: 'planner_rate_limited',
-      retryAfterSeconds: options.retryAfterSeconds,
-    });
-  }
-
-  return problemJson({
-    status: 500,
-    title: 'Internal Server Error',
-    detail: options.detail ?? 'Unexpected error while generating planner report.',
-    type: 'https://guiademilhas.app/problems/planner-internal-error',
-    instance: options.instance,
-    requestId: options.requestId,
-    code: 'planner_internal_error',
-  });
-}
 
 export const POST = withApiLogging('api.planner.generate', async (request: NextRequest) => {
   const requestId = getOrCreateRequestId(request);

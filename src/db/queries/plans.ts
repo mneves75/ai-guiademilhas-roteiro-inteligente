@@ -2,13 +2,12 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { plans } from '@/db/schema/postgres';
 import { withSoftDeleteFilter, softDeleteNow } from './base';
-import * as crypto from 'crypto';
 
 /**
  * Gera ID único para plano (UUID v4).
  */
 function generatePlanId(): string {
-  return crypto.randomUUID();
+  return globalThis.crypto.randomUUID();
 }
 
 /**
