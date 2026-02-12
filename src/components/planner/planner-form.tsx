@@ -3,12 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/lib/locale';
 import { initialTravelPreferences } from '@/lib/planner/constants';
-import type { PlannerReport, TravelPreferences } from '@/lib/planner/types';
+import type { TravelPreferences } from '@/lib/planner/types';
 import { travelPreferencesSchema } from '@/lib/planner/schema';
-import {
-  parsePlannerGenerateSuccessPayload,
-  parsePlannerProblemDetails,
-} from '@/lib/planner/api-contract';
+import { usePlannerStream } from '@/lib/planner/use-planner-stream';
 import { plannerFunnelEvents } from '@/lib/analytics/funnel';
 import {
   capturePlannerFunnelEvent,
@@ -51,6 +48,11 @@ const labels = {
     shareLoading: 'Compartilhando...',
     shareCopied: 'Link copiado!',
     shareError: 'Não foi possível compartilhar o relatório.',
+    streaming: {
+      analyzing: 'Analisando sua viagem...',
+      generating: 'Gerando relatório...',
+      saved: 'Salvo',
+    },
     fields: {
       departureDate: 'Data de ida',
       returnDate: 'Data de volta',
@@ -138,6 +140,11 @@ const labels = {
     shareLoading: 'Sharing...',
     shareCopied: 'Link copied to clipboard!',
     shareError: 'Could not share the report.',
+    streaming: {
+      analyzing: 'Analyzing your trip...',
+      generating: 'Generating report...',
+      saved: 'Saved',
+    },
     fields: {
       departureDate: 'Departure date',
       returnDate: 'Return date',
@@ -232,10 +239,8 @@ function validateForm(formData: TravelPreferences, locale: Locale): FieldErrors 
 export default function PlannerForm({ locale }: { locale: Locale }) {
   const [formData, setFormData] = useState<TravelPreferences>(initialTravelPreferences);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [report, setReport] = useState<PlannerReport | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { state: streamState, generate, reset: resetStream } = usePlannerStream();
   const [submitError, setSubmitError] = useState('');
-  const [fallbackNoticeVisible, setFallbackNoticeVisible] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
@@ -246,6 +251,13 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     () => formData.num_adultos + formData.num_chd + formData.num_inf,
     [formData.num_adultos, formData.num_chd, formData.num_inf]
   );
+
+  const isSubmitting = streamState.status === 'streaming';
+  const report = streamState.status === 'complete' ? streamState.report : null;
+  const fallbackNoticeVisible =
+    streamState.status === 'complete' && streamState.mode === 'fallback';
+  const planId = streamState.status === 'complete' ? streamState.planId : undefined;
+  const displayError = streamState.status === 'error' ? streamState.message : submitError;
 
   useEffect(() => {
     const source = readPlannerFunnelSource();
@@ -267,74 +279,24 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setIsSubmitting(true);
-    setReport(null);
-    setFallbackNoticeVisible(false);
+    const funnelSource = readPlannerFunnelSource();
+    generate(formData, locale, funnelSource ?? undefined);
 
-    try {
-      const funnelSource = readPlannerFunnelSource();
-      const response = await fetch('/api/planner/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          locale,
-          source: funnelSource ?? undefined,
-          preferences: formData,
-        }),
+    if (funnelSource) {
+      capturePlannerFunnelEvent(plannerFunnelEvents.plannerGenerated, {
+        source: funnelSource,
+        locale,
+        mode: 'ai',
+        channel: 'client',
+        passengers: totalPassengers,
       });
-
-      const payload = (await response.json().catch(() => null)) as unknown;
-
-      if (!response.ok) {
-        const problem = parsePlannerProblemDetails(payload);
-        const errorTitle = problem?.title;
-        const requestId = problem?.requestId ?? response.headers.get('x-request-id') ?? undefined;
-        const retryAfterSeconds = problem?.retryAfterSeconds;
-        const retryHint =
-          typeof retryAfterSeconds === 'number'
-            ? locale === 'pt-BR'
-              ? ` Tente novamente em ${retryAfterSeconds}s.`
-              : ` Retry in ${retryAfterSeconds}s.`
-            : '';
-
-        setSubmitError(
-          requestId
-            ? `${errorTitle ?? t.submitFailed}${retryHint} ${t.requestIdLabel}: ${requestId}`
-            : `${errorTitle ?? t.submitFailed}${retryHint}`
-        );
-        return;
-      }
-
-      const success = parsePlannerGenerateSuccessPayload(payload);
-      if (!success) {
-        setSubmitError(t.invalidResponse);
-        return;
-      }
-
-      if (funnelSource) {
-        capturePlannerFunnelEvent(plannerFunnelEvents.plannerGenerated, {
-          source: funnelSource,
-          locale,
-          mode: success.mode,
-          channel: 'client',
-          passengers: totalPassengers,
-        });
-        clearPlannerFunnelSource();
-      }
-
-      setReport(success.report);
-      setFallbackNoticeVisible(success.mode === 'fallback');
-    } catch {
-      setSubmitError(t.submitFailed);
-    } finally {
-      setIsSubmitting(false);
+      clearPlannerFunnelSource();
     }
   }
 
   function handleReset() {
-    setReport(null);
+    resetStream();
     setSubmitError('');
-    setFallbackNoticeVisible(false);
     setErrors({});
     setFormData(initialTravelPreferences);
   }
@@ -383,13 +345,13 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {submitError && (
+            {displayError && (
               <div
                 role="alert"
                 aria-live="assertive"
                 className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
               >
-                {submitError}
+                {displayError}
               </div>
             )}
             <div className="grid gap-4 md:grid-cols-2">
@@ -737,17 +699,65 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t.submitLoading : t.submit}
+                {isSubmitting ? t.streaming.generating : t.submit}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
+      {streamState.status === 'streaming' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              {t.streaming.generating}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {streamState.title && (
+              <div>
+                <h3 className="text-lg font-semibold">{streamState.title}</h3>
+                {streamState.summary && (
+                  <p className="text-sm text-muted-foreground">{streamState.summary}</p>
+                )}
+              </div>
+            )}
+            {streamState.sections.length > 0 && (
+              <div className="space-y-4">
+                {streamState.sections.map((section, idx) => (
+                  <div
+                    key={`${section.title}-${idx}`}
+                    className="animate-in fade-in-0 slide-in-from-bottom-2 space-y-2 duration-300"
+                  >
+                    <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
+                    <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                      {section.items.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {report && (
         <Card>
           <CardHeader>
-            <CardTitle>{t.sections.report}</CardTitle>
+            <CardTitle className="flex items-center">
+              {t.sections.report}
+              {planId && (
+                <span className="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                  {t.streaming.saved}
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {fallbackNoticeVisible && (

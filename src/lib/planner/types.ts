@@ -45,3 +45,10 @@ export interface PlannerReport {
   sections: ReportSection[];
   assumptions: string[];
 }
+
+// --- Tipos para streaming ---
+
+export type PlannerStreamEvent =
+  | { type: 'delta'; title?: string; summary?: string; sections: ReportSection[] }
+  | { type: 'complete'; report: PlannerReport; mode: 'ai' | 'fallback'; planId?: string }
+  | { type: 'error'; code: string; message: string };

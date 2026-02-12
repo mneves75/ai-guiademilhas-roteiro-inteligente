@@ -162,7 +162,7 @@ export type GeneratePlannerReportResult = {
   mode: PlannerGenerationMode;
 };
 
-function buildFallbackReport({
+export function buildFallbackReport({
   locale,
   preferences,
   reason,

@@ -121,6 +121,38 @@ Admin access controlled by `ADMIN_EMAILS` env var (comma-separated).
 
 MDX blog with frontmatter in `content/blog/*.mdx`. Utilities in `src/lib/blog.ts`.
 
+### Planner Streaming Architecture
+
+The planner uses AI SDK v6's `streamText` + `Output.object()` for progressive report generation via SSE.
+
+**Flow**: Form submit → `POST /api/planner/generate-stream` → SSE stream → sections render progressively → auto-save to `plans` table.
+
+**Key files**:
+
+| File                                       | Purpose                                             |
+| ------------------------------------------ | --------------------------------------------------- |
+| `src/lib/planner/stream-report.ts`         | `streamText` + structured output (single AI call)   |
+| `src/lib/planner/use-planner-stream.ts`    | Client hook consuming SSE stream                    |
+| `app/api/planner/generate-stream/route.ts` | SSE endpoint (auth, rate limit, progressive deltas) |
+| `app/api/planner/generate/route.ts`        | Non-streaming fallback (backward compat)            |
+| `src/db/queries/plans.ts`                  | Plan CRUD (create, list, get, soft delete)          |
+| `app/api/planner/plans/route.ts`           | GET list of user plans (paginated)                  |
+| `app/api/planner/plans/[id]/route.ts`      | GET single plan, DELETE soft delete                 |
+
+**SSE event types** (`PlannerStreamEvent` in `src/lib/planner/types.ts`):
+
+- `delta` — progressive title/summary/sections as AI generates
+- `complete` — final validated report + planId (auto-saved to DB)
+- `error` — generation failure with localized message
+
+**DB table**: `plans` — stores generated reports with versioning (`parentId` for iteration chains), workspace scoping, soft delete.
+
+**Backward compat**: The original `/api/planner/generate` endpoint remains unchanged. The streaming endpoint is additive.
+
+### Shared Reports
+
+Token-based public access pattern. Authenticated users create share tokens via `POST /api/planner/share`, public pages at `/r/[token]` render reports without auth. Query functions in `src/db/queries/shared-reports.ts`. Idempotent — same report content returns existing token.
+
 ### Email Templates
 
 React Email templates in `src/emails/`. Send via `src/lib/email-actions.ts`.

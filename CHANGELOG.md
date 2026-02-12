@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`shared_reports` table**: dual-dialect (Postgres + SQLite) with soft deletes, creator FK, locale, and report JSON storage.
 - **`POST /api/planner/share`**: authenticated endpoint that validates report via `plannerReportSchema`, creates or returns existing share token.
 - **`/r/[token]` public page**: Server Component with OG metadata, locale-aware rendering via `m()`, no auth required.
+- **Planner Streaming Architecture**: Progressive SSE streaming via AI SDK v6 `streamText` + `Output.object()`. Sections render one by one as the AI generates, replacing the full-wait experience.
+  - `app/api/planner/generate-stream/route.ts` — SSE endpoint with auth, rate limit, audit
+  - `src/lib/planner/stream-report.ts` — Core streaming via `partialOutputStream`
+  - `src/lib/planner/use-planner-stream.ts` — Client hook (`idle | streaming | complete | error`)
+- **Persistent Plans**: Auto-save generated plans to PostgreSQL on stream completion (best-effort, non-blocking).
+  - `src/db/queries/plans.ts` — CRUD (`createPlan`, `getUserPlans`, `getPlanById`, `softDeletePlan`)
+  - `app/api/planner/plans/route.ts` — `GET /api/planner/plans` (paginated list)
+  - `app/api/planner/plans/[id]/route.ts` — `GET` + `DELETE` (soft delete with ownership check)
+- **Progressive Rendering UI**: Streaming sections appear with `animate-in` transitions, pulsing dot indicator, green "Salvo"/"Saved" badge on completion.
 - **Google AI API key**: planner now generates reports using Google Generative AI instead of fallback mode.
 - Planner API contract helpers with resilient parsing for versioned success payloads and RFC 9457 problem details
 - Route-level unit tests for `POST /api/planner/generate` (401, 429 problem+json, 200 success)
@@ -35,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `src/components/planner/planner-form.tsx` now uses `usePlannerStream` hook for progressive section rendering during generation.
+- `src/lib/planner/generate-report.ts` exports `buildFallbackReport` for reuse by streaming endpoint.
 - Share status auto-dismisses after 3 seconds (copied) or 4 seconds (error) for cleaner UX.
 - `POST /api/planner/generate` now returns versioned success payload (`schemaVersion`, `generatedAt`) and standardized 429 `application/problem+json`
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors
