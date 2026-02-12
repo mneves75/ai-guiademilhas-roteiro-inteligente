@@ -16,6 +16,7 @@ Aplicacao de planejamento de viagens com milhas, baseada no framework Next.js 16
 - **SEO Baseline** - Sitemap, robots, RSS autodiscovery, canonical + `hreflang` alternates enforced
 - **Storage** - Avatar uploads with adapters (local, R2, Vercel Blob)
 - **Full CI/CD** - GitHub Actions + Vercel previews
+- **Planner de Viagens com IA** - Relatorio estrategico de milhas gerado por Google AI, com links compartilhaveis publicos (`/r/[token]`)
 
 ## Quick Start
 
@@ -117,9 +118,10 @@ No CI, o projeto possui:
 
 ## Project Status
 
-| Phase            | Status      | Description                 |
-| ---------------- | ----------- | --------------------------- |
-| 1-12. v1 Roadmap | ✅ Complete | End-to-end demo app + gates |
+| Phase            | Status      | Description                   |
+| ---------------- | ----------- | ----------------------------- |
+| 1-12. v1 Roadmap | ✅ Complete | End-to-end demo app + gates   |
+| 13. Share Links  | ✅ Complete | Shareable planner report URLs |
 
 ## Contributing
 

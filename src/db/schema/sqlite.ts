@@ -205,6 +205,25 @@ export const stripeEvents = sqliteTable(
   (table) => [index('idx_stripe_events_event_id').on(table.stripeEventId)]
 );
 
+export const sharedReports = sqliteTable(
+  'shared_reports',
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    token: text().notNull().unique(),
+    creatorUserId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    locale: text().notNull().default('pt-BR'),
+    reportJson: text().notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('idx_shared_reports_token').on(table.token),
+    index('idx_shared_reports_creator').on(table.creatorUserId),
+    index('idx_shared_reports_deleted').on(table.deletedAt),
+  ]
+);
+
 // ==================== RELATIONS ====================
 // Identical structure to postgres.ts — relations() is dialect-agnostic
 
@@ -213,6 +232,7 @@ export const userRelations = relations(users, ({ many }) => ({
   workspaceMemberships: many(workspaceMembers),
   accounts: many(accounts),
   sessions: many(sessions),
+  sharedReports: many(sharedReports),
 }));
 
 export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
@@ -260,4 +280,11 @@ export const sessionRelations = relations(sessions, ({ one }) => ({
 
 export const accountRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
+}));
+
+export const sharedReportRelations = relations(sharedReports, ({ one }) => ({
+  creator: one(users, {
+    fields: [sharedReports.creatorUserId],
+    references: [users.id],
+  }),
 }));

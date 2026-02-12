@@ -243,6 +243,58 @@ export const stripeEvents = pgTable(
   (table) => [index('idx_stripe_events_event_id').on(table.stripeEventId)]
 );
 
+/**
+ * SHARED_REPORTS TABLE
+ * Public share tokens for planner reports.
+ */
+export const sharedReports = pgTable(
+  'shared_reports',
+  {
+    id: serial().primaryKey(),
+    token: varchar({ length: 255 }).notNull().unique(),
+    creatorUserId: varchar({ length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    locale: varchar({ length: 10 }).notNull().default('pt-BR'),
+    reportJson: text().notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('idx_shared_reports_token').on(table.token),
+    index('idx_shared_reports_creator').on(table.creatorUserId),
+    index('idx_shared_reports_deleted').on(table.deletedAt),
+  ]
+);
+
+/**
+ * PLANS TABLE
+ * Planos de viagem persistentes gerados pelo planner.
+ */
+export const plans = pgTable(
+  'plans',
+  {
+    id: varchar({ length: 36 }).primaryKey(),
+    userId: varchar({ length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    workspaceId: integer().references(() => workspaces.id),
+    locale: varchar({ length: 10 }).notNull(),
+    title: varchar({ length: 120 }).notNull(),
+    preferences: text().notNull(),
+    report: text().notNull(),
+    mode: varchar({ length: 20 }).notNull(),
+    version: integer().notNull().default(1),
+    parentId: varchar({ length: 36 }),
+    ...timestamps,
+  },
+  (table) => [
+    index('idx_plans_user_id').on(table.userId),
+    index('idx_plans_workspace_id').on(table.workspaceId),
+    index('idx_plans_parent_id').on(table.parentId),
+    index('idx_plans_deleted').on(table.deletedAt),
+  ]
+);
+
 // ==================== RELATIONS ====================
 
 export const userRelations = relations(users, ({ many }) => ({
@@ -250,6 +302,8 @@ export const userRelations = relations(users, ({ many }) => ({
   workspaceMemberships: many(workspaceMembers),
   accounts: many(accounts),
   sessions: many(sessions),
+  sharedReports: many(sharedReports),
+  plans: many(plans),
 }));
 
 export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
@@ -299,6 +353,29 @@ export const accountRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
 
+export const sharedReportRelations = relations(sharedReports, ({ one }) => ({
+  creator: one(users, {
+    fields: [sharedReports.creatorUserId],
+    references: [users.id],
+  }),
+}));
+
+export const planRelations = relations(plans, ({ one }) => ({
+  user: one(users, {
+    fields: [plans.userId],
+    references: [users.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [plans.workspaceId],
+    references: [workspaces.id],
+  }),
+  parent: one(plans, {
+    fields: [plans.parentId],
+    references: [plans.id],
+    relationName: 'planVersions',
+  }),
+}));
+
 // ==================== ZOD SCHEMAS ====================
 
 export const insertWorkspaceSchema = createInsertSchema(workspaces).omit({
@@ -327,3 +404,20 @@ export const insertWorkspaceInvitationSchema = createInsertSchema(workspaceInvit
 });
 
 export const selectWorkspaceInvitationSchema = createSelectSchema(workspaceInvitations);
+
+export const insertSharedReportSchema = createInsertSchema(sharedReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+});
+
+export const selectSharedReportSchema = createSelectSchema(sharedReports);
+
+export const insertPlanSchema = createInsertSchema(plans).omit({
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+});
+
+export const selectPlanSchema = createSelectSchema(plans);

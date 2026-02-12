@@ -167,4 +167,8 @@ export const {
   workspaceInvitationRelations,
   sessionRelations,
   accountRelations,
+  sharedReports,
+  sharedReportRelations,
+  plans,
+  planRelations,
 } = activeSchema;

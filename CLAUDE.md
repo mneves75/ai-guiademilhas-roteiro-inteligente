@@ -55,7 +55,8 @@ app/
 │   ├── dashboard/       # User dashboard with workspace context
 │   └── admin/           # Admin-only (ADMIN_EMAILS env check)
 ├── blog/                # Public MDX blog
-└── api/                 # API routes (auth, stripe, workspaces)
+├── api/                 # API routes (auth, stripe, workspaces, planner)
+└── r/                   # Public shareable report pages (no auth)
 ```
 
 ### Database Patterns
@@ -85,6 +86,10 @@ await db.update(workspaces).set({ deletedAt: new Date() }).where(eq(workspaces.i
 
 - Node (postgres/sqlite): `pnpm db:seed` (runs `src/db/seed.ts`)
 - D1 (Cloudflare): `wrangler d1 execute ... --file=src/db/seed.d1.sql`
+
+**Shared Reports**:
+
+Token-based public access pattern. Authenticated users create share tokens via `POST /api/planner/share`, public pages at `/r/[token]` render reports without auth. Query functions in `src/db/queries/shared-reports.ts`. Idempotent — same report content returns existing token.
 
 ### Multi-Tenancy
 

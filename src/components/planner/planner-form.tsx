@@ -47,6 +47,10 @@ const labels = {
     dateOrderError: 'A data de volta deve ser igual ou posterior à data de ida.',
     totalPassengers: (count: number) => `Total informado: ${count} passageiro(s).`,
     assumptionsTitle: 'Assunções',
+    share: 'Compartilhar relatório',
+    shareLoading: 'Compartilhando...',
+    shareCopied: 'Link copiado!',
+    shareError: 'Não foi possível compartilhar o relatório.',
     fields: {
       departureDate: 'Data de ida',
       returnDate: 'Data de volta',
@@ -130,6 +134,10 @@ const labels = {
     dateOrderError: 'Return date must be on or after departure date.',
     totalPassengers: (count: number) => `Total: ${count} passenger(s).`,
     assumptionsTitle: 'Assumptions',
+    share: 'Share report',
+    shareLoading: 'Sharing...',
+    shareCopied: 'Link copied to clipboard!',
+    shareError: 'Could not share the report.',
     fields: {
       departureDate: 'Departure date',
       returnDate: 'Return date',
@@ -228,6 +236,8 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [fallbackNoticeVisible, setFallbackNoticeVisible] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   const t = labels[locale] ?? labels['pt-BR'];
   const f = t.fields;
@@ -327,6 +337,37 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     setFallbackNoticeVisible(false);
     setErrors({});
     setFormData(initialTravelPreferences);
+  }
+
+  async function handleShare() {
+    if (!report) return;
+    setIsSharing(true);
+    setShareStatus('idle');
+
+    try {
+      const res = await fetch('/api/planner/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report, locale }),
+      });
+
+      if (!res.ok) {
+        setShareStatus('error');
+        return;
+      }
+
+      const data = await res.json();
+      const fullUrl = `${window.location.origin}${data.url}`;
+
+      await navigator.clipboard.writeText(fullUrl);
+      setShareStatus('copied');
+      setTimeout(() => setShareStatus('idle'), 3000);
+    } catch {
+      setShareStatus('error');
+      setTimeout(() => setShareStatus('idle'), 4000);
+    } finally {
+      setIsSharing(false);
+    }
   }
 
   return (
@@ -743,10 +784,19 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
               </div>
             )}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button type="button" variant="outline" onClick={handleReset}>
                 {t.reset}
               </Button>
+              <Button type="button" variant="secondary" onClick={handleShare} disabled={isSharing}>
+                {isSharing ? t.shareLoading : t.share}
+              </Button>
+              {shareStatus === 'copied' && (
+                <span className="text-sm text-green-600 dark:text-green-400">{t.shareCopied}</span>
+              )}
+              {shareStatus === 'error' && (
+                <span className="text-sm text-destructive">{t.shareError}</span>
+              )}
             </div>
           </CardContent>
         </Card>

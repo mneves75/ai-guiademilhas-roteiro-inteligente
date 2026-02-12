@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Shareable report URLs**: planner reports can now be shared via public links (`/r/[token]`). Authenticated users click "Compartilhar" to generate a permanent, public link. Token-based (32-char hex, 128-bit entropy), idempotent (same content returns same link), with rate limiting (10 req/min) and audit logging.
+- **`shared_reports` table**: dual-dialect (Postgres + SQLite) with soft deletes, creator FK, locale, and report JSON storage.
+- **`POST /api/planner/share`**: authenticated endpoint that validates report via `plannerReportSchema`, creates or returns existing share token.
+- **`/r/[token]` public page**: Server Component with OG metadata, locale-aware rendering via `m()`, no auth required.
+- **Google AI API key**: planner now generates reports using Google Generative AI instead of fallback mode.
 - Planner API contract helpers with resilient parsing for versioned success payloads and RFC 9457 problem details
 - Route-level unit tests for `POST /api/planner/generate` (401, 429 problem+json, 200 success)
 - OpenAPI 3.1 contract for planner endpoint (`docs/openapi.planner.yaml`)
@@ -30,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Share status auto-dismisses after 3 seconds (copied) or 4 seconds (error) for cleaner UX.
 - `POST /api/planner/generate` now returns versioned success payload (`schemaVersion`, `generatedAt`) and standardized 429 `application/problem+json`
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors
 - Reuse docs now document executable upstream sync workflow with branch autodetection and local path defaults
@@ -55,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CSP `style-src` blocking Radix UI**: removed nonce from `style-src` directive (kept `'unsafe-inline'`). Nonce stays on `script-src` for XSS protection. CSS injection cannot execute JS, so `'unsafe-inline'` for styles is safe.
 - `security:audit` now handles Git repos without commits by falling back to directory-based gitleaks scan
 - `framework:status` now parses ahead/behind counters correctly when Git returns tab-separated values
 

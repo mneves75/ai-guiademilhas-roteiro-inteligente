@@ -724,6 +724,13 @@ const EN_MESSAGES = {
     header: {
       backToDashboard: 'Back to dashboard',
     },
+    share: 'Share report',
+    shareLoading: 'Sharing...',
+    shareCopied: 'Link copied to clipboard!',
+    shareError: 'Could not share the report.',
+    sharedTitle: 'Shared Travel Plan',
+    sharedCreatedAt: 'Created on',
+    sharedBy: 'Generated with Guia de Milhas Planner',
   },
 
   admin: {
@@ -1582,6 +1589,13 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
     header: {
       backToDashboard: 'Voltar ao painel',
     },
+    share: 'Compartilhar relatório',
+    shareLoading: 'Compartilhando...',
+    shareCopied: 'Link copiado!',
+    shareError: 'Não foi possível compartilhar o relatório.',
+    sharedTitle: 'Plano de Viagem Compartilhado',
+    sharedCreatedAt: 'Criado em',
+    sharedBy: 'Gerado com o Planner do Guia de Milhas',
   },
 
   admin: {

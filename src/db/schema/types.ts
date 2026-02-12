@@ -135,6 +135,39 @@ export type NewWorkspaceInvitation = Omit<
   'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
 >;
 
+export type SharedReport = {
+  id: number;
+  token: string;
+  creatorUserId: string;
+  locale: string;
+  reportJson: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+};
+
+export type NewSharedReport = Omit<SharedReport, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+
+export type Plan = {
+  id: string;
+  userId: string;
+  workspaceId: number | null;
+  locale: string;
+  title: string;
+  preferences: string;
+  report: string;
+  mode: string;
+  version: number;
+  parentId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+};
+
+export type NewPlan = Omit<Plan, 'createdAt' | 'updatedAt' | 'deletedAt' | 'version'> & {
+  version?: number;
+};
+
 // ==================== DB PROVIDER ====================
 
 export type DbProvider = 'postgres' | 'sqlite' | 'd1';
