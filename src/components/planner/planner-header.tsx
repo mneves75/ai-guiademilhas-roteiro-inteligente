@@ -46,6 +46,7 @@ export function PlannerHeader({ user }: PlannerHeaderProps) {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard">
             <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="sr-only sm:hidden">{t.planner.header.backToDashboard}</span>
             <span className="hidden sm:inline">{t.planner.header.backToDashboard}</span>
           </Link>
         </Button>
@@ -55,7 +56,12 @@ export function PlannerHeader({ user }: PlannerHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label={t.common.userFallback}
+            >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                 <span className="text-sm font-medium">
                   {(user.name ?? user.email).charAt(0).toUpperCase()}

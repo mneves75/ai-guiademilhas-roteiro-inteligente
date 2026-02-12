@@ -51,7 +51,7 @@ test.describe('Protected Routes', () => {
 
     await signUpAndReachWorkspaces(page, { seed: `${testInfo.testId}-home-redirect` });
     await page.goto('/en', { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/\/dashboard\/planner$/);
+    await expect(page).toHaveURL(/\/planner$/);
   });
 
   test('invalid session cookie still keeps callback on protected redirect', async ({
