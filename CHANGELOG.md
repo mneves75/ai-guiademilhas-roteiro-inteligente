@@ -46,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `src/components/planner/planner-form.tsx` now uses `usePlannerStream` hook for progressive section rendering during generation.
 - `src/lib/planner/generate-report.ts` exports `buildFallbackReport` for reuse by streaming endpoint.
+- Extracted shared planner modules to eliminate DRY violations:
+  - `src/lib/planner/prompt.ts` — shared prompt construction, API key resolution, enum localization
+  - `src/lib/planner/problem-response.ts` — RFC 9457 problem+json helpers (previously duplicated in 4 routes)
+- AbortSignal now propagated from client through SSE endpoint to Gemini API (prevents token waste on disconnect).
+- Silent `void error` swallowing replaced with `console.warn` + requestId for observability.
+- `src/db/queries/plans.ts` uses `globalThis.crypto.randomUUID()` instead of `import * as crypto`.
 - Share status auto-dismisses after 3 seconds (copied) or 4 seconds (error) for cleaner UX.
 - `POST /api/planner/generate` now returns versioned success payload (`schemaVersion`, `generatedAt`) and standardized 429 `application/problem+json`
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors

@@ -87,10 +87,6 @@ await db.update(workspaces).set({ deletedAt: new Date() }).where(eq(workspaces.i
 - Node (postgres/sqlite): `pnpm db:seed` (runs `src/db/seed.ts`)
 - D1 (Cloudflare): `wrangler d1 execute ... --file=src/db/seed.d1.sql`
 
-**Shared Reports**:
-
-Token-based public access pattern. Authenticated users create share tokens via `POST /api/planner/share`, public pages at `/r/[token]` render reports without auth. Query functions in `src/db/queries/shared-reports.ts`. Idempotent — same report content returns existing token.
-
 ### Multi-Tenancy
 
 Workspaces provide team isolation. Key tables:
@@ -129,15 +125,17 @@ The planner uses AI SDK v6's `streamText` + `Output.object()` for progressive re
 
 **Key files**:
 
-| File                                       | Purpose                                             |
-| ------------------------------------------ | --------------------------------------------------- |
-| `src/lib/planner/stream-report.ts`         | `streamText` + structured output (single AI call)   |
-| `src/lib/planner/use-planner-stream.ts`    | Client hook consuming SSE stream                    |
-| `app/api/planner/generate-stream/route.ts` | SSE endpoint (auth, rate limit, progressive deltas) |
-| `app/api/planner/generate/route.ts`        | Non-streaming fallback (backward compat)            |
-| `src/db/queries/plans.ts`                  | Plan CRUD (create, list, get, soft delete)          |
-| `app/api/planner/plans/route.ts`           | GET list of user plans (paginated)                  |
-| `app/api/planner/plans/[id]/route.ts`      | GET single plan, DELETE soft delete                 |
+| File                                       | Purpose                                              |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `src/lib/planner/prompt.ts`                | Shared prompt construction, API key, enum i18n       |
+| `src/lib/planner/problem-response.ts`      | RFC 9457 problem+json helpers (shared across routes) |
+| `src/lib/planner/stream-report.ts`         | `streamText` + structured output (single AI call)    |
+| `src/lib/planner/use-planner-stream.ts`    | Client hook consuming SSE stream                     |
+| `app/api/planner/generate-stream/route.ts` | SSE endpoint (auth, rate limit, progressive deltas)  |
+| `app/api/planner/generate/route.ts`        | Non-streaming fallback (backward compat)             |
+| `src/db/queries/plans.ts`                  | Plan CRUD (create, list, get, soft delete)           |
+| `app/api/planner/plans/route.ts`           | GET list of user plans (paginated)                   |
+| `app/api/planner/plans/[id]/route.ts`      | GET single plan, DELETE soft delete                  |
 
 **SSE event types** (`PlannerStreamEvent` in `src/lib/planner/types.ts`):
 
