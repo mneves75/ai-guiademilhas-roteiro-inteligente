@@ -79,6 +79,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **CSP `style-src` blocking Radix UI**: removed nonce from `style-src` directive (kept `'unsafe-inline'`). Nonce stays on `script-src` for XSS protection. CSS injection cannot execute JS, so `'unsafe-inline'` for styles is safe.
+- **Share idempotency correctness**: `findFirst` returned an arbitrary row per user — now scans all user shares and compares SHA-256 content fingerprints to find the correct match.
+- **Share state leaking across reports**: `handleReset` did not clear `shareStatus`, so "Link copiado" persisted when generating a new report.
+- **Share API route consistency**: replaced manual `request.json()` with `readJsonBodyAs()` + `isHttpError` catch block, matching the generate endpoint pattern. Added `.strict()` to request schema.
 - `security:audit` now handles Git repos without commits by falling back to directory-based gitleaks scan
 - `framework:status` now parses ahead/behind counters correctly when Git returns tab-separated values
 
