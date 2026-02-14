@@ -224,6 +224,55 @@ export const sharedReports = sqliteTable(
   ]
 );
 
+/**
+ * PLANS TABLE
+ * Planos de viagem persistentes gerados pelo planner.
+ */
+export const plans = sqliteTable(
+  'plans',
+  {
+    id: text().primaryKey(),
+    userId: text()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    workspaceId: integer().references(() => workspaces.id),
+    locale: text().notNull(),
+    title: text().notNull(),
+    preferences: text().notNull(),
+    report: text().notNull(),
+    mode: text().notNull(),
+    version: integer().notNull().default(1),
+    parentId: text(),
+    ...timestamps,
+  },
+  (table) => [
+    index('idx_plans_user_id').on(table.userId),
+    index('idx_plans_workspace_id').on(table.workspaceId),
+    index('idx_plans_parent_id').on(table.parentId),
+    index('idx_plans_deleted').on(table.deletedAt),
+  ]
+);
+
+/**
+ * PLAN_CACHE TABLE
+ * LLM response cache — SHA256 hash of preferences → cached report.
+ * TTL enforced at query time (7 days). Rows can be cleaned up periodically.
+ */
+export const planCache = sqliteTable(
+  'plan_cache',
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    hash: text().notNull().unique(), // SHA256 hex = 64 chars
+    report: text().notNull(), // JSON stringified PlannerReport
+    model: text().notNull(), // e.g. "gemini-2.5-flash"
+    hitCount: integer().notNull().default(0),
+    createdAt: integer({ mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex('idx_plan_cache_hash').on(table.hash)]
+);
+
 // ==================== RELATIONS ====================
 // Identical structure to postgres.ts — relations() is dialect-agnostic
 
@@ -233,6 +282,7 @@ export const userRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   sharedReports: many(sharedReports),
+  plans: many(plans),
 }));
 
 export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
@@ -286,5 +336,21 @@ export const sharedReportRelations = relations(sharedReports, ({ one }) => ({
   creator: one(users, {
     fields: [sharedReports.creatorUserId],
     references: [users.id],
+  }),
+}));
+
+export const planRelations = relations(plans, ({ one }) => ({
+  user: one(users, {
+    fields: [plans.userId],
+    references: [users.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [plans.workspaceId],
+    references: [workspaces.id],
+  }),
+  parent: one(plans, {
+    fields: [plans.parentId],
+    references: [plans.id],
+    relationName: 'planVersions',
   }),
 }));

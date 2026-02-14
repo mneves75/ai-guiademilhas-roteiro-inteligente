@@ -63,7 +63,22 @@ export const plannerGenerateRequestSchema = z
   })
   .strict();
 
-const reportItemSchema = z.string().trim().min(6).max(240);
+const structuredItemSchema = z.object({
+  text: z.string().trim().min(6).max(240),
+  tag: z.enum(['tip', 'warning', 'action', 'info']).optional(),
+  links: z
+    .array(
+      z.object({
+        label: z.string().trim().min(2).max(60),
+        url: z.string().url().max(500),
+        type: z.enum(['search', 'book', 'info', 'map']),
+      })
+    )
+    .max(3)
+    .optional(),
+});
+
+const reportItemSchema = z.union([z.string().trim().min(6).max(240), structuredItemSchema]);
 
 const reportSectionSchema = z
   .object({

@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { JsonLd } from '@/components/json-ld';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { getLandingContent } from '@/content/landing';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { publicPathname } from '@/lib/locale-routing';
 import { getRequestLocale } from '@/lib/locale-server';
 import { plannerLoginHref, plannerSignupHref, PLANNER_PATH } from '@/lib/planner/navigation';
@@ -63,10 +62,7 @@ export default async function HomePage() {
   const appName = content.appName;
   const canonicalPath = publicPathname(locale, '/');
   const plannerPath = PLANNER_PATH;
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   if (session) {
     redirect(plannerPath);
   }

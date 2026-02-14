@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,14 +13,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
 
+type SessionUser = {
+  email: string;
+  name?: string;
+  image?: string | null;
+};
+
 export default function SettingsPage() {
   const router = useRouter();
   const { locale } = useLocale();
   const t = m(locale);
   const ts = t.dashboard.settings;
 
-  const { data: session, refetch } = authClient.useSession();
-  const [name, setName] = useState(session?.user?.name ?? '');
+  const [session, setSession] = useState<{ user: SessionUser } | null>(null);
+
+  const fetchUser = async () => {
+    const {
+      data: { user },
+    } = await authClient.auth.getUser();
+    if (user) {
+      setSession({
+        user: {
+          email: user.email!,
+          name: user.user_metadata?.name ?? user.user_metadata?.full_name,
+          image: user.user_metadata?.avatar_url ?? user.user_metadata?.picture,
+        },
+      });
+    }
+  };
+
+  useEffect(() => {
+    void fetchUser();
+  }, []);
+
+  const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -33,6 +59,12 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
+  useEffect(() => {
+    if (session?.user?.name && !name) {
+      setName(session.user.name);
+    }
+  }, [session, name]);
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -40,12 +72,14 @@ export default function SettingsPage() {
     setSuccess('');
 
     try {
-      const result = await authClient.updateUser({ name });
-      if (result?.error) {
-        throw new Error(result.error.message ?? ts.profile.failed);
+      const { error: updateError } = await authClient.auth.updateUser({
+        data: { name, full_name: name },
+      });
+      if (updateError) {
+        throw new Error(updateError.message ?? ts.profile.failed);
       }
       setSuccess(ts.profile.saved);
-      await refetch();
+      await fetchUser();
       router.refresh();
     } catch {
       setError(ts.profile.failed);
@@ -75,11 +109,13 @@ export default function SettingsPage() {
         throw new Error(uploadData.error ?? ts.avatar.uploadFailed);
       }
 
-      const updateRes = await authClient.updateUser({ image: uploadData.url });
-      if (updateRes?.error) {
-        throw new Error(updateRes.error.message ?? ts.avatar.updateFailed);
+      const { error: updateError } = await authClient.auth.updateUser({
+        data: { avatar_url: uploadData.url },
+      });
+      if (updateError) {
+        throw new Error(updateError.message ?? ts.avatar.updateFailed);
       }
-      await refetch();
+      await fetchUser();
       setSuccess(ts.avatar.updated);
       router.refresh();
     } catch (e) {
@@ -94,11 +130,13 @@ export default function SettingsPage() {
     setError('');
     setSuccess('');
     try {
-      const updateRes = await authClient.updateUser({ image: null });
-      if (updateRes?.error) {
-        throw new Error(updateRes.error.message ?? ts.avatar.removeFailed);
+      const { error: updateError } = await authClient.auth.updateUser({
+        data: { avatar_url: null },
+      });
+      if (updateError) {
+        throw new Error(updateError.message ?? ts.avatar.removeFailed);
       }
-      await refetch();
+      await fetchUser();
       setSuccess(ts.avatar.removed);
       router.refresh();
     } catch (e) {
@@ -125,25 +163,18 @@ export default function SettingsPage() {
         throw new Error(ts.password.mismatch);
       }
 
-      const res = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          revokeOtherSessions: true,
-        }),
+      const { error: pwError } = await authClient.auth.updateUser({
+        password: newPassword,
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
-      if (!res.ok) {
-        throw new Error(data?.error?.message ?? ts.password.changeFailed);
+      if (pwError) {
+        throw new Error(pwError.message ?? ts.password.changeFailed);
       }
 
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setPasswordSuccess(ts.password.updated);
-      await refetch();
+      await fetchUser();
     } catch (e) {
       setPasswordError(e instanceof Error ? e.message : ts.password.changeFailed);
     } finally {

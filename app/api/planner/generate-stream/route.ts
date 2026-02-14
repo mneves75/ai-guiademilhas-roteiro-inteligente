@@ -1,7 +1,6 @@
 import { type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { auditFromRequest } from '@/audit';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { isHttpError } from '@/lib/http';
 import { readJsonBodyAs } from '@/lib/http-body';
 import { withApiLogging } from '@/lib/logging';
@@ -30,8 +29,7 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
 
   try {
     // --- Auth check ---
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       return plannerProblemResponse({
         status: 401,
@@ -75,6 +73,73 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
         source: payload.source,
       },
     });
+
+    // --- Check cache ---
+    const { hashPreferences, getCachedReport } = await import('@/lib/planner/cache');
+    const cacheHash = await hashPreferences(preferences);
+    const cachedReport = await getCachedReport(cacheHash);
+
+    if (cachedReport) {
+      // Auto-save plan to DB (same logic as existing)
+      let planId: string | undefined;
+      try {
+        const { createPlan } = await import('@/db/queries/plans');
+        const plan = await createPlan({
+          userId: session.user.id,
+          locale,
+          title: cachedReport.title,
+          preferences: JSON.stringify(preferences),
+          report: JSON.stringify(cachedReport),
+          mode: 'cached',
+        });
+        planId = plan.id;
+      } catch (dbError) {
+        console.warn('[planner.generate-stream] cached plan save failed', {
+          requestId,
+          error: dbError instanceof Error ? dbError.message : String(dbError),
+        });
+      }
+
+      // Analytics
+      if (payload.source) {
+        captureServerEvent({
+          distinctId: String(session.user.id),
+          event: plannerFunnelEvents.plannerGenerated,
+          properties: { source: payload.source, locale, mode: 'cached', channel: 'server' },
+        });
+      }
+      incPlannerFunnelGenerated({
+        source: payload.source ?? 'unknown',
+        mode: 'ai', // cache is transparent — report as 'ai' for metrics
+        channel: 'server',
+      });
+
+      // Return as SSE
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          const event: PlannerStreamEvent = {
+            type: 'complete',
+            report: cachedReport,
+            mode: 'ai', // Show as 'ai' to user (cache is transparent)
+            planId,
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-store',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+          'x-request-id': requestId,
+          'x-cache': 'hit',
+        },
+      });
+    }
 
     // --- Check API key antes de iniciar stream ---
     const apiKey = resolvePlannerApiKey();
@@ -184,6 +249,17 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
                   locale,
                   mode: 'ai',
                   channel: 'server',
+                  sectionCount: parsed.data.sections.length,
+                  hasDestinationGuide: parsed.data.sections.some(
+                    (s) =>
+                      s.title.toLowerCase().includes('guia') ||
+                      s.title.toLowerCase().includes('guide')
+                  ),
+                  destinationsRequested: preferences.destinos.trim().length > 0,
+                  assumptionCount: parsed.data.assumptions.length,
+                  hasStructuredItems: parsed.data.sections.some((s) =>
+                    s.items.some((item) => typeof item !== 'string')
+                  ),
                 },
               });
             }
@@ -193,6 +269,17 @@ export const POST = withApiLogging('api.planner.generate-stream', async (request
               mode: 'ai',
               channel: 'server',
             });
+
+            // Save to LLM response cache (best-effort)
+            try {
+              const { setCachedReport } = await import('@/lib/planner/cache');
+              await setCachedReport(cacheHash, parsed.data, 'gemini-2.5-flash');
+            } catch (cacheError) {
+              console.warn('[planner.generate-stream] cache save failed', {
+                requestId,
+                error: cacheError instanceof Error ? cacheError.message : String(cacheError),
+              });
+            }
 
             send({ type: 'complete', report: parsed.data, mode: 'ai', planId });
           } else {

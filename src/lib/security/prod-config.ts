@@ -16,8 +16,7 @@ export function validateProductionConfig(
 
   const origin =
     tryGetOriginFromEnv(env.NEXT_PUBLIC_APP_URL) ??
-    tryGetOriginFromEnv(env.BETTER_AUTH_BASE_URL) ??
-    tryGetOriginFromEnv(env.BETTER_AUTH_URL);
+    tryGetOriginFromEnv(env.NEXT_PUBLIC_SUPABASE_URL);
 
   // If origin is missing, other subsystems will fail fast (e.g. Better Auth baseURL).
   // Keep this validator narrowly scoped to things we can assert safely.
@@ -26,8 +25,7 @@ export function validateProductionConfig(
   if (!isLocalOrigin(origin) && !origin.startsWith('https://')) {
     return {
       ok: false,
-      error:
-        'NEXT_PUBLIC_APP_URL (or BETTER_AUTH_BASE_URL/BETTER_AUTH_URL) must be https:// in production.',
+      error: 'NEXT_PUBLIC_APP_URL (or NEXT_PUBLIC_SUPABASE_URL) must be https:// in production.',
     };
   }
 

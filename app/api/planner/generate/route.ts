@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { auditFromRequest } from '@/audit';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { isHttpError } from '@/lib/http';
 import { readJsonBodyAs } from '@/lib/http-body';
 import { withApiLogging } from '@/lib/logging';
@@ -26,8 +25,7 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
   const instance = request.nextUrl.pathname;
 
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       return plannerProblemResponse({
         status: 401,
@@ -54,6 +52,65 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
 
     const payload = await readJsonBodyAs(request, plannerGenerateRequestSchema);
     const locale = normalizeLocale(payload.locale);
+
+    // --- Check cache ---
+    const { hashPreferences, getCachedReport, setCachedReport } =
+      await import('@/lib/planner/cache');
+    const cacheHash = await hashPreferences(payload.preferences);
+    const cachedReport = await getCachedReport(cacheHash);
+
+    if (cachedReport) {
+      auditFromRequest(request, {
+        action: 'planner.generate',
+        actor: { userId: String(session.user.id) },
+        metadata: {
+          locale,
+          passengers:
+            payload.preferences.num_adultos +
+            payload.preferences.num_chd +
+            payload.preferences.num_inf,
+          destinationsProvided: payload.preferences.destinos.length > 0,
+          generationMode: 'cached',
+          source: payload.source,
+        },
+      });
+
+      if (payload.source) {
+        captureServerEvent({
+          distinctId: String(session.user.id),
+          event: plannerFunnelEvents.plannerGenerated,
+          properties: {
+            source: payload.source,
+            locale,
+            mode: 'cached',
+            channel: 'server',
+          },
+        });
+      }
+
+      incPlannerFunnelGenerated({
+        source: payload.source ?? 'unknown',
+        mode: 'ai', // cache is transparent — report as 'ai' for metrics
+        channel: 'server',
+      });
+
+      return NextResponse.json(
+        {
+          schemaVersion: PLANNER_API_SCHEMA_VERSION,
+          generatedAt: new Date().toISOString(),
+          report: cachedReport,
+          mode: 'ai' as const,
+        },
+        {
+          status: 200,
+          headers: {
+            'x-request-id': requestId,
+            'x-cache': 'hit',
+          },
+        }
+      );
+    }
+
     const generation = await generatePlannerReport({
       locale,
       preferences: payload.preferences,
@@ -94,6 +151,18 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
       mode: generation.mode,
       channel: 'server',
     });
+
+    // Save to LLM response cache on successful AI generation (best-effort)
+    if (generation.mode === 'ai') {
+      try {
+        await setCachedReport(cacheHash, generation.report, 'gemini-2.5-flash');
+      } catch (cacheError) {
+        console.warn('[planner.generate] cache save failed', {
+          requestId,
+          error: cacheError instanceof Error ? cacheError.message : String(cacheError),
+        });
+      }
+    }
 
     return NextResponse.json(
       {

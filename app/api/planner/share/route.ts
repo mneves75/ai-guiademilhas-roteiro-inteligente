@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { auditFromRequest } from '@/audit';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { isHttpError } from '@/lib/http';
 import { readJsonBodyAs } from '@/lib/http-body';
 import { withApiLogging } from '@/lib/logging';
@@ -28,8 +27,7 @@ export const POST = withApiLogging('api.planner.share', async (request: NextRequ
   const requestId = getOrCreateRequestId(request);
 
   try {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

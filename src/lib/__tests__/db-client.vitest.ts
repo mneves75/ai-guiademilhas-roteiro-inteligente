@@ -1,7 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mkdtempSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -57,21 +54,13 @@ describe('db/client', () => {
     expect(() => db.query).toThrow(/DATABASE_URL is required/);
   });
 
-  it('initializes sqlite on first access, but refuses sqlite in edge client', async () => {
+  it('throws descriptive error for sqlite provider (not available in bundled builds)', async () => {
     process.env.DB_PROVIDER = 'sqlite';
 
-    const dir = mkdtempSync(join(tmpdir(), 'db-seed-'));
-    const sqlitePath = join(dir, 'app.db');
-    process.env.SQLITE_PATH = sqlitePath;
+    const { db, dbEdge } = await import('@/db/client');
 
-    try {
-      const { db, dbEdge } = await import('@/db/client');
-
-      expect(typeof db.select).toBe('function');
-      expect(() => dbEdge.select).toThrow(/SQLite provider is not supported in Edge runtime/);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+    expect(() => db.select).toThrow(/SQLite provider not available in bundled builds/);
+    expect(() => dbEdge.select).toThrow(/SQLite provider is not supported in Edge runtime/);
   });
 
   it('guards D1 provider behind explicit Worker binding', async () => {

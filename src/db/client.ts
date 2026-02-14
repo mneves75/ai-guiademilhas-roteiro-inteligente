@@ -5,7 +5,6 @@ import * as sqliteSchema from './schema/sqlite';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { DbProvider } from './schema/types';
 import { createPostgresDb, createPostgresEdgeDb } from './adapters/postgres';
-import { createSqliteDb } from './adapters/sqlite';
 import { resolveDbProvider } from './env';
 
 /**
@@ -96,7 +95,13 @@ function lazy(getter: () => CanonicalDb): CanonicalDb {
 function createDb(): CanonicalDb {
   switch (DB_PROVIDER) {
     case 'sqlite': {
-      return createSqliteDb() as unknown as CanonicalDb;
+      // SQLite adapter requires better-sqlite3 (optional native dep, not bundled by Turbopack).
+      // Use createSqliteDb() from @/db/adapters/sqlite directly in non-bundled environments,
+      // or set DB_PROVIDER=postgres (default for this project).
+      throw new Error(
+        'SQLite provider not available in bundled builds. ' +
+          'Install better-sqlite3 and import createSqliteDb from @/db/adapters/sqlite directly.'
+      );
     }
     case 'd1': {
       throw new Error(
@@ -171,4 +176,5 @@ export const {
   sharedReportRelations,
   plans,
   planRelations,
+  planCache,
 } = activeSchema;

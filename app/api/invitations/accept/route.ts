@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { acceptInvitation, getInvitationByToken } from '@/db/queries/invitations';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { withApiLogging } from '@/lib/logging';
@@ -20,8 +19,7 @@ const acceptInvitationSchema = z
  * Accept an invitation using token
  */
 export const POST = withApiLogging('api.invitations.accept', async (request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }

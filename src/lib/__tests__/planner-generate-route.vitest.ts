@@ -12,16 +12,8 @@ const mocks = vi.hoisted(() => ({
   mockIncPlannerFunnelGenerated: vi.fn(),
 }));
 
-vi.mock('next/headers', () => ({
-  headers: vi.fn(async () => new Headers()),
-}));
-
 vi.mock('@/lib/auth', () => ({
-  getAuth: () => ({
-    api: {
-      getSession: mocks.mockGetSession,
-    },
-  }),
+  getSession: mocks.mockGetSession,
 }));
 
 vi.mock('@/lib/security/rate-limit', () => ({
@@ -38,6 +30,12 @@ vi.mock('@/audit', () => ({
 
 vi.mock('@/lib/analytics/posthog-server', () => ({
   captureServerEvent: mocks.mockCaptureServerEvent,
+}));
+
+vi.mock('@/lib/planner/cache', () => ({
+  hashPreferences: vi.fn().mockResolvedValue('test_hash_abc123'),
+  getCachedReport: vi.fn().mockResolvedValue(null),
+  setCachedReport: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/lib/metrics', () => ({

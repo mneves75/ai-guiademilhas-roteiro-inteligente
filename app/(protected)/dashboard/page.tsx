@@ -1,5 +1,4 @@
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,10 +10,7 @@ import { m } from '@/lib/messages';
 import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export default async function DashboardPage() {
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect(buildLoginRedirectHref('/dashboard', { defaultPath: '/dashboard' }));

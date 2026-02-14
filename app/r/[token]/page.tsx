@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { getSharedReportByToken } from '@/db/queries/shared-reports';
 import { plannerReportSchema } from '@/lib/planner/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ReportItemView } from '@/components/planner/report-item';
+import { getItemText } from '@/lib/planner/types';
 import { m } from '@/lib/messages';
 import type { Locale } from '@/lib/locale';
 
@@ -94,8 +96,10 @@ export default async function SharedReportPage({ params }: Props) {
               <div key={section.title} className="space-y-2">
                 <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  {section.items.map((item) => (
-                    <li key={item}>{item}</li>
+                  {section.items.map((item, i) => (
+                    <li key={`${getItemText(item)}-${i}`}>
+                      <ReportItemView item={item} />
+                    </li>
                   ))}
                 </ul>
               </div>

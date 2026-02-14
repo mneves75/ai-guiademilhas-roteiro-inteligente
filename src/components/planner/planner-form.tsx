@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Locale } from '@/lib/locale';
-import { initialTravelPreferences } from '@/lib/planner/constants';
-import type { TravelPreferences } from '@/lib/planner/types';
-import { travelPreferencesSchema } from '@/lib/planner/schema';
+
+import { getItemText } from '@/lib/planner/types';
+import { ReportItemView } from '@/components/planner/report-item';
 import { usePlannerStream } from '@/lib/planner/use-planner-stream';
 import { plannerFunnelEvents } from '@/lib/analytics/funnel';
 import {
@@ -12,20 +12,14 @@ import {
   clearPlannerFunnelSource,
   readPlannerFunnelSource,
 } from '@/lib/analytics/funnel-client';
+import { useWizardForm, TOTAL_STEPS, type StepIndex } from '@/hooks/use-wizard-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-
-type FieldErrors = Partial<Record<keyof TravelPreferences, string>>;
+import { WizardProgress } from '@/components/planner/wizard-progress';
+import { StepTrip } from '@/components/planner/steps/step-trip';
+import { StepPassengers } from '@/components/planner/steps/step-passengers';
+import { StepFlight } from '@/components/planner/steps/step-flight';
+import { StepPreferences } from '@/components/planner/steps/step-preferences';
 
 const labels = {
   'pt-BR': {
@@ -48,10 +42,17 @@ const labels = {
     shareLoading: 'Compartilhando...',
     shareCopied: 'Link copiado!',
     shareError: 'Não foi possível compartilhar o relatório.',
+    downloadPdf: 'Baixar PDF',
     streaming: {
       analyzing: 'Analisando sua viagem...',
       generating: 'Gerando relatório...',
       saved: 'Salvo',
+    },
+    wizard: {
+      next: 'Próximo',
+      back: 'Voltar',
+      skipAndGenerate: 'Pular e gerar',
+      stepLabels: ['Viagem', 'Passageiros', 'Voo e Milhas', 'Preferências'],
     },
     fields: {
       departureDate: 'Data de ida',
@@ -140,10 +141,17 @@ const labels = {
     shareLoading: 'Sharing...',
     shareCopied: 'Link copied to clipboard!',
     shareError: 'Could not share the report.',
+    downloadPdf: 'Download PDF',
     streaming: {
       analyzing: 'Analyzing your trip...',
       generating: 'Generating report...',
       saved: 'Saved',
+    },
+    wizard: {
+      next: 'Next',
+      back: 'Back',
+      skipAndGenerate: 'Skip and generate',
+      stepLabels: ['Trip', 'Passengers', 'Flight & Miles', 'Preferences'],
     },
     fields: {
       departureDate: 'Departure date',
@@ -214,31 +222,8 @@ const labels = {
   },
 } as const;
 
-function validateForm(formData: TravelPreferences, locale: Locale): FieldErrors {
-  const t = labels[locale] ?? labels['pt-BR'];
-  const parsed = travelPreferencesSchema.safeParse(formData);
-  if (parsed.success) return {};
-
-  const errors: FieldErrors = {};
-  for (const issue of parsed.error.issues) {
-    const field = issue.path[0];
-    if (typeof field !== 'string') continue;
-    const key = field as keyof TravelPreferences;
-    if (errors[key]) continue;
-    if (issue.code === 'custom' && key === 'data_volta') {
-      errors[key] = t.dateOrderError;
-      continue;
-    }
-    errors[key] =
-      issue.code === 'too_small' || issue.code === 'invalid_type' ? t.required : t.invalidValue;
-  }
-
-  return errors;
-}
-
 export default function PlannerForm({ locale }: { locale: Locale }) {
-  const [formData, setFormData] = useState<TravelPreferences>(initialTravelPreferences);
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const wizard = useWizardForm();
   const { state: streamState, generate, reset: resetStream } = usePlannerStream();
   const [submitError, setSubmitError] = useState('');
   const [isSharing, setIsSharing] = useState(false);
@@ -248,8 +233,8 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
   const f = t.fields;
 
   const totalPassengers = useMemo(
-    () => formData.num_adultos + formData.num_chd + formData.num_inf,
-    [formData.num_adultos, formData.num_chd, formData.num_inf]
+    () => wizard.formData.num_adultos + wizard.formData.num_chd + wizard.formData.num_inf,
+    [wizard.formData.num_adultos, wizard.formData.num_chd, wizard.formData.num_inf]
   );
 
   const isSubmitting = streamState.status === 'streaming';
@@ -258,6 +243,9 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     streamState.status === 'complete' && streamState.mode === 'fallback';
   const planId = streamState.status === 'complete' ? streamState.planId : undefined;
   const displayError = streamState.status === 'error' ? streamState.message : submitError;
+
+  // Show form only when idle or error (not while streaming or after complete)
+  const showForm = streamState.status === 'idle' || streamState.status === 'error';
 
   useEffect(() => {
     const source = readPlannerFunnelSource();
@@ -268,19 +256,22 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     });
   }, [locale]);
 
-  function updateField<K extends keyof TravelPreferences>(key: K, value: TravelPreferences[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleSubmit() {
     setSubmitError('');
-    const nextErrors = validateForm(formData, locale);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!wizard.validateAll()) {
+      // Find the first step with errors and navigate to it
+      const stepsToCheck: StepIndex[] = [0, 1, 2];
+      for (const step of stepsToCheck) {
+        if (!wizard.validateStep(step)) {
+          wizard.goToStep(step);
+          return;
+        }
+      }
+      return;
+    }
 
     const funnelSource = readPlannerFunnelSource();
-    generate(formData, locale, funnelSource ?? undefined);
+    generate(wizard.formData, locale, funnelSource ?? undefined);
 
     if (funnelSource) {
       capturePlannerFunnelEvent(plannerFunnelEvents.plannerGenerated, {
@@ -298,8 +289,7 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     resetStream();
     setSubmitError('');
     setShareStatus('idle');
-    setErrors({});
-    setFormData(initialTravelPreferences);
+    wizard.clearDraft();
   }
 
   async function handleShare() {
@@ -333,6 +323,83 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
     }
   }
 
+  function renderCurrentStep() {
+    switch (wizard.currentStep) {
+      case 0:
+        return (
+          <StepTrip
+            formData={wizard.formData}
+            updateField={wizard.updateField}
+            errors={wizard.errors}
+            fieldLabels={{
+              departureDate: f.departureDate,
+              returnDate: f.returnDate,
+              flexibilityDays: f.flexibilityDays,
+              origin: f.origin,
+              destinations: f.destinations,
+            }}
+          />
+        );
+      case 1:
+        return (
+          <StepPassengers
+            formData={wizard.formData}
+            updateField={wizard.updateField}
+            errors={wizard.errors}
+            fieldLabels={{
+              adults: f.adults,
+              children: f.children,
+              infants: f.infants,
+              childAges: f.childAges,
+            }}
+            totalPassengersLabel={t.totalPassengers(totalPassengers)}
+          />
+        );
+      case 2:
+        return (
+          <StepFlight
+            formData={wizard.formData}
+            updateField={wizard.updateField}
+            errors={wizard.errors}
+            fieldLabels={{
+              flightPreference: f.flightPreference,
+              flightPreferencePlaceholder: f.flightPreferencePlaceholder,
+              flightPreferenceOptions: f.flightPreferenceOptions,
+              schedules: f.schedules,
+              schedulesPlaceholder: f.schedulesPlaceholder,
+              schedulesOptions: f.schedulesOptions,
+              baggage: f.baggage,
+              baggagePlaceholder: f.baggagePlaceholder,
+              baggageOptions: f.baggageOptions,
+              milesPrograms: f.milesPrograms,
+              bankPrograms: f.bankPrograms,
+              budget: f.budget,
+            }}
+          />
+        );
+      case 3:
+        return (
+          <StepPreferences
+            formData={wizard.formData}
+            updateField={wizard.updateField}
+            errors={wizard.errors}
+            fieldLabels={{
+              riskTolerance: f.riskTolerance,
+              riskTolerancePlaceholder: f.riskTolerancePlaceholder,
+              riskToleranceOptions: f.riskToleranceOptions,
+              accommodation: f.accommodation,
+              accommodationPlaceholder: f.accommodationPlaceholder,
+              accommodationOptions: f.accommodationOptions,
+              neighborhoods: f.neighborhoods,
+              profile: f.profile,
+              restrictions: f.restrictions,
+              documents: f.documents,
+            }}
+          />
+        );
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -340,12 +407,17 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
         <p className="text-muted-foreground">{t.subtitle}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.sections.trip}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+      {showForm && (
+        <Card>
+          <CardHeader className="space-y-4">
+            <WizardProgress
+              currentStep={wizard.currentStep}
+              totalSteps={TOTAL_STEPS}
+              labels={t.wizard.stepLabels as unknown as string[]}
+              onStepClick={(step) => wizard.goToStep(step as StepIndex)}
+            />
+          </CardHeader>
+          <CardContent className="space-y-6">
             {displayError && (
               <div
                 role="alert"
@@ -355,357 +427,42 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                 {displayError}
               </div>
             )}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="data_ida">{f.departureDate}</Label>
-                <Input
-                  id="data_ida"
-                  type="date"
-                  value={formData.data_ida}
-                  onChange={(event) => updateField('data_ida', event.target.value)}
-                />
-                {errors.data_ida && <p className="text-xs text-destructive">{errors.data_ida}</p>}
+
+            {renderCurrentStep()}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between pt-4 border-t">
+              <div>
+                {!wizard.isFirstStep && (
+                  <Button type="button" variant="outline" onClick={wizard.goBack}>
+                    {t.wizard.back}
+                  </Button>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="data_volta">{f.returnDate}</Label>
-                <Input
-                  id="data_volta"
-                  type="date"
-                  value={formData.data_volta}
-                  onChange={(event) => updateField('data_volta', event.target.value)}
-                />
-                {errors.data_volta && (
-                  <p className="text-xs text-destructive">{errors.data_volta}</p>
+              <div className="flex gap-3">
+                {wizard.isLastStep && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {t.wizard.skipAndGenerate}
+                  </Button>
+                )}
+                {wizard.isLastStep ? (
+                  <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? t.streaming.generating : t.submit}
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={wizard.goNext}>
+                    {t.wizard.next}
+                  </Button>
                 )}
               </div>
             </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="flex_dias">{f.flexibilityDays}</Label>
-                <Input
-                  id="flex_dias"
-                  type="number"
-                  min={0}
-                  max={30}
-                  inputMode="numeric"
-                  value={formData.flex_dias}
-                  onChange={(event) => updateField('flex_dias', event.target.value)}
-                />
-                {errors.flex_dias && <p className="text-xs text-destructive">{errors.flex_dias}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="origens">{f.origin}</Label>
-                <Input
-                  id="origens"
-                  minLength={2}
-                  maxLength={200}
-                  value={formData.origens}
-                  onChange={(event) => updateField('origens', event.target.value)}
-                />
-                {errors.origens && <p className="text-xs text-destructive">{errors.origens}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="destinos">{f.destinations}</Label>
-              <Input
-                id="destinos"
-                minLength={2}
-                maxLength={200}
-                value={formData.destinos}
-                onChange={(event) => updateField('destinos', event.target.value)}
-              />
-              {errors.destinos && <p className="text-xs text-destructive">{errors.destinos}</p>}
-            </div>
-
-            <Separator />
-
-            <div>
-              <h2 className="text-base font-semibold">{t.sections.passengers}</h2>
-              <p className="text-sm text-muted-foreground">{t.totalPassengers(totalPassengers)}</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="num_adultos">{f.adults}</Label>
-                <Input
-                  id="num_adultos"
-                  type="number"
-                  min={1}
-                  max={9}
-                  value={formData.num_adultos}
-                  onChange={(event) => updateField('num_adultos', Number(event.target.value) || 0)}
-                />
-                {errors.num_adultos && (
-                  <p className="text-xs text-destructive">{errors.num_adultos}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="num_chd">{f.children}</Label>
-                <Input
-                  id="num_chd"
-                  type="number"
-                  min={0}
-                  max={9}
-                  value={formData.num_chd}
-                  onChange={(event) => updateField('num_chd', Number(event.target.value) || 0)}
-                />
-                {errors.num_chd && <p className="text-xs text-destructive">{errors.num_chd}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="num_inf">{f.infants}</Label>
-                <Input
-                  id="num_inf"
-                  type="number"
-                  min={0}
-                  max={9}
-                  value={formData.num_inf}
-                  onChange={(event) => updateField('num_inf', Number(event.target.value) || 0)}
-                />
-                {errors.num_inf && <p className="text-xs text-destructive">{errors.num_inf}</p>}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="idades_chd_inf">{f.childAges}</Label>
-              <Input
-                id="idades_chd_inf"
-                maxLength={120}
-                value={formData.idades_chd_inf}
-                onChange={(event) => updateField('idades_chd_inf', event.target.value)}
-              />
-              {errors.idades_chd_inf && (
-                <p className="text-xs text-destructive">{errors.idades_chd_inf}</p>
-              )}
-            </div>
-
-            <Separator />
-
-            <div>
-              <h2 className="text-base font-semibold">{t.sections.flight}</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="preferencia_voo">{f.flightPreference}</Label>
-                <Select
-                  value={formData.preferencia_voo}
-                  onValueChange={(value) =>
-                    updateField('preferencia_voo', value as TravelPreferences['preferencia_voo'])
-                  }
-                >
-                  <SelectTrigger id="preferencia_voo">
-                    <SelectValue placeholder={f.flightPreferencePlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="indiferente">
-                      {f.flightPreferenceOptions.indiferente}
-                    </SelectItem>
-                    <SelectItem value="direto">{f.flightPreferenceOptions.direto}</SelectItem>
-                    <SelectItem value="1_conexao">
-                      {f.flightPreferenceOptions['1_conexao']}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="horarios_voo">{f.schedules}</Label>
-                <Select
-                  value={formData.horarios_voo}
-                  onValueChange={(value) =>
-                    updateField('horarios_voo', value as TravelPreferences['horarios_voo'])
-                  }
-                >
-                  <SelectTrigger id="horarios_voo">
-                    <SelectValue placeholder={f.schedulesPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="qualquer">{f.schedulesOptions.qualquer}</SelectItem>
-                    <SelectItem value="manha">{f.schedulesOptions.manha}</SelectItem>
-                    <SelectItem value="tarde">{f.schedulesOptions.tarde}</SelectItem>
-                    <SelectItem value="noite">{f.schedulesOptions.noite}</SelectItem>
-                    <SelectItem value="madrugada">{f.schedulesOptions.madrugada}</SelectItem>
-                    <SelectItem value="evitar_madrugada">
-                      {f.schedulesOptions.evitar_madrugada}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bagagem">{f.baggage}</Label>
-                <Select
-                  value={formData.bagagem}
-                  onValueChange={(value) =>
-                    updateField('bagagem', value as TravelPreferences['bagagem'])
-                  }
-                >
-                  <SelectTrigger id="bagagem">
-                    <SelectValue placeholder={f.baggagePlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mao">{f.baggageOptions.mao}</SelectItem>
-                    <SelectItem value="1_despachada">{f.baggageOptions['1_despachada']}</SelectItem>
-                    <SelectItem value="mais_despachadas">
-                      {f.baggageOptions.mais_despachadas}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h2 className="text-base font-semibold">{t.sections.programs}</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="programas_milhas">{f.milesPrograms}</Label>
-                <Input
-                  id="programas_milhas"
-                  maxLength={240}
-                  value={formData.programas_milhas}
-                  onChange={(event) => updateField('programas_milhas', event.target.value)}
-                />
-                {errors.programas_milhas && (
-                  <p className="text-xs text-destructive">{errors.programas_milhas}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="programas_bancos">{f.bankPrograms}</Label>
-                <Input
-                  id="programas_bancos"
-                  maxLength={240}
-                  value={formData.programas_bancos}
-                  onChange={(event) => updateField('programas_bancos', event.target.value)}
-                />
-                {errors.programas_bancos && (
-                  <p className="text-xs text-destructive">{errors.programas_bancos}</p>
-                )}
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="vistos_existentes">{f.documents}</Label>
-                <Input
-                  id="vistos_existentes"
-                  maxLength={240}
-                  value={formData.vistos_existentes}
-                  onChange={(event) => updateField('vistos_existentes', event.target.value)}
-                />
-                {errors.vistos_existentes && (
-                  <p className="text-xs text-destructive">{errors.vistos_existentes}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="orcamento_brl">{f.budget}</Label>
-                <Input
-                  id="orcamento_brl"
-                  maxLength={120}
-                  value={formData.orcamento_brl}
-                  onChange={(event) => updateField('orcamento_brl', event.target.value)}
-                />
-                {errors.orcamento_brl && (
-                  <p className="text-xs text-destructive">{errors.orcamento_brl}</p>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h2 className="text-base font-semibold">{t.sections.preferences}</h2>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="tolerancia_risco">{f.riskTolerance}</Label>
-                <Select
-                  value={formData.tolerancia_risco}
-                  onValueChange={(value) =>
-                    updateField('tolerancia_risco', value as TravelPreferences['tolerancia_risco'])
-                  }
-                >
-                  <SelectTrigger id="tolerancia_risco">
-                    <SelectValue placeholder={f.riskTolerancePlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="baixa">{f.riskToleranceOptions.baixa}</SelectItem>
-                    <SelectItem value="media">{f.riskToleranceOptions.media}</SelectItem>
-                    <SelectItem value="alta">{f.riskToleranceOptions.alta}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="hospedagem_padrao">{f.accommodation}</Label>
-                <Select
-                  value={formData.hospedagem_padrao}
-                  onValueChange={(value) =>
-                    updateField(
-                      'hospedagem_padrao',
-                      value as TravelPreferences['hospedagem_padrao']
-                    )
-                  }
-                >
-                  <SelectTrigger id="hospedagem_padrao">
-                    <SelectValue placeholder={f.accommodationPlaceholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="indiferente">
-                      {f.accommodationOptions.indiferente}
-                    </SelectItem>
-                    <SelectItem value="3">{f.accommodationOptions['3']}</SelectItem>
-                    <SelectItem value="4">{f.accommodationOptions['4']}</SelectItem>
-                    <SelectItem value="5">{f.accommodationOptions['5']}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bairros_pref">{f.neighborhoods}</Label>
-                <Input
-                  id="bairros_pref"
-                  maxLength={240}
-                  value={formData.bairros_pref}
-                  onChange={(event) => updateField('bairros_pref', event.target.value)}
-                />
-                {errors.bairros_pref && (
-                  <p className="text-xs text-destructive">{errors.bairros_pref}</p>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="perfil">{f.profile}</Label>
-              <Input
-                id="perfil"
-                maxLength={240}
-                value={formData.perfil}
-                onChange={(event) => updateField('perfil', event.target.value)}
-              />
-              {errors.perfil && <p className="text-xs text-destructive">{errors.perfil}</p>}
-            </div>
-
-            <Separator />
-
-            <div>
-              <h2 className="text-base font-semibold">{t.sections.constraints}</h2>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="restricoes">{f.restrictions}</Label>
-              <textarea
-                id="restricoes"
-                maxLength={800}
-                className="min-h-[96px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={formData.restricoes}
-                onChange={(event) => updateField('restricoes', event.target.value)}
-              />
-              {errors.restricoes && <p className="text-xs text-destructive">{errors.restricoes}</p>}
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t.streaming.generating : t.submit}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {streamState.status === 'streaming' && (
         <Card>
@@ -737,7 +494,9 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                     <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
                     <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                       {section.items.map((item, i) => (
-                        <li key={i}>{item}</li>
+                        <li key={`${getItemText(item)}-${i}`}>
+                          <ReportItemView item={item} />
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -776,8 +535,10 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
                 <div key={section.title} className="space-y-2">
                   <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
                   <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                    {section.items.map((item) => (
-                      <li key={item}>{item}</li>
+                    {section.items.map((item, i) => (
+                      <li key={`${getItemText(item)}-${i}`}>
+                        <ReportItemView item={item} />
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -802,6 +563,13 @@ export default function PlannerForm({ locale }: { locale: Locale }) {
               <Button type="button" variant="secondary" onClick={handleShare} disabled={isSharing}>
                 {isSharing ? t.shareLoading : t.share}
               </Button>
+              {planId && (
+                <Button type="button" variant="secondary" asChild>
+                  <a href={`/api/planner/plans/${planId}/pdf`} download>
+                    {t.downloadPdf}
+                  </a>
+                </Button>
+              )}
               {shareStatus === 'copied' && (
                 <span className="text-sm text-green-600 dark:text-green-400">{t.shareCopied}</span>
               )}

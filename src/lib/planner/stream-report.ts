@@ -35,6 +35,7 @@ export function streamPlannerReport({ locale, preferences, signal }: StreamPlann
           'Hospedagem',
           'Riscos e Mitigacoes',
           'Proximos Passos',
+          'Guia Rapido do Destino',
         ]
       : [
           'Trip Summary',
@@ -43,12 +44,13 @@ export function streamPlannerReport({ locale, preferences, signal }: StreamPlann
           'Lodging',
           'Risks and Mitigations',
           'Next Steps',
+          'Quick Destination Guide',
         ];
 
   return streamText({
     model: google(modelId),
     temperature: 0.2,
-    maxOutputTokens: 1800,
+    maxOutputTokens: 2400,
     output: Output.object({
       schema: plannerReportSchema,
       name: locale === 'pt-BR' ? 'relatorio_planejamento_milhas' : 'miles_planning_report',

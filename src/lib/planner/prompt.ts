@@ -111,6 +111,16 @@ export function buildSystemPrompt(locale: Locale, options?: { sectionOrder?: str
         '- Em caso de dados faltantes, registre em assumptions de forma curta e acionavel.',
         '- Priorize clareza operacional: o usuario deve saber o que fazer depois de ler o relatorio.',
         '- Evite jargoes desnecessarios, frases vagas e marketing.',
+        '- Cada item pode ser uma string simples OU um objeto estruturado com campos: text (obrigatorio), tag (tip/warning/action/info), links (array de {label, url, type}).',
+        '- Use items estruturados quando for util: dicas praticas (tag: tip), alertas (tag: warning), acoes executaveis com link (tag: action).',
+        '- Nao force items estruturados — use string simples quando nao houver valor agregado.',
+        '',
+        'SECAO DESTINO:',
+        '- Se o usuario informou destinos candidatos, inclua uma secao "Guia Rapido: [Destino]" no final do relatorio.',
+        '- Conteudo: transporte do aeroporto ao centro, bairros recomendados para o perfil do viajante, culinaria local imperdivel, dicas praticas, cuidados.',
+        '- Seja especifico: nomes de linhas de metro/onibus, precos aproximados, nomes de restaurantes/bairros reais.',
+        '- Se multiplos destinos, faca uma secao para cada (max 2).',
+        '- Se nenhum destino informado, nao inclua esta secao.',
       ]
     : [
         'You are a senior miles redemption strategist for domestic and international trips.',
@@ -121,6 +131,16 @@ export function buildSystemPrompt(locale: Locale, options?: { sectionOrder?: str
         '- If information is missing, capture it in assumptions with actionable wording.',
         '- Keep recommendations operational and concise.',
         '- Avoid buzzwords and generic filler.',
+        '- Each item can be a plain string OR a structured object with: text (required), tag (tip/warning/action/info), links (array of {label, url, type}).',
+        '- Use structured items when useful: practical tips (tag: tip), warnings (tag: warning), actionable items with links (tag: action).',
+        '- Do not force structured items — use plain strings when there is no added value.',
+        '',
+        'DESTINATION SECTION:',
+        '- If the user provided candidate destinations, include a "Quick Guide: [Destination]" section at the end.',
+        '- Content: airport transport to city center, recommended neighborhoods for the traveler profile, must-try local cuisine, practical tips, warnings.',
+        '- Be specific: metro/bus line names, approximate prices, real restaurant/neighborhood names.',
+        '- For multiple destinations, create one section per destination (max 2).',
+        '- If no destination provided, skip this section.',
       ];
 
   if (options?.sectionOrder?.length) {
@@ -143,6 +163,8 @@ export function buildUserPrompt(locale: Locale, preferences: TravelPreferencesIn
       'Gere o relatorio estruturado com 4 a 8 secoes.',
       'Secoes sugeridas: Resumo da Viagem, Estrategia de Emissao, Ordem de Busca e Execucao, Riscos e Mitigacao, Proximos Passos.',
       'Cada secao precisa ter 2 a 6 itens curtos e especificos.',
+      'Se destinos candidatos foram informados, inclua secao "Guia Rapido: [Destino]" com info pratica (transporte, bairros, culinaria, dicas).',
+      'Formato dos items: string simples OU objeto { text, tag?, links?: [{label, url, type}] }.',
       'Dados do usuario (JSON):',
       context,
     ].join('\n\n');
@@ -152,6 +174,8 @@ export function buildUserPrompt(locale: Locale, preferences: TravelPreferencesIn
     'Generate the structured report with 4 to 8 sections.',
     'Suggested sections: Trip Summary, Redemption Strategy, Search and Execution Order, Risks and Mitigations, Next Steps.',
     'Each section must have 2 to 6 concise and specific items.',
+    'If candidate destinations were provided, include a "Quick Guide: [Destination]" section with practical info (transport, neighborhoods, cuisine, tips).',
+    'Item format: plain string OR object { text, tag?, links?: [{label, url, type}] }.',
     'User data (JSON):',
     context,
   ].join('\n\n');

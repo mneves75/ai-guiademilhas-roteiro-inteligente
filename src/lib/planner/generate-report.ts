@@ -216,7 +216,7 @@ export async function generatePlannerReport({
     const result = await generateText({
       model: google(modelId),
       temperature: 0.2,
-      maxOutputTokens: 1800,
+      maxOutputTokens: 2400,
       output: Output.object({
         schema: plannerReportSchema,
         name: locale === 'pt-BR' ? 'relatorio_planejamento_milhas' : 'miles_planning_report',

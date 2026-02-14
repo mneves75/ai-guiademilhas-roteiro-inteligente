@@ -20,8 +20,7 @@ describe('resolveAppOrigin', () => {
 
   it('falls back to request origin in non-production', () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
-    delete process.env.BETTER_AUTH_BASE_URL;
-    delete process.env.BETTER_AUTH_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
 
     const request = {
@@ -33,8 +32,7 @@ describe('resolveAppOrigin', () => {
 
   it('uses forwarded host/proto in non-production when env origin is missing', () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
-    delete process.env.BETTER_AUTH_BASE_URL;
-    delete process.env.BETTER_AUTH_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
 
     const request = {
@@ -46,8 +44,7 @@ describe('resolveAppOrigin', () => {
 
   it('throws in production when env origin is missing', () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
-    delete process.env.BETTER_AUTH_BASE_URL;
-    delete process.env.BETTER_AUTH_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
 
     const request = { nextUrl: { origin: 'https://attacker.example' } } as never;

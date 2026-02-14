@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { signUp } from '@/lib/auth-client';
+import type { AuthError } from '@supabase/supabase-js';
 import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
 import { isValidEmail } from '@/lib/validation/email';
@@ -89,21 +90,19 @@ export default function SignupForm({
         return;
       }
 
-      const result = await signUp.email({
-        name: normalizedName,
-        email: normalizedEmail,
-        password,
-        callbackURL: callbackUrl,
-      });
-      if (result.error) {
-        const mapped = mapSignUpError(result.error, {
-          nameRequired: t.nameRequired,
-          invalidEmail: t.invalidEmail,
-          passwordRequired: t.passwordRequired,
-          passwordMinError: t.passwordMinError,
-          signupFailedFallback: t.signupFailedFallback,
-          signupTrySignInHint: t.signupTrySignInHint,
-        });
+      const { error: signUpError } = await signUp(normalizedEmail, password, normalizedName);
+      if (signUpError) {
+        const mapped = mapSignUpError(
+          { message: (signUpError as AuthError).message, code: (signUpError as AuthError).code },
+          {
+            nameRequired: t.nameRequired,
+            invalidEmail: t.invalidEmail,
+            passwordRequired: t.passwordRequired,
+            passwordMinError: t.passwordMinError,
+            signupFailedFallback: t.signupFailedFallback,
+            signupTrySignInHint: t.signupTrySignInHint,
+          }
+        );
         if (mapped.fieldErrors) setFieldErrors(mapped.fieldErrors);
         if (mapped.globalError) setError(mapped.globalError);
       } else {

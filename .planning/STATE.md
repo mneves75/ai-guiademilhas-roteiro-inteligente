@@ -18,8 +18,9 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 
 **Stack:**
 - Next.js 16 + React 19 + TypeScript
-- Better Auth (modern auth)
-- PostgreSQL + Drizzle ORM
+- Supabase Auth via `@supabase/ssr` (migrated from Better Auth)
+- PostgreSQL (Supabase) + Drizzle ORM (`casing: 'snake_case'`, `prepare: false`)
+- Gemini 2.5 Flash via AI SDK v6 (planner)
 - Stripe (payments)
 - Geist design system + shadcn/ui
 - Resend + React Email (transactional)
@@ -39,8 +40,8 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 Phase 1-12: COMPLETE
 ```
 
-**Last Activity:** 2026-02-06 - v1 features implemented and verified (lint/type-check/test/build/e2e)
-**Next Action:** Tag a release (ex: `v0.2.0`) and publish release notes
+**Last Activity:** 2026-02-14 - Supabase Auth migration + Planner v3 (enriched schema, cache, history, PDF, wizard form, proxy.ts session refresh, build verification, 120 tests passing)
+**Next Action:** Tag a release (ex: `v0.3.0`) and publish release notes
 
 ---
 
@@ -158,4 +159,37 @@ Phase 1-12: COMPLETE
 
 ---
 
+## Quick Tasks Completed
+
+| Date | Task | Commit | Verification |
+|------|------|--------|--------------|
+| 2026-02-12 | Separate planner from dashboard into immersive standalone zone | `a1835d6` | type-check ✅ build ✅ 106 tests ✅ |
+| 2026-02-14 | Supabase Auth migration + Planner v3 (7 fases) + build verification | pending | type-check ✅ lint ✅ build ✅ 120 tests ✅ |
+
 **Phase 1-12 Status:** ✅ COMPLETE
+
+---
+
+## Planner v3 Summary (2026-02-14)
+
+7 implementation phases + build verification (Plano v5):
+
+| Fase | Feature | Status |
+|------|---------|--------|
+| 1 | Supabase Auth migration (from Better Auth) | ✅ |
+| 2 | 4-step wizard form (`useWizardForm` + localStorage) | ✅ |
+| 3 | SSE streaming + persistent plans | ✅ |
+| 4 | Enriched report schema (`ReportItem = string \| StructuredItem`) | ✅ |
+| 5 | SHA256 cache → `planCache` table (TTL 7d) | ✅ |
+| 6 | Plan history (`/planner/history` + paginated list) | ✅ |
+| 7 | PDF export (`@react-pdf/renderer`) | ✅ |
+| v5-A | Build verification (type-check, lint, build, 120 tests) | ✅ |
+| v5-B | `maxOutputTokens` 1800 → 2400 (2 files) | ✅ |
+| v5-C | Unit tests for rich types (14 new tests) | ✅ |
+| v5-D | Quality metrics in analytics event | ✅ |
+
+**Key changes in v5:**
+- Merged `middleware.ts` into `proxy.ts` (Next.js 16 proxy pattern)
+- Extracted `refreshSession()` to `src/lib/supabase/middleware.ts` (single source of truth)
+- Fixed Turbopack static resolution for `better-sqlite3` (removed import chain)
+- Updated auth error codes from Better Auth → Supabase format in tests

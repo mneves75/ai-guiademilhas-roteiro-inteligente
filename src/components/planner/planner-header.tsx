@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { authClient } from '@/lib/auth-client';
+import { signOut } from '@/lib/auth-client';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
 import { publicPathname } from '@/lib/locale-routing';
@@ -29,7 +29,7 @@ export function PlannerHeader({ user }: PlannerHeaderProps) {
   const t = m(locale);
 
   const handleSignOut = async () => {
-    await authClient.signOut();
+    await signOut();
     router.push('/');
     router.refresh();
   };
@@ -48,6 +48,14 @@ export function PlannerHeader({ user }: PlannerHeaderProps) {
             <ArrowLeft className="h-4 w-4 sm:mr-2" />
             <span className="sr-only sm:hidden">{t.planner.header.backToDashboard}</span>
             <span className="hidden sm:inline">{t.planner.header.backToDashboard}</span>
+          </Link>
+        </Button>
+
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/planner/history">
+            <History className="h-4 w-4 sm:mr-2" />
+            <span className="sr-only sm:hidden">{t.planner.history.title}</span>
+            <span className="hidden sm:inline">{t.planner.history.title}</span>
           </Link>
         </Button>
 

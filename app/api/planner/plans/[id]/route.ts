@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { withApiLogging } from '@/lib/logging';
 import { getOrCreateRequestId } from '@/lib/request-id';
 import { getPlanById, softDeletePlan } from '@/db/queries/plans';
@@ -16,8 +15,7 @@ export const GET = withApiLogging(
     const { id } = await context.params;
 
     try {
-      const auth = getAuth();
-      const session = await auth.api.getSession({ headers: await headers() });
+      const session = await getSession();
 
       if (!session) {
         return problemJson({
@@ -101,8 +99,7 @@ export const DELETE = withApiLogging(
     const { id } = await context.params;
 
     try {
-      const auth = getAuth();
-      const session = await auth.api.getSession({ headers: await headers() });
+      const session = await getSession();
 
       if (!session) {
         return problemJson({

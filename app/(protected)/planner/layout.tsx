@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { buildLoginRedirectHref } from '@/lib/security/redirect';
 import { PlannerHeader } from '@/components/planner/planner-header';
 
@@ -11,11 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PlannerLayout({ children }: { children: React.ReactNode }) {
-  const requestHeaders = await headers();
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: requestHeaders,
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect(buildLoginRedirectHref('/planner', { defaultPath: '/planner' }));

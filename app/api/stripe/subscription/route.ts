@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getWorkspaceSubscription } from '@/lib/stripe-helpers';
 import { STRIPE_PLANS } from '@/lib/stripe';
@@ -12,8 +11,7 @@ import { badRequest, forbidden, unauthorized } from '@/lib/http';
  * Get subscription status for a workspace
  */
 export const GET = withApiLogging('api.stripe.subscription', async (request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }

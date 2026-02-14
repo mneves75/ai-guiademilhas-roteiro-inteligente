@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { plans } from '@/db/schema/postgres';
-import { withSoftDeleteFilter, softDeleteNow } from './base';
+import { withSoftDeleteFilter, softDeleteNow, buildConditions } from './base';
 
 /**
  * Gera ID único para plano (UUID v4).
@@ -85,6 +85,17 @@ export async function getPlanById(
   });
 
   return result ?? null;
+}
+
+/**
+ * Conta total de planos do usuário (excluindo soft-deleted).
+ */
+export async function getUserPlansCount(userId: string): Promise<number> {
+  const result = await db
+    .select({ count: count() })
+    .from(plans)
+    .where(buildConditions(eq(plans.userId, userId), withSoftDeleteFilter(plans)));
+  return result[0]?.count ?? 0;
 }
 
 /**

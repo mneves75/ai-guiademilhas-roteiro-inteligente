@@ -22,9 +22,9 @@ const timestamps = {
   deletedAt: timestamp(),
 };
 
-// ==================== BETTER AUTH TABLES ====================
-// These match Better Auth's expected schema structure
-// See: https://www.better-auth.com/docs/concepts/database
+// ==================== AUTH TABLES ====================
+// These tables store user, session, account, and verification data.
+// Retained for app-level queries; Supabase Auth manages its own auth.users separately.
 
 /**
  * USERS TABLE
@@ -293,6 +293,24 @@ export const plans = pgTable(
     index('idx_plans_parent_id').on(table.parentId),
     index('idx_plans_deleted').on(table.deletedAt),
   ]
+);
+
+/**
+ * PLAN_CACHE TABLE
+ * LLM response cache — SHA256 hash of preferences → cached report.
+ * TTL enforced at query time (7 days). Rows can be cleaned up periodically.
+ */
+export const planCache = pgTable(
+  'plan_cache',
+  {
+    id: serial().primaryKey(),
+    hash: varchar({ length: 64 }).notNull().unique(), // SHA256 hex = 64 chars
+    report: text().notNull(), // JSON stringified PlannerReport
+    model: varchar({ length: 60 }).notNull(), // e.g. "gemini-2.5-flash"
+    hitCount: integer().notNull().default(0),
+    createdAt: timestamp().defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex('idx_plan_cache_hash').on(table.hash)]
 );
 
 // ==================== RELATIONS ====================

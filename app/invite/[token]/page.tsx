@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authClient } from '@/lib/auth-client';
+
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
 import { publicPathname } from '@/lib/locale-routing';
@@ -39,8 +40,12 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   useEffect(() => {
     async function loadData() {
       // Check session
-      const { data: sessionData } = await authClient.getSession();
-      setSession(sessionData);
+      const {
+        data: { user },
+      } = await authClient.auth.getUser();
+      if (user) {
+        setSession({ user: { email: user.email! } });
+      }
 
       // Verify invitation
       const res = await fetch(`/api/invitations/accept?token=${token}`);

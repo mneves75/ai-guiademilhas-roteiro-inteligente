@@ -16,8 +16,7 @@ function tryGetOrigin(value: string | undefined): string | null {
 export function resolvePublicOrigin(): string {
   return (
     tryGetOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
-    tryGetOrigin(process.env.BETTER_AUTH_BASE_URL) ??
-    tryGetOrigin(process.env.BETTER_AUTH_URL) ??
+    tryGetOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL) ??
     'https://shipped.dev'
   );
 }

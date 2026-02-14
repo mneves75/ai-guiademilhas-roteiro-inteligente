@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { refreshSession, type SessionCookie } from '@/lib/supabase/middleware';
 import { checkRateLimit } from '@/lib/security/rate-limit';
 import { getOrCreateRequestId } from '@/lib/request-id';
 import { normalizeLocale, type Locale, LOCALE_COOKIE } from '@/lib/locale';
@@ -97,19 +98,11 @@ function buildProtectedCsp(nonce: string): string {
   return directives.join('; ');
 }
 
-function hasBetterAuthSessionCookie(request: NextRequest): boolean {
-  const baseName = 'better-auth.session_token';
-  const candidates = [baseName, `__Secure-${baseName}`, `__Host-${baseName}`];
-
-  for (const name of candidates) {
-    const value = request.cookies.get(name)?.value;
-    if (value) return true;
-  }
-
-  // Defense-in-depth: treat any cookie ending with the base name as a hint, even if prefixing changes.
+function hasSupabaseSessionCookie(request: NextRequest): boolean {
+  // Supabase auth cookies follow the pattern: sb-<project-ref>-auth-token
   return request.cookies
     .getAll()
-    .some((cookie) => cookie.name.endsWith(baseName) && !!cookie.value);
+    .some((c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token') && !!c.value);
 }
 
 function getClientIp(request: NextRequest): string {
@@ -123,10 +116,7 @@ function getClientIp(request: NextRequest): string {
 }
 
 function isAllowedOrigin(origin: string, request: NextRequest): boolean {
-  const allowedFromEnv =
-    tryParseOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
-    tryParseOrigin(process.env.BETTER_AUTH_BASE_URL) ??
-    tryParseOrigin(process.env.BETTER_AUTH_URL);
+  const allowedFromEnv = tryParseOrigin(process.env.NEXT_PUBLIC_APP_URL);
 
   if (allowedFromEnv) return origin === allowedFromEnv;
 
@@ -212,6 +202,26 @@ export async function proxy(request: NextRequest) {
   }
 
   // ---------------------------------------------------------------------------
+  // Supabase session refresh
+  // ---------------------------------------------------------------------------
+  // Refresh auth tokens when a session cookie is present. Refreshed cookies are
+  // collected and applied to whatever response the proxy ultimately returns.
+  const hasSession = hasSupabaseSessionCookie(request);
+  let sessionCookies: SessionCookie[] = [];
+
+  if (hasSession) {
+    const result = await refreshSession(request);
+    sessionCookies = result.cookies;
+  }
+
+  function applySessionCookies(response: NextResponse): NextResponse {
+    for (const { name, value, options } of sessionCookies) {
+      response.cookies.set(name, value, options);
+    }
+    return response;
+  }
+
+  // ---------------------------------------------------------------------------
   // CSRF / cross-site protections (state-changing API routes)
   // ---------------------------------------------------------------------------
   if (
@@ -222,8 +232,7 @@ export async function proxy(request: NextRequest) {
   ) {
     // CSRF is primarily relevant when the browser automatically attaches cookies.
     // If there is no session cookie, endpoints should return 401 anyway.
-    const hasSessionCookie = hasBetterAuthSessionCookie(request);
-    if (hasSessionCookie) {
+    if (hasSession) {
       // Prefer Fetch Metadata for modern browsers.
       const fetchSite = request.headers.get('sec-fetch-site');
       if (fetchSite === 'cross-site') {
@@ -280,8 +289,7 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedPage) {
     const protectedCallbackUrl = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-    const hasSessionCookie = hasBetterAuthSessionCookie(request);
-    if (!hasSessionCookie) {
+    if (!hasSession) {
       incProtectedRedirect();
       observeProxyLatencyMs('redirect', Date.now() - startedAt);
       const loginUrl = new URL('/login', request.url);
@@ -310,7 +318,7 @@ export async function proxy(request: NextRequest) {
     // Avoid caching personalized HTML at intermediaries.
     response.headers.set('Cache-Control', 'no-store, max-age=0');
     observeProxyLatencyMs('protected', Date.now() - startedAt);
-    return response;
+    return applySessionCookies(response);
   }
 
   const requestHeaders = new Headers(request.headers);
@@ -318,7 +326,7 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set('x-shipped-locale', getPreferredLocale(request));
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set('x-request-id', requestId);
-  return response;
+  return applySessionCookies(response);
 }
 
 // Next.js requires this object to be statically analyzable in the proxy file.

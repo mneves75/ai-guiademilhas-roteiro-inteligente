@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getOrCreateStripeCustomer, createOneTimeCheckoutSession } from '@/lib/stripe-helpers';
 import { resolveAppOrigin } from '@/lib/security/origin';
@@ -20,8 +19,7 @@ const stripePaymentSchema = z
  * Create Stripe Checkout session for a one-time payment (example product).
  */
 export const POST = withApiLogging('api.stripe.payment', async (request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }

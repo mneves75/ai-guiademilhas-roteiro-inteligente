@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getWorkspaceById } from '@/db/queries/workspaces';
 import {
@@ -43,8 +42,7 @@ const revokeInvitationSchema = z
 export const GET = withApiLogging(
   'api.workspaces.invitations.list',
   async (_request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }
@@ -73,8 +71,7 @@ export const GET = withApiLogging(
 export const POST = withApiLogging(
   'api.workspaces.invitations.create',
   async (request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }
@@ -147,8 +144,7 @@ export const POST = withApiLogging(
 export const DELETE = withApiLogging(
   'api.workspaces.invitations.revoke',
   async (request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }
