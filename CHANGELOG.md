@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Restored favicon assets**: `favicon.ico`, `favicon-16x16.png`, `apple-touch-icon.png` copied from `.scrap_bin/` to `public/`, resolving 404s on all browsers.
+- **Database schema on new Supabase instance**: All 12 tables pushed via `drizzle-kit push` (accounts, plans, plan_cache, sessions, shared_reports, stripe_events, subscriptions, users, verification, workspace_invitations, workspace_members, workspaces).
+
 ### Added
 
 - **Shareable report URLs**: planner reports can now be shared via public links (`/r/[token]`). Authenticated users click "Compartilhar" to generate a permanent, public link. Token-based (32-char hex, 128-bit entropy), idempotent (same content returns same link), with rate limiting (10 req/min) and audit logging.

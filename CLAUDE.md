@@ -94,6 +94,7 @@ await db.update(workspaces).set({ deletedAt: new Date() }).where(eq(workspaces.i
 
 - Supabase connection pooler requires `prepare: false` in Drizzle config
 - SQLite provider throws at runtime in bundled builds (Turbopack can't resolve uninstalled `better-sqlite3`)
+- `drizzle-kit push` does NOT auto-load `.env.local` — source it first: `set -a && source .env.local && set +a && pnpm drizzle-kit push`
 
 ### Multi-Tenancy
 
