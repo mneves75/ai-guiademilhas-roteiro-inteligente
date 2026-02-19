@@ -1,20 +1,16 @@
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getUserWorkspaces } from '@/db/queries/workspaces';
-import { Users, FolderKanban, CreditCard, ArrowRight, Plus } from 'lucide-react';
+import { Users, FolderKanban, CreditCard, ArrowRight, Plus, Plane } from 'lucide-react';
 import { getRequestLocale } from '@/lib/locale-server';
 import { m } from '@/lib/messages';
 import { buildLoginRedirectHref } from '@/lib/security/redirect';
 
 export default async function DashboardPage() {
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect(buildLoginRedirectHref('/dashboard', { defaultPath: '/dashboard' }));
@@ -146,6 +142,12 @@ export default async function DashboardPage() {
             <CardDescription>{t.dashboard.overview.quickActionsSubtitle}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2">
+            <Button asChild className="w-full justify-start">
+              <Link href="/planner">
+                <Plane className="mr-2 h-4 w-4" />
+                {t.dashboard.overview.actions.planTrip}
+              </Link>
+            </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/dashboard/workspaces/new">
                 <Plus className="mr-2 h-4 w-4" />
@@ -196,11 +198,19 @@ export default async function DashboardPage() {
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-xs text-muted-foreground">
                   3
                 </div>
-                <span className="text-sm">{t.dashboard.overview.steps.inviteTeam}</span>
+                <Link href="/planner" className="text-sm hover:text-primary hover:underline">
+                  {t.dashboard.overview.steps.planFirstTrip}
+                </Link>
               </li>
               <li className="flex items-center gap-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-xs text-muted-foreground">
                   4
+                </div>
+                <span className="text-sm">{t.dashboard.overview.steps.inviteTeam}</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-xs text-muted-foreground">
+                  5
                 </div>
                 <span className="text-sm">{t.dashboard.overview.steps.setupBilling}</span>
               </li>

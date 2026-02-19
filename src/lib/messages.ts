@@ -130,7 +130,7 @@ const EN_MESSAGES = {
       items: [
         {
           title: 'Authentication',
-          description: 'Better Auth with email/password, OAuth, and magic links out of the box.',
+          description: 'Authentication with email/password, OAuth, and magic links out of the box.',
         },
         {
           title: 'Multi-Tenancy',
@@ -485,8 +485,9 @@ const EN_MESSAGES = {
       quickActions: 'Quick Actions',
       quickActionsSubtitle: 'Common tasks you can do right now',
       gettingStarted: 'Getting Started',
-      gettingStartedSubtitle: 'Complete these steps to get the most out of Shipped',
+      gettingStartedSubtitle: 'Complete these steps to get the most out of Guia de Milhas',
       actions: {
+        planTrip: 'Plan a trip with miles',
         createNewWorkspace: 'Create a new workspace',
         inviteTeamMembers: 'Invite team members',
         updateProfile: 'Update your profile',
@@ -494,6 +495,7 @@ const EN_MESSAGES = {
       steps: {
         createAccount: 'Create your account',
         createFirstWorkspace: 'Create your first workspace',
+        planFirstTrip: 'Create your first trip plan',
         inviteTeam: 'Invite your team',
         setupBilling: 'Set up billing',
       },
@@ -611,7 +613,7 @@ const EN_MESSAGES = {
       noneTitle: 'No notifications',
       noneBody: "You're all caught up! Check back later.",
       seed: {
-        title: 'Welcome to Shipped!',
+        title: 'Welcome to Guia de Milhas!',
         description: 'Get started by creating your first workspace.',
         time: 'Just now',
       },
@@ -715,6 +717,43 @@ const EN_MESSAGES = {
         disabled: 'Disabled',
         alwaysOn: 'Always On',
       },
+    },
+  },
+
+  planner: {
+    header: {
+      backToDashboard: 'Back to dashboard',
+    },
+    share: 'Share report',
+    shareLoading: 'Sharing...',
+    shareCopied: 'Link copied to clipboard!',
+    shareError: 'Could not share the report.',
+    sharedTitle: 'Shared Travel Plan',
+    sharedCreatedAt: 'Created on',
+    sharedBy: 'Generated with Guia de Milhas Planner',
+    history: {
+      title: 'My Plans',
+      subtitle: (count: number) => `${count} saved plan(s)`,
+      view: 'View plan',
+      share: 'Share',
+      delete: 'Delete',
+      deleteConfirm: 'Confirm deletion',
+      deleteCancel: 'Cancel',
+      deleteTitle: 'Are you sure you want to delete this plan?',
+      version: 'Version',
+      shared: 'Link copied!',
+      shareError: 'Could not share.',
+      ai: 'AI',
+      fallback: 'Fallback',
+      cached: 'Cache',
+      empty: 'No saved plans yet.',
+      emptyAction: 'Create first plan',
+      previous: 'Previous',
+      next: 'Next',
+      backToPlanner: 'Back to planner',
+      destination: 'Destination',
+      deleting: 'Deleting...',
+      deleteError: 'Could not delete plan.',
     },
   },
 
@@ -979,7 +1018,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       items: [
         {
           title: 'Autenticação',
-          description: 'Better Auth com email/senha, OAuth e links mágicos.',
+          description: 'Autenticação com email/senha, OAuth e links mágicos.',
         },
         {
           title: 'Multi-tenancy',
@@ -1334,8 +1373,9 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       quickActions: 'Ações rápidas',
       quickActionsSubtitle: 'Tarefas comuns que você pode fazer agora',
       gettingStarted: 'Primeiros passos',
-      gettingStartedSubtitle: 'Complete estes passos para aproveitar o Shipped',
+      gettingStartedSubtitle: 'Complete estes passos para aproveitar o Guia de Milhas',
       actions: {
+        planTrip: 'Planejar viagem com milhas',
         createNewWorkspace: 'Criar um novo workspace',
         inviteTeamMembers: 'Convidar membros',
         updateProfile: 'Atualizar seu perfil',
@@ -1343,6 +1383,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       steps: {
         createAccount: 'Criar sua conta',
         createFirstWorkspace: 'Criar seu primeiro workspace',
+        planFirstTrip: 'Crie seu primeiro roteiro',
         inviteTeam: 'Convidar sua equipe',
         setupBilling: 'Configurar cobrança',
       },
@@ -1461,7 +1502,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       noneTitle: 'Sem notificações',
       noneBody: 'Tudo em dia. Volte mais tarde.',
       seed: {
-        title: 'Bem-vindo ao Shipped!',
+        title: 'Bem-vindo ao Guia de Milhas!',
         description: 'Comece criando seu primeiro workspace.',
         time: 'Agora mesmo',
       },
@@ -1565,6 +1606,43 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
         disabled: 'Desativado',
         alwaysOn: 'Sempre ativo',
       },
+    },
+  },
+
+  planner: {
+    header: {
+      backToDashboard: 'Voltar ao painel',
+    },
+    share: 'Compartilhar relatório',
+    shareLoading: 'Compartilhando...',
+    shareCopied: 'Link copiado!',
+    shareError: 'Não foi possível compartilhar o relatório.',
+    sharedTitle: 'Plano de Viagem Compartilhado',
+    sharedCreatedAt: 'Criado em',
+    sharedBy: 'Gerado com o Planner do Guia de Milhas',
+    history: {
+      title: 'Meus Planos',
+      subtitle: (count: number) => `${count} plano(s) salvo(s)`,
+      view: 'Ver plano',
+      share: 'Compartilhar',
+      delete: 'Excluir',
+      deleteConfirm: 'Confirmar exclusão',
+      deleteCancel: 'Cancelar',
+      deleteTitle: 'Tem certeza que deseja excluir este plano?',
+      version: 'Versão',
+      shared: 'Link copiado!',
+      shareError: 'Não foi possível compartilhar.',
+      ai: 'IA',
+      fallback: 'Fallback',
+      cached: 'Cache',
+      empty: 'Nenhum plano salvo ainda.',
+      emptyAction: 'Criar primeiro plano',
+      previous: 'Anterior',
+      next: 'Próximo',
+      backToPlanner: 'Voltar ao planner',
+      destination: 'Destino',
+      deleting: 'Excluindo...',
+      deleteError: 'Não foi possível excluir o plano.',
     },
   },
 

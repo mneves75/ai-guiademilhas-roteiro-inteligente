@@ -14,15 +14,15 @@ export function BaseLayout({ preview, children }: BaseLayoutProps) {
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logo}>Shipped</Text>
+            <Text style={logo}>Guia de Milhas</Text>
           </Section>
           {children}
           <Section style={footer}>
             <Text style={footerText}>
-              © {new Date().getFullYear()} Shipped. All rights reserved.
+              © {new Date().getFullYear()} Guia de Milhas. All rights reserved.
             </Text>
             <Text style={footerText}>
-              You received this email because you signed up for Shipped.
+              You received this email because you signed up for Guia de Milhas.
             </Text>
           </Section>
         </Container>

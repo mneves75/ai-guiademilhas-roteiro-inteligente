@@ -6,10 +6,7 @@ import { LOCALE_COOKIE, normalizeLocale, type Locale } from './locale';
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 function shouldUseSecureCookies(): boolean {
-  const raw =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.BETTER_AUTH_BASE_URL ??
-    process.env.BETTER_AUTH_URL;
+  const raw = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!raw) return process.env.NODE_ENV === 'production';
 
   try {

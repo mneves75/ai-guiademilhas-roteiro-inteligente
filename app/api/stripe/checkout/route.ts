@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { verifyWorkspaceMember } from '@/db/queries/workspaces';
 import { getOrCreateStripeCustomer, createCheckoutSession } from '@/lib/stripe-helpers';
 import { getPlanPriceId, STRIPE_PLANS, type BillingInterval, type PlanId } from '@/lib/stripe';
@@ -23,8 +22,7 @@ const stripeCheckoutSchema = z
  * Create Stripe Checkout session for subscription upgrade
  */
 export const POST = withApiLogging('api.stripe.checkout', async (request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }

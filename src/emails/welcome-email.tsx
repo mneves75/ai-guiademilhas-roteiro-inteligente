@@ -7,23 +7,27 @@ interface WelcomeEmailProps {
   loginUrl?: string;
 }
 
-export function WelcomeEmail({ name, loginUrl = 'https://shipped.dev/login' }: WelcomeEmailProps) {
+export function WelcomeEmail({
+  name,
+  loginUrl = 'https://guiademilhas.app/login',
+}: WelcomeEmailProps) {
   return (
-    <BaseLayout preview={`Welcome to Shipped, ${name}!`}>
+    <BaseLayout preview={`Welcome to Guia de Milhas, ${name}!`}>
       <Section style={content}>
-        <Heading style={heading}>Welcome to Shipped!</Heading>
+        <Heading style={heading}>Welcome to Guia de Milhas!</Heading>
         <Text style={paragraph}>Hi {name},</Text>
         <Text style={paragraph}>
-          Thank you for signing up for Shipped. We&apos;re excited to have you on board!
+          Thank you for signing up for Guia de Milhas. We&apos;re excited to have you on board!
         </Text>
         <Text style={paragraph}>
-          With Shipped, you can launch your SaaS in days, not months. Here&apos;s what you can do:
+          With Guia de Milhas, you can build your trip strategy with clarity. Here&apos;s what you
+          can do:
         </Text>
         <ul style={list}>
-          <li style={listItem}>Create workspaces and invite your team</li>
-          <li style={listItem}>Set up authentication with multiple providers</li>
-          <li style={listItem}>Manage subscriptions and billing</li>
-          <li style={listItem}>Access the admin dashboard</li>
+          <li style={listItem}>Define origins, destinations, dates and passenger profile</li>
+          <li style={listItem}>Generate structured scenarios with objective trade-offs</li>
+          <li style={listItem}>Prioritize the best emission path based on your constraints</li>
+          <li style={listItem}>Execute with a clear action plan</li>
         </ul>
         <Section style={buttonContainer}>
           <Button style={button} href={loginUrl}>
@@ -36,7 +40,7 @@ export function WelcomeEmail({ name, loginUrl = 'https://shipped.dev/login' }: W
         <Text style={paragraph}>
           Best,
           <br />
-          The Shipped Team
+          Guia de Milhas Team
         </Text>
       </Section>
     </BaseLayout>

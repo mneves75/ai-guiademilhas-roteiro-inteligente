@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LANDING_PLANNER_SOURCE } from '@/lib/analytics/funnel';
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,16 +33,52 @@ export const travelPreferencesSchema = z
     bairros_pref: boundedText(240),
     restricoes: boundedText(800),
   })
+  .superRefine((value, ctx) => {
+    if (!isoDatePattern.test(value.data_ida) || !isoDatePattern.test(value.data_volta)) {
+      return;
+    }
+
+    const departure = Date.parse(`${value.data_ida}T00:00:00Z`);
+    const returnDate = Date.parse(`${value.data_volta}T00:00:00Z`);
+
+    if (!Number.isFinite(departure) || !Number.isFinite(returnDate)) {
+      return;
+    }
+
+    if (returnDate < departure) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['data_volta'],
+        message: 'Return date must be on or after departure date',
+      });
+    }
+  })
   .strict();
 
 export const plannerGenerateRequestSchema = z
   .object({
     locale: z.string().optional(),
+    source: z.enum([LANDING_PLANNER_SOURCE]).optional(),
     preferences: travelPreferencesSchema,
   })
   .strict();
 
-const reportItemSchema = z.string().trim().min(6).max(240);
+const structuredItemSchema = z.object({
+  text: z.string().trim().min(6).max(240),
+  tag: z.enum(['tip', 'warning', 'action', 'info']).optional(),
+  links: z
+    .array(
+      z.object({
+        label: z.string().trim().min(2).max(60),
+        url: z.string().url().max(500),
+        type: z.enum(['search', 'book', 'info', 'map']),
+      })
+    )
+    .max(3)
+    .optional(),
+});
+
+const reportItemSchema = z.union([z.string().trim().min(6).max(240), structuredItemSchema]);
 
 const reportSectionSchema = z
   .object({

@@ -10,7 +10,6 @@ import {
   FolderKanban,
   BarChart3,
   Mail,
-  Map,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkspaceSwitcher } from './workspace-switcher';
@@ -34,7 +33,6 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
   const navigation = [
     { name: t.dashboard.nav.overview, href: '/dashboard', icon: LayoutDashboard },
-    { name: t.dashboard.nav.planner, href: '/dashboard/planner', icon: Map },
     { name: t.dashboard.nav.workspaces, href: '/dashboard/workspaces', icon: FolderKanban },
     { name: t.dashboard.nav.team, href: '/dashboard/team', icon: Users },
     { name: t.dashboard.nav.analytics, href: '/dashboard/analytics', icon: BarChart3 },

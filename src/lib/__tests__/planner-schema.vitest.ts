@@ -35,6 +35,46 @@ describe('plannerGenerateRequestSchema', () => {
 
     expect(parsed.success).toBe(false);
   });
+
+  it('rejects return date earlier than departure date', () => {
+    const parsed = plannerGenerateRequestSchema.safeParse({
+      locale: 'pt-BR',
+      preferences: {
+        ...initialTravelPreferences,
+        data_ida: '2026-08-20',
+        data_volta: '2026-08-10',
+        origens: 'GRU',
+        destinos: 'LIS',
+        num_adultos: 1,
+      },
+    });
+
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(
+        parsed.error.issues.some(
+          (issue) => issue.path[0] === 'preferences' && issue.path[1] === 'data_volta'
+        )
+      ).toBe(true);
+    }
+  });
+
+  it('rejects unknown funnel source values', () => {
+    const parsed = plannerGenerateRequestSchema.safeParse({
+      locale: 'pt-BR',
+      source: 'unknown_source',
+      preferences: {
+        ...initialTravelPreferences,
+        data_ida: '2026-08-10',
+        data_volta: '2026-08-20',
+        origens: 'GRU',
+        destinos: 'LIS',
+        num_adultos: 1,
+      },
+    });
+
+    expect(parsed.success).toBe(false);
+  });
 });
 
 describe('generatePlannerReport', () => {

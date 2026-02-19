@@ -5,7 +5,7 @@
 **Version:** v1 (Initial Release - Full Featured Demo)
 **Depth:** Comprehensive (12 phases, foundation → features → production)
 **Coverage:** 90/90 v1 requirements mapped
-**Last Updated:** 2026-02-06
+**Last Updated:** 2026-02-19
 
 ---
 
@@ -90,17 +90,17 @@ Plans:
 **Plans:** 5 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Install Drizzle ORM, configure database connection (Wave 1)
-- [ ] 02-02-PLAN.md — Create database schema with 7 tables + generate migration (Wave 1)
-- [ ] 02-03-PLAN.md — Create soft delete query helpers + multi-tenant isolation (Wave 2)
-- [ ] 02-04-PLAN.md — Create seed script + npm database scripts (Wave 2)
-- [ ] 02-05-PLAN.md — Verification checkpoint: database working end-to-end (Wave 3)
+- [x] 02-01-PLAN.md — Install Drizzle ORM, configure database connection (Wave 1)
+- [x] 02-02-PLAN.md — Create database schema with 7 tables + generate migration (Wave 1)
+- [x] 02-03-PLAN.md — Create soft delete query helpers + multi-tenant isolation (Wave 2)
+- [x] 02-04-PLAN.md — Create seed script + npm database scripts (Wave 2)
+- [x] 02-05-PLAN.md — Verification checkpoint: database working end-to-end (Wave 3)
 
 ---
 
 ### Phase 3: Authentication Core
 
-**Goal:** Implement Better Auth with email/password signup, OAuth, login persistence, and middleware-based protected route enforcement.
+**Goal:** Verify and complete Supabase Auth integration with email/password signup, OAuth, magic link, password reset, login persistence, and proxy-based protected route enforcement.
 
 **Why Here:** User management is the foundation. Phases 4+ need users to exist. Dashboard/payment features require auth working.
 
@@ -122,6 +122,14 @@ Plans:
 3. Password reset link expires after 1 hour and only works once
 4. Accessing `/dashboard` when logged out redirects to login; accessing `/` when logged in doesn't redirect
 5. Middleware auth check runs on every request and blocks unauthenticated access to protected routes
+
+**Plans:** 4 plans in 3 waves
+
+Plans:
+- [ ] 03-01-PLAN.md — Verify existing auth implementation (AUTH-01/02/03/04/07/08) (Wave 1)
+- [ ] 03-02-PLAN.md — Create missing API routes for password reset + magic link + SEC-1 fix (Wave 1, parallel)
+- [ ] 03-03-PLAN.md — Clean up stale Better Auth references + regression tests (Wave 2)
+- [ ] 03-04-PLAN.md — Verification checkpoint: all 8 AUTH-* requirements (Wave 3)
 
 ---
 
@@ -428,7 +436,7 @@ Based on comprehensive depth and yolo mode (aggressive parallelization):
 |--------|----------|-------|
 | 1 (Foundation) | 1 week | Sets up all tooling; unblocks others |
 | 2 (Database) | 3-4 days | Schema + migrations; runs parallel to Phase 3 |
-| 3 (Auth) | 1 week | Better Auth integration; runs after Phase 2 complete |
+| 3 (Auth) | 1 week | Supabase Auth verification + gap fill; runs after Phase 2 complete |
 | 4 (Design) | 1 week | Component library; runs parallel to Phase 3 |
 | 5 (Landing) | 3-4 days | Uses Phase 4 components; quick |
 | 6 (Teams) | 5-6 days | Complex logic; depends on Phases 2, 3, 7 |
@@ -460,4 +468,4 @@ Roadmap is complete when:
 
 ---
 
-**Phase 2 planning complete. Ready for execution via `/gsd:execute-phase 2`.**
+**Phase 3 planning complete. Ready for execution via `/gsd:execute-phase 3`.**

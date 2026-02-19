@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,10 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect(buildLoginRedirectHref('/admin', { defaultPath: '/admin' }));

@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { authClient } from '@/lib/auth-client';
+import { signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/locale-context';
 import { m } from '@/lib/messages';
@@ -38,7 +38,7 @@ export function DashboardHeader({ user, impersonatedBy }: DashboardHeaderProps) 
   const t = m(locale);
 
   const handleSignOut = async () => {
-    await authClient.signOut();
+    await signOut();
     router.push('/');
     router.refresh();
   };

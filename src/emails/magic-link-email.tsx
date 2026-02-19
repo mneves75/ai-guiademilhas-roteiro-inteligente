@@ -16,7 +16,7 @@ export function MagicLinkEmail({
   return (
     <BaseLayout preview="Your magic sign-in link">
       <Section style={content}>
-        <Heading style={heading}>Sign in to Shipped</Heading>
+        <Heading style={heading}>Sign in to Guia de Milhas</Heading>
         <Text style={paragraph}>
           Click the button below to sign in. This link expires in {expiresInMinutes} minutes.
         </Text>

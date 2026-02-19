@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/telemetry/sentry';
 
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Shipped <noreply@shipped.dev>';
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Guia de Milhas <noreply@guiademilhas.app>';
 
 export type EmailResult = {
   success: boolean;

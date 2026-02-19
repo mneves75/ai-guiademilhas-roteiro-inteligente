@@ -58,7 +58,6 @@
     "@growthbook/growthbook-react": "^1.6.4",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@neondatabase/serverless": "^1.0.2",
     "@next/mdx": "^16.1.6",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.69.0",
@@ -75,11 +74,13 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@react-email/components": "^1.0.7",
     "@react-email/render": "^2.0.4",
+    "@react-pdf/renderer": "^4.3.2",
     "@sentry/node": "^10.38.0",
     "@stripe/stripe-js": "^8.7.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
     "@vercel/blob": "^2.2.0",
     "ai": "^6.0.79",
-    "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -109,9 +110,6 @@
     "stripe": "^20.3.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
-  },
-  "optionalDependencies": {
-    "better-sqlite3": "^12.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -155,7 +153,6 @@
       "@esbuild-kit/core-utils>esbuild": "0.25.12"
     },
     "onlyBuiltDependencies": [
-      "better-sqlite3",
       "esbuild",
       "sharp",
       "unrs-resolver"

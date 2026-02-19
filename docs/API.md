@@ -5,7 +5,8 @@ Este documento descreve os endpoints principais expostos em `app/api/**/route.ts
 ## Convencoes
 
 - **Request correlation**: `x-request-id` e propagado (proxy) e incluido em respostas de erro do wrapper (`src/lib/logging.ts`).
-- **Erros**: em geral retornam JSON no formato `{ "error": "mensagem", "requestId": "..." }` (4xx/5xx). O planner tambem expõe `application/problem+json` para casos de rate limit.
+- **Erros**: em geral retornam JSON no formato `{ "error": "mensagem", "requestId": "..." }` (4xx/5xx).  
+  No endpoint do planner, falhas retornam `application/problem+json` (RFC 9457) para `400`, `401`, `429` e `500`.
 - **Cache**: rotas `GET /api/*` enviam `Cache-Control: no-store` via `next.config.ts`.
 - **Contrato formal**: endpoint do planner descrito em `docs/openapi.planner.yaml` (OpenAPI 3.1).
 
@@ -26,11 +27,11 @@ Resposta:
 
 Em producao, requer `METRICS_TOKEN` e o header `Authorization: Bearer <token>`.
 
-## Auth (Better Auth)
+## Auth (Supabase Auth)
 
 - `GET|POST /api/auth/*` (catch-all em `app/api/auth/[...all]/route.ts`)
 
-Obs.: endpoints e payloads dependem da configuracao do Better Auth em `src/lib/auth.ts`.
+Obs.: endpoints e payloads usam Supabase Auth via `@supabase/ssr`. Config em `src/lib/supabase/server.ts`.
 
 ## Workspaces (multi-tenancy)
 
@@ -65,6 +66,7 @@ Payload (exemplo resumido):
 ```json
 {
   "locale": "pt-BR",
+  "source": "landing_planner",
   "preferences": {
     "data_ida": "2026-08-15",
     "data_volta": "2026-08-25",
@@ -81,12 +83,19 @@ Notas:
 - Requer sessao autenticada.
 - Aplica rate limit por usuario autenticado.
 - `locale` e normalizado no backend para locale suportado (fallback seguro quando invalido).
+- `source` (opcional) identifica a origem de funil para mensuracao (`landing_planner`).
 - `num_adultos`, `num_chd` e `num_inf` aceitam inteiro ou string numerica (coercao segura no schema).
 - `flex_dias` aceita `0..30` (string numerica).
 - Resposta de sucesso (versionada):  
   `{ "schemaVersion": "2026-02-11", "generatedAt": "ISO-8601", "report": { ... }, "mode": "ai|fallback" }`.
 - Sem chave de IA, o endpoint continua funcional em `mode: "fallback"` com plano resiliente.
-- Em rate limit, retorna `429` com `Retry-After` e `application/problem+json`:
+- Em falhas, retorna `application/problem+json` com `requestId` e `code`.
+- Codes do planner:
+  - `planner_invalid_request` (`400`)
+  - `planner_unauthorized` (`401`)
+  - `planner_rate_limited` (`429`, inclui `Retry-After`)
+  - `planner_internal_error` (`500`)
+- Exemplo de rate limit (`429`):
 
 ```json
 {

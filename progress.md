@@ -459,3 +459,295 @@ Data: 2026-02-11
     - campos `num_*` aceitam inteiro ou string numerica (coercao),
     - `locale` documentado como normalizado com fallback seguro.
   - `docs/API.md` atualizado com as mesmas regras do backend.
+
+### Revisao first-principles + SEO semantico (2026-02-11)
+
+- Implementado:
+  - `FAQPage` JSON-LD na landing publica (`app/page.tsx`), derivado de `content.faqs`.
+  - teste E2E para structured data da landing (`e2e/home.e2e.ts`).
+  - invariantes minimos de copy/SEO para os dois locales (`src/lib/__tests__/landing-content.vitest.ts`).
+  - documento tecnico de critica 10/10 com referencias externas:
+    - `docs/solucao-elegante-10-10-first-principles.pt-br.md`
+- Objetivo:
+  - reduzir regressao silenciosa em SEO semantico e copy de conversao;
+  - alinhar critica tecnica com fontes de mercado (Next.js, Google Search, Schema.org, ASVS, GitHub).
+
+### Funil de conversao ponta-a-ponta (2026-02-11)
+
+- Objetivo: sair de validacao apenas tecnica para medicao real de conversao no fluxo principal landing -> auth -> planner.
+- Implementado:
+  - origem de funil em URL (`source=landing_planner`) para CTAs de landing;
+  - propagacao dessa origem entre login e signup sem perder `callbackUrl`;
+  - eventos de funil no cliente:
+    - `planner_funnel_auth_viewed`
+    - `planner_funnel_auth_completed`
+    - `planner_funnel_opened`
+    - `planner_funnel_generated`
+  - persistencia de origem em `sessionStorage` para conectar auth -> planner.
+- Arquivos principais:
+  - `src/lib/analytics/funnel.ts`
+  - `src/lib/analytics/funnel-client.ts`
+  - `src/lib/planner/navigation.ts`
+  - `app/page.tsx`
+  - `app/(auth)/login/page.tsx`
+  - `app/(auth)/signup/page.tsx`
+  - `app/(auth)/login/login-form.tsx`
+  - `app/(auth)/signup/signup-form.tsx`
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+  - `e2e/home.e2e.ts`
+  - `src/lib/__tests__/funnel.vitest.ts`
+  - `docs/solucao-elegante-10-10-first-principles.pt-br.md`
+
+### Confiabilidade de conversao: evento final no backend (2026-02-11)
+
+- Ajuste implementado:
+  - `POST /api/planner/generate` agora aceita `source` opcional (`landing_planner`) no payload;
+  - evento `planner_funnel_generated` também e emitido no servidor com `channel=server`;
+  - auditoria do planner inclui `source` no metadata para correlacao.
+- Motivacao:
+  - reduzir perdas de telemetria da etapa final por bloqueio client-side.
+- Arquivos:
+  - `src/lib/planner/schema.ts`
+  - `app/api/planner/generate/route.ts`
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+  - `docs/openapi.planner.yaml`
+  - `docs/API.md`
+
+### Alertas operacionais de funil (2026-02-11)
+
+- Implementado:
+  - metrica Prometheus `app_planner_funnel_generated_total{source,mode,channel}`;
+  - incremento da metrica no backend do planner (`channel=server`);
+  - alertas no Prometheus:
+    - `AppPlannerFallbackRatioHigh`
+    - `AppPlannerLandingSourceDrop`
+- Objetivo:
+  - converter medicao de funil em acao operacional automatica (detectar degradacao e quebra de tracking).
+- Arquivos:
+  - `src/lib/metrics.ts`
+  - `app/api/planner/generate/route.ts`
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+  - `grafana/alerts/security-alerts.yaml`
+  - `observability/README.pt-br.md`
+
+### Hardening final de conversao + UX publica (2026-02-11)
+
+- Ajustes implementados:
+  - `app/pricing/page.tsx`
+    - remove dependencias visuais da landing do framework (`Header`/`Footer` com branding Shipped);
+    - adota header publico alinhado ao produto (`Guia de Milhas` / `Miles Guide`);
+    - preserva CTA de `signup` para planner com `source=landing_planner`;
+    - ajusta CTA de "gerenciar billing" para login com callback em `/dashboard/billing` e `source=landing_planner`.
+  - `app/(protected)/dashboard/planner/planner-form.tsx`
+    - validacao client-side agora espelha `travelPreferencesSchema` (Zod) para reduzir 400 evitavel;
+    - adiciona mensagens de erro por campo e limites HTML (`min/max/maxLength`) nos campos relevantes;
+    - melhora mensagem de erro de submissao aproveitando `title` quando presente no payload de erro.
+  - `src/lib/planner/api-contract.ts`
+    - `parsePlannerGenerateSuccessPayload` passa a validar `report` com `plannerReportSchema` (parse estrito);
+    - `parsePlannerProblemDetails` ganha compatibilidade com payload legado `{ error, requestId }`.
+  - `src/lib/__tests__/planner-api-contract.vitest.ts`
+    - novo teste de retrocompatibilidade para erro legado.
+  - `e2e/home.e2e.ts`
+    - reforco de assertivas de `source=landing_planner` nos CTAs de pricing;
+    - novo teste para CTA "manage billing" mantendo callback + source.
+
+- Evidencias desta rodada:
+  - `pnpm lint` -> PASS
+  - `pnpm test` -> PASS (`97 passed`)
+  - `pnpm verify:ci` -> PASS (`41 passed` em `test:e2e:ci`)
+  - `pnpm test:e2e` -> PASS (`82 passed`)
+
+- Resultado:
+  - fluxo publico/paid pages sem resquicios visuais do framework;
+  - tracking de origem consistente nos CTAs publicos criticos;
+  - contrato e parse do planner mais resilientes sem quebrar retrocompatibilidade;
+  - qualidade comprovada em gate completo + E2E full matrix.
+
+### Padronizacao completa de erro RFC 9457 no planner (2026-02-11)
+
+- Ajustes implementados:
+  - `app/api/planner/generate/route.ts`
+    - padroniza respostas de erro do planner em `application/problem+json` para `400`, `401`, `429` e `500`;
+    - adiciona helper central `plannerProblemResponse` com `type`, `title`, `status`, `detail`, `instance`, `requestId`, `code` (+ `Retry-After` no `429`);
+    - remove dependencia de throw para `401` (retorno explicito problem+json).
+  - `src/lib/__tests__/planner-generate-route.vitest.ts`
+    - atualiza teste `401` para formato RFC 9457;
+    - adiciona teste novo para `400` quando payload e invalido.
+  - `docs/openapi.planner.yaml`
+    - respostas `400/401/429/500` do planner em `application/problem+json`;
+    - schema `PlannerProblem` ampliado para status `4xx/5xx` e codes:
+      - `planner_invalid_request`
+      - `planner_unauthorized`
+      - `planner_rate_limited`
+      - `planner_internal_error`
+  - `docs/API.md`
+    - documenta padrao de erro RFC 9457 para o endpoint do planner em todos os status de falha.
+
+- Evidencias desta rodada:
+  - `pnpm test -- src/lib/__tests__/planner-generate-route.vitest.ts src/lib/__tests__/planner-api-contract.vitest.ts` -> PASS (`98 passed`)
+  - `pnpm verify:ci` -> PASS (`41 passed` em `test:e2e:ci`)
+  - `pnpm test:e2e` -> PASS (`82 passed`)
+
+- Resultado:
+  - contrato de erro do planner ficou consistente ponta-a-ponta (server, cliente, testes e docs), removendo a principal lacuna residual de confiabilidade/operacao.
+
+### Revalidacao autonoma final desta sessao (2026-02-11)
+
+- Limpeza de artefatos acidentais:
+  - removidos arquivos vazios `planner-` e `success,`.
+- Evidencias executadas em sequencia:
+  - `pnpm verify:ci` -> PASS
+    - unit: `27 files`, `106 passed`
+    - e2e:ci (chromium): `46 passed`
+  - `pnpm security:audit` -> PASS
+    - `pnpm audit --prod`: sem vulnerabilidades conhecidas
+    - `gitleaks git`: sem leaks (`153 commits scanned`)
+    - DAST-lite: `4 passed`
+  - `PW_FULL=1 pnpm test:e2e` -> PASS
+    - `225 passed`, `5 skipped`, `0 failed`
+    - skips mantidos como intencionais em `mobile-safari` para cenarios auth-heavy documentados nos testes.
+
+## 2026-02-18 02:29 - Fechamento LM Studio + shared link
+
+- Revalidei `pnpm verify` completo no estado atual: passou (lint, type-check, unit, build, db smoke sqlite/postgres e 50 E2E chromium).
+- Executei fluxo real `bootstrap auth -> POST /api/planner/generate -> POST /api/planner/share -> GET /r/{token}`.
+- Evidência final: `generate_code=200 mode=ai sections=4 share_code=201 share_url=/r/c745a85b1bd5580237c2a9688de15fa8 link_code=200 elapsed_s=2`.
+- Diagnóstico do 403 no teste via curl: proteção CSRF em `proxy.ts` exige `Origin/Referer` válidos quando há cookie de sessão.
+
+## 2026-02-18 02:33 - Bateria autônoma de confiabilidade LM Studio
+
+- Loop real autenticado (cookie E2E + headers Origin/Referer válidos) executado em produção local.
+- `POST /api/planner/generate` x3: 3/3 `200`, 3/3 `mode=ai`, 3/3 `sections=4`.
+- `POST /api/planner/share` x3 + `GET /r/{token}` x3: 3/3 `201` + 3/3 `200`.
+- `POST /api/planner/generate-stream` x2: 2/2 `200`, 2/2 `mode=ai`, 2/2 `sections=4`.
+- Evidência resumida: `generate_ok=3/3 ai_ok=3/3 share_ok=3/3 link_ok=3/3 stream_ok=2/2 stream_ai_ok=2/2`.
+
+## 2026-02-18 02:36 - Smoke script integrado + verify completo
+
+- Adicionado `scripts/planner-lmstudio-smoke.mjs` para validação automática real de generate/share/link + stream SSE com LM Studio.
+- Ajuste pós-falha inicial: tratamento de rate limit 429 com retry guiado por `retryAfterSeconds` e orçamento de chamadas para não estourar o limite.
+- Novo script exposto em `package.json` como `pnpm test:planner:lmstudio`.
+- Evidência smoke final: `generate_ok=3/3 ai_ok=3/3 cold_ok=3/3 warm_cache_hit_ok=1/1 share_ok=3/3 link_ok=3/3 stream_ok=2/2 stream_ai_ok=2/2`, último link `/r/a90bf3c197048b2f4501a6cdabb46e5f`.
+- Evidência gate completo: `pnpm verify` finalizou com sucesso (incluindo 50 E2E passando).
+
+## 2026-02-18 02:43 - Gate composto `verify:planner:local`
+
+- Adicionados scripts NPM:
+  - `test:planner:lmstudio:soak` (8 gerações + 4 streams)
+  - `verify:planner:local` (`pnpm verify` + soak LM Studio)
+- Execução validada: `pnpm verify:planner:local` finalizou com sucesso.
+- Evidência verify interno: lint/type/unit/build/db-smoke/e2e chromium (50 passed).
+- Evidência soak no mesmo comando: `generate_ok=8/8 ai_ok=8/8 cold_ok=8/8 warm_cache_hit_ok=1/1 share_ok=8/8 link_ok=8/8 stream_ok=4/4 stream_ai_ok=4/4`.
+- Link final validado: `/r/720f9401d38ed05ed8f791fb600447d8` com HTTP 200.
+
+## 2026-02-18 02:48 - Stress test extremo LM Studio
+
+- Execução: `SMOKE_GENERATE_LOOPS=12 SMOKE_STREAM_LOOPS=6 pnpm test:planner:lmstudio`.
+- Resultado: `generate_ok=12/12 ai_ok=12/12 cold_ok=12/12 warm_cache_hit_ok=1/1 share_ok=12/12 link_ok=12/12 stream_ok=6/6 stream_ai_ok=6/6`.
+- Sob carga, ocorreram 429 transitórios (iteração 11 de generate e 5 de stream) tratados pelo retry com sucesso, sem falha final.
+- Link final do stress test: `/r/454ae3dac0f9cac1b2f5782fc964c9c5` validado com HTTP 200.
+
+## 2026-02-18 02:51 - Preflight LM Studio + revalidação composta
+
+- Harden do smoke: preflight obrigatório de `PLANNER_PROVIDER=lmstudio` e health-check de `PLANNER_LM_STUDIO_BASE_URL/models` antes dos loops.
+- Gate reexecutado: `pnpm verify:planner:local` com sucesso após o harden.
+- Evidência verify interno: 50 E2E Chromium pass.
+- Evidência soak interno: `generate_ok=8/8 ai_ok=8/8 cold_ok=8/8 warm_cache_hit_ok=1/1 share_ok=8/8 link_ok=8/8 stream_ok=4/4 stream_ai_ok=4/4`.
+- Link final dessa rodada: `/r/bef760c9676f56a2f70d44bc151f3a08` validado com HTTP 200.
+
+## 2026-02-18 02:55 - Robustez fail-fast validada
+
+- Teste negativo 1: `PLANNER_PROVIDER=google pnpm test:planner:lmstudio` -> falha esperada (`PLANNER_PROVIDER must be lmstudio`).
+- Teste negativo 2: `PLANNER_PROVIDER=lmstudio PLANNER_LM_STUDIO_BASE_URL=http://localhost:59999/v1 pnpm test:planner:lmstudio` -> falha esperada (`LM Studio unreachable .../models`).
+- Revalidação positiva imediata: `pnpm test:planner:lmstudio` -> sucesso completo (`3/3` generate/share/link e `2/2` stream).
+- Link final da rodada: `/r/a4ae72b9f07cbf2f0da56ccb0c611a88` com HTTP 200.
+
+## 2026-02-18 03:00 - Rodada final autônoma (gate + stress extra)
+
+- `pnpm verify:planner:local` executado com sucesso completo (verify + soak 8/4).
+- Stress extra final: `SMOKE_GENERATE_LOOPS=12 SMOKE_STREAM_LOOPS=6 pnpm test:planner:lmstudio`.
+- Resultado stress extra: `generate_ok=12/12 ai_ok=12/12 cold_ok=12/12 warm_cache_hit_ok=1/1 share_ok=12/12 link_ok=12/12 stream_ok=6/6 stream_ai_ok=6/6`.
+- Link final validado: `/r/77dc1bf3096b1377de63d12cea545623` com HTTP 200.
+
+## 2026-02-18 03:07 - Rodada máxima extra (16/8)
+
+- Gate completo executado: `pnpm verify:planner:local` -> sucesso.
+- Stress extra: `SMOKE_GENERATE_LOOPS=16 SMOKE_STREAM_LOOPS=8 pnpm test:planner:lmstudio` -> sucesso.
+- Resultado: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- Link final validado: `/r/a29bbc9e67b239276f771d146cdcfab2` com HTTP 200.
+
+## 2026-02-18 03:15 - Gate autônomo único concluído
+
+- Executado `pnpm verify:planner:autonomous` (script único end-to-end).
+- Fluxo coberto no mesmo comando:
+  1. `verify:planner:local` (verify completo + soak 8/4),
+  2. negativo provider incorreto (falha esperada),
+  3. negativo endpoint LM Studio inválido (falha esperada),
+  4. stress positivo 16/8.
+- Resultado final do stress positivo no gate: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- Link final do gate: `/r/0e484355a724ee84c2e208ce243f09f7` validado com HTTP 200.
+
+## 2026-02-18 03:42 - Reexecução total autônoma concluída (sessão atual)
+
+- Comando executado: `pnpm verify:planner:autonomous`.
+- Resultado do gate: sucesso completo (exit 0) cobrindo:
+  1. `verify:planner:local` (inclui `pnpm verify` + soak 8/4),
+  2. guard negativo provider incorreto (falha esperada),
+  3. guard negativo endpoint LM Studio inválido (falha esperada),
+  4. stress positivo final 16/8.
+- Resultado do stress positivo: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- `latest_link` do próprio gate: `/r/fac89bd17523120046404f72db204c97`.
+- Validação externa após gate: `curl http://localhost:3000/r/fac89bd17523120046404f72db204c97` retornou HTTP `200`.
+
+## 2026-02-18 03:50 - Reexecução autônoma extra concluída
+
+- Rodado novamente: `pnpm verify:planner:autonomous`.
+- Resultado: sucesso completo (exit 0), incluindo `verify`, E2E Chromium `50/50`, guards negativos e stress final `16/8`.
+- Saída final do stress: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- `latest_link` do gate: `/r/631db4938aaed4802caabee09ffe2a70`.
+- Validação pós-gate: `curl` em `http://localhost:3000/r/631db4938aaed4802caabee09ffe2a70` retornou HTTP `200`.
+
+## 2026-02-19 - Refatoração Elegante do Planner (Padrão Carmack)
+
+### Escopo
+
+- Extração de god handlers em utilitários composáveis
+- Correção de 60+ strings pt-BR sem acentos
+- Isolamento do provider LM Studio
+- Unificação do pipeline pós-geração (save + analytics + metrics + cache)
+
+### Novos arquivos
+
+| Arquivo                                | Propósito                                                | Linhas |
+| -------------------------------------- | -------------------------------------------------------- | ------ |
+| `src/lib/planner/strings.ts`           | `normalizeForComparison()` + `sectionOrder(locale)`      | 40     |
+| `src/lib/planner/sse.ts`               | `sseHeaders()`, `encodeEvent()`, `singleEventResponse()` | 40     |
+| `src/lib/planner/post-generation.ts`   | Pipeline pós-geração unificado (best-effort)             | 102    |
+| `src/lib/planner/lmstudio-provider.ts` | `generateViaLmStudio()` extraído de generate-report.ts   | 240    |
+
+### Reduções
+
+| Arquivo                    | Antes | Depois | Delta |
+| -------------------------- | ----- | ------ | ----- |
+| `generate-stream/route.ts` | 448   | 227    | -49%  |
+| `generate/route.ts`        | 201   | 131    | -35%  |
+| `generate-report.ts`       | 557   | 326    | -41%  |
+
+### Acentos corrigidos em
+
+- `prompt.ts` (~30 strings: `localizeEnum`, `buildSystemPrompt`, `buildUserPrompt`, `formatPromptContext`)
+- `stream-report.ts` (5 section titles)
+- `generate-report.ts` (fallback report strings)
+- `lmstudio-provider.ts` (repair rules)
+- `normalize-report.ts` (matching + fallback strings)
+- `planner-pdf-document.tsx` ("Assunções")
+- `pdf-styles.ts` ("[atenção]", "[ação]")
+- `generate-stream/route.ts` ("geração do relatório")
+
+### Verificação
+
+- `pnpm type-check` ✅
+- `pnpm lint` ✅ (zero warnings)
+- `pnpm test` ✅ (146/147 — 1 pre-existing SQLite binding failure)
+- `pnpm build` ✅

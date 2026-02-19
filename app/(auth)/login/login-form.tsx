@@ -1,15 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { signIn } from '@/lib/auth-client';
+import { signIn, signInWithOAuth } from '@/lib/auth-client';
 import type { Locale } from '@/lib/locale';
 import { m } from '@/lib/messages';
 import { isValidEmail } from '@/lib/validation/email';
 import { mapSignInError } from '@/lib/auth/ui-errors';
 import { parseBodyFieldErrors } from '@/lib/auth/error-utils';
+import { plannerFunnelEvents, type FunnelSource, withFunnelSource } from '@/lib/analytics/funnel';
+import {
+  capturePlannerFunnelEvent,
+  rememberPlannerFunnelSource,
+} from '@/lib/analytics/funnel-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -17,9 +22,11 @@ import { Separator } from '@/components/ui/separator';
 
 export default function LoginForm({
   callbackUrl,
+  funnelSource,
   initialLocale,
 }: {
   callbackUrl: string;
+  funnelSource: FunnelSource | null;
   initialLocale: Locale;
 }) {
   const router = useRouter();
@@ -34,7 +41,20 @@ export default function LoginForm({
   const [magicLoading, setMagicLoading] = useState(false);
 
   const t = m(locale).auth;
-  const signupHref = `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  const signupHref = withFunnelSource(
+    `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+    funnelSource
+  );
+
+  useEffect(() => {
+    if (!funnelSource) return;
+    rememberPlannerFunnelSource(funnelSource);
+    capturePlannerFunnelEvent(plannerFunnelEvents.authViewed, {
+      source: funnelSource,
+      step: 'login',
+      locale,
+    });
+  }, [funnelSource, locale]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,20 +77,27 @@ export default function LoginForm({
         return;
       }
 
-      const result = await signIn.email({
-        email: normalizedEmail,
-        password,
-        callbackURL: callbackUrl,
-      });
-      if (result.error) {
-        const mapped = mapSignInError(result.error, {
-          invalidEmail: t.invalidEmail,
-          passwordRequired: t.passwordRequired,
-          loginFailedFallback: t.loginFailedFallback,
-        });
+      const { error: signInError } = await signIn(normalizedEmail, password);
+      if (signInError) {
+        const mapped = mapSignInError(
+          { message: signInError.message, code: signInError.code },
+          {
+            invalidEmail: t.invalidEmail,
+            passwordRequired: t.passwordRequired,
+            loginFailedFallback: t.loginFailedFallback,
+          }
+        );
         if (mapped.fieldErrors) setFieldErrors(mapped.fieldErrors);
         if (mapped.globalError) setError(mapped.globalError);
       } else {
+        if (funnelSource) {
+          capturePlannerFunnelEvent(plannerFunnelEvents.authCompleted, {
+            source: funnelSource,
+            step: 'login',
+            method: 'email_password',
+            locale,
+          });
+        }
         router.push(callbackUrl);
         router.refresh();
       }
@@ -83,7 +110,10 @@ export default function LoginForm({
 
   async function handleOAuthSignIn(provider: 'google' | 'github') {
     try {
-      await signIn.social({ provider, callbackURL: callbackUrl });
+      await signInWithOAuth(
+        provider,
+        `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(callbackUrl)}`
+      );
     } catch {
       setError(t.oauthLoginFailed);
     }

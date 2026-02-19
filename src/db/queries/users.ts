@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 
 /**
  * Get user by ID
- * Note: Better Auth tables don't use soft deletes
+ * Note: User records don't use soft deletes (Supabase Auth manages user lifecycle)
  */
 export async function getUserById(id: string) {
   return db.query.users.findFirst({

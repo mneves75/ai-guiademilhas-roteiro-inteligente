@@ -9,6 +9,7 @@ declare global {
         authRateLimitedTotal: Counter;
         protectedRedirectsTotal: Counter;
         proxyLatencyMs: Histogram<'outcome'>;
+        plannerFunnelGeneratedTotal: Counter<'source' | 'mode' | 'channel'>;
       }
     | undefined;
 }
@@ -59,11 +60,19 @@ function getAppMetrics() {
     registers: [register],
   });
 
+  const plannerFunnelGeneratedTotal = new Counter({
+    name: 'app_planner_funnel_generated_total',
+    help: 'Planner reports generated, labeled by funnel source, generation mode, and telemetry channel.',
+    labelNames: ['source', 'mode', 'channel'] as const,
+    registers: [register],
+  });
+
   globalThis.__appMetrics = {
     blockedRequestsTotal,
     authRateLimitedTotal,
     protectedRedirectsTotal,
     proxyLatencyMs,
+    plannerFunnelGeneratedTotal,
   };
 
   return globalThis.__appMetrics;
@@ -86,6 +95,14 @@ export function observeProxyLatencyMs(
   ms: number
 ) {
   getAppMetrics().proxyLatencyMs.observe({ outcome }, ms);
+}
+
+export function incPlannerFunnelGenerated(labels: {
+  source: 'landing_planner' | 'unknown';
+  mode: 'ai' | 'fallback';
+  channel: 'server' | 'client';
+}) {
+  getAppMetrics().plannerFunnelGeneratedTotal.inc(labels, 1);
 }
 
 export async function renderMetricsText(): Promise<string> {

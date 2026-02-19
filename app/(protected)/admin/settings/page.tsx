@@ -26,11 +26,11 @@ export default async function AdminSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="app-name">{ts.appName}</Label>
-            <Input id="app-name" defaultValue="Shipped" />
+            <Input id="app-name" defaultValue="Guia de Milhas" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="support-email">{ts.supportEmail}</Label>
-            <Input id="support-email" type="email" defaultValue="support@shipped.dev" />
+            <Input id="support-email" type="email" defaultValue="support@guiademilhas.app" />
           </div>
           <Button>{ts.save}</Button>
         </CardContent>

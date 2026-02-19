@@ -385,3 +385,122 @@ pnpm db:smoke
   - `docs/openapi.planner.yaml` (locale normalizado, `flex_dias` `0..30`, `num_*` como inteiro ou string numerica).
   - `docs/API.md` com as mesmas regras.
   - `pnpm security:asvs-check` -> PASS apos os ajustes de contrato.
+
+## Revisao first-principles + SEO semantico (2026-02-11)
+
+- Mudancas cobertas:
+  - `FAQPage` JSON-LD em `app/page.tsx`.
+  - novo teste SEO de structured data em `e2e/home.e2e.ts`.
+  - novos invariantes de copy/conversao em `src/lib/__tests__/landing-content.vitest.ts`.
+- Comandos de validacao:
+  - `pnpm test -- --run src/lib/__tests__/landing-content.vitest.ts`
+  - `pnpm test:e2e:ci -- --grep \"FAQPage JSON-LD\"`
+  - `pnpm verify:ci`
+
+## Instrumentacao de funil landing -> auth -> planner (2026-02-11)
+
+- Mudanca alvo:
+  - rastrear progressao de funil com `source=landing_planner` e eventos dedicados no PostHog.
+- Comandos de validacao:
+  - `pnpm test -- --run src/lib/__tests__/funnel.vitest.ts src/lib/__tests__/landing-content.vitest.ts`
+  - `pnpm test:e2e:ci`
+  - `pnpm verify:ci`
+- Criterios de aceite:
+  - CTAs da landing preservam `callbackUrl` e incluem `source=landing_planner`;
+  - navegacao login<->signup preserva callback + source;
+  - build/lint/type/test/e2e verdes sem regressao.
+
+## Confiabilidade de funil: evento final no backend (2026-02-11)
+
+- Mudanca alvo:
+  - enviar `source` no request do planner e registrar `planner_funnel_generated` no servidor.
+- Comandos de validacao:
+  - `pnpm test -- --run src/lib/__tests__/planner-generate-route.vitest.ts src/lib/__tests__/funnel.vitest.ts`
+  - `pnpm test:e2e:ci`
+  - `pnpm verify:ci`
+- Criterios de aceite:
+  - contrato aceita `source=landing_planner` sem quebrar retrocompatibilidade;
+  - evento server-side do passo final e disparado com `channel=server`;
+  - pipeline CI completa continua verde.
+
+## Alertas de funil no Prometheus (2026-02-11)
+
+- Mudanca alvo:
+  - metrica de conversao final do planner e alertas de regressao do funil.
+- Comandos de validacao:
+  - `pnpm test -- --run src/lib/__tests__/planner-generate-route.vitest.ts src/lib/__tests__/funnel-slo.vitest.ts`
+  - `pnpm verify:ci`
+- Criterios de aceite:
+  - backend incrementa `app_planner_funnel_generated_total` no sucesso do planner;
+  - alertas `AppPlannerFallbackRatioHigh` e `AppPlannerLandingSourceDrop` disponiveis em `/rules` do Prometheus;
+  - pipeline CI permanece verde.
+
+## Rodada final - hardening de conversao e UX publica (2026-02-11)
+
+### Escopo validado
+
+- pricing publica sem componentes da landing do framework.
+- CTAs de pricing com `source=landing_planner`.
+- parser de contrato do planner com validacao estrita de sucesso e fallback para erro legado.
+- validacao client-side do planner alinhada ao schema Zod do backend.
+
+### Comandos executados
+
+- `pnpm lint`
+- `pnpm test`
+- `pnpm verify:ci`
+- `pnpm test:e2e`
+
+### Resultado
+
+- `pnpm lint`: PASS
+- `pnpm test`: PASS (`97 passed`)
+- `pnpm verify:ci`: PASS (`41 passed` em E2E CI)
+- `pnpm test:e2e`: PASS (`82 passed`)
+
+### Evidencia E2E especifica adicionada
+
+- `e2e/home.e2e.ts`
+  - Pricing: assert de `source=landing_planner` em todos links de signup.
+  - Pricing: novo teste para link "manage billing" com `callbackUrl=/dashboard/billing` + `source=landing_planner`.
+
+## Rodada final - contrato de erro RFC 9457 completo no planner (2026-02-11)
+
+### Escopo validado
+
+- `POST /api/planner/generate` retorna `application/problem+json` em `400/401/429/500`.
+- teste de rota cobre `401` (problem+json), `400` (payload invalido), `429` (rate limit) e `200` (sucesso).
+- OpenAPI/API docs sincronizados com runtime.
+
+### Comandos executados
+
+- `pnpm test -- src/lib/__tests__/planner-generate-route.vitest.ts src/lib/__tests__/planner-api-contract.vitest.ts`
+- `pnpm verify:ci`
+- `pnpm test:e2e`
+
+### Resultado
+
+- Unit/integration: PASS (`98 passed`)
+- Pipeline CI completa: PASS (`test:e2e:ci` com `41 passed`)
+- E2E full matrix: PASS (`82 passed`)
+
+## Revalidacao final desta sessao (2026-02-11)
+
+### Comandos executados
+
+- `pnpm verify:ci`
+- `pnpm security:audit`
+- `PW_FULL=1 pnpm test:e2e`
+
+### Resultado
+
+- `pnpm verify:ci`: PASS
+  - Unit: `27 files`, `106 passed`
+  - E2E CI (chromium): `46 passed`
+- `pnpm security:audit`: PASS
+  - `pnpm audit --prod`: sem vulnerabilidades conhecidas
+  - `gitleaks git`: sem leaks (`153 commits scanned`)
+  - DAST-lite: `4 passed`
+- `PW_FULL=1 pnpm test:e2e`: PASS
+  - `225 passed`, `5 skipped`, `0 failed`
+  - Skips esperados/intencionais em `mobile-safari` para cenarios auth-heavy.

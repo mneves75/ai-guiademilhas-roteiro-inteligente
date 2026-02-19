@@ -5,150 +5,23 @@ import { generateText, Output } from 'ai';
 import type { Locale } from '@/lib/locale';
 import type { PlannerReport } from './types';
 import { plannerReportSchema, type TravelPreferencesInput } from './schema';
+import {
+  localizeEnum,
+  resolvePlannerProvider,
+  resolvePlannerApiKey,
+  resolvePlannerBaseUrl,
+  resolvePlannerModelId,
+  resolvePlannerFallbackModelId,
+  buildSystemPrompt,
+  buildUserPrompt,
+} from './prompt';
+import {
+  extractPlannerCandidateFromError,
+  normalizePlannerReportCandidate,
+} from './normalize-report';
+import { generateViaLmStudio } from './lmstudio-provider';
 
-const DEFAULT_PLANNER_MODEL = 'gemini-2.5-flash';
 const FALLBACK_ASSUMPTION_TOKEN = '__planner_fallback__';
-
-function resolvePlannerApiKey(): string | null {
-  const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
-  const trimmed = key?.trim();
-  return trimmed ? trimmed : null;
-}
-
-function resolvePlannerModelId(): string {
-  const configured = process.env.PLANNER_GOOGLE_MODEL?.trim();
-  return configured || DEFAULT_PLANNER_MODEL;
-}
-
-function localizeEnum(locale: Locale, value: string): string {
-  if (locale === 'en') {
-    const map: Record<string, string> = {
-      direto: 'direct flights only',
-      '1_conexao': 'up to 1 layover',
-      indiferente: 'no strict preference',
-      qualquer: 'any time',
-      manha: 'morning',
-      tarde: 'afternoon',
-      noite: 'evening',
-      madrugada: 'late night',
-      evitar_madrugada: 'avoid late night',
-      mao: 'carry-on only',
-      '1_despachada': '1 checked bag',
-      mais_despachadas: '2+ checked bags',
-      baixa: 'low',
-      media: 'medium',
-      alta: 'high',
-    };
-    return map[value] ?? value;
-  }
-
-  const map: Record<string, string> = {
-    direto: 'somente voos diretos',
-    '1_conexao': 'ate 1 conexao',
-    indiferente: 'sem preferencia rigida',
-    qualquer: 'qualquer horario',
-    manha: 'manha',
-    tarde: 'tarde',
-    noite: 'noite',
-    madrugada: 'madrugada',
-    evitar_madrugada: 'evitar madrugada',
-    mao: 'somente bagagem de mao',
-    '1_despachada': '1 bagagem despachada',
-    mais_despachadas: '2+ bagagens despachadas',
-    baixa: 'baixa',
-    media: 'media',
-    alta: 'alta',
-  };
-  return map[value] ?? value;
-}
-
-function formatPromptContext(locale: Locale, preferences: TravelPreferencesInput): string {
-  const isPt = locale === 'pt-BR';
-
-  const context = {
-    locale,
-    trip: {
-      outboundDate: preferences.data_ida,
-      returnDate: preferences.data_volta,
-      flexibilityDays: preferences.flex_dias,
-      origins: preferences.origens,
-      candidateDestinations: preferences.destinos,
-    },
-    travelers: {
-      adults: preferences.num_adultos,
-      children: preferences.num_chd,
-      infants: preferences.num_inf,
-      agesChildrenInfants: preferences.idades_chd_inf || (isPt ? 'Nao informado' : 'Not provided'),
-    },
-    flight: {
-      preference: localizeEnum(locale, preferences.preferencia_voo),
-      timeWindow: localizeEnum(locale, preferences.horarios_voo),
-      baggage: localizeEnum(locale, preferences.bagagem),
-    },
-    milesAndBudget: {
-      milesPrograms: preferences.programas_milhas || (isPt ? 'Nao informado' : 'Not provided'),
-      bankPrograms: preferences.programas_bancos || (isPt ? 'Nao informado' : 'Not provided'),
-      budgetPerPersonBRL: preferences.orcamento_brl || (isPt ? 'Nao informado' : 'Not provided'),
-    },
-    profile: {
-      travelerProfile: preferences.perfil || (isPt ? 'Nao informado' : 'Not provided'),
-      hotelStandard: preferences.hospedagem_padrao,
-      preferredAreas: preferences.bairros_pref || (isPt ? 'Nao informado' : 'Not provided'),
-      constraints: preferences.restricoes || (isPt ? 'Nao informado' : 'Not provided'),
-      climateRiskTolerance: localizeEnum(locale, preferences.tolerancia_risco),
-      visasOrDocuments: preferences.vistos_existentes || (isPt ? 'Nao informado' : 'Not provided'),
-    },
-  };
-
-  return JSON.stringify(context, null, 2);
-}
-
-function buildSystemPrompt(locale: Locale): string {
-  if (locale === 'pt-BR') {
-    return [
-      'Voce e um estrategista senior de emissoes com milhas para viagens de lazer e negocio.',
-      'Gere um plano objetivo, pratico e executavel em portugues do Brasil.',
-      'Regras obrigatorias:',
-      '- Nao invente disponibilidade real, tarifas exatas ou regras especificas de companhias sem fonte.',
-      '- Sempre explicite trade-offs entre custo em milhas, tempo, conforto e risco.',
-      '- Em caso de dados faltantes, registre em assumptions de forma curta e acionavel.',
-      '- Priorize clareza operacional: o usuario deve saber o que fazer depois de ler o relatorio.',
-      '- Evite jargoes desnecessarios, frases vagas e marketing.',
-    ].join('\n');
-  }
-
-  return [
-    'You are a senior miles redemption strategist for domestic and international trips.',
-    'Produce a practical and execution-ready plan in English.',
-    'Hard constraints:',
-    '- Do not invent real-time availability, exact prices, or carrier-specific rules without sources.',
-    '- Explicitly highlight trade-offs between miles cost, travel time, comfort, and risk.',
-    '- If information is missing, capture it in assumptions with actionable wording.',
-    '- Keep recommendations operational and concise.',
-    '- Avoid buzzwords and generic filler.',
-  ].join('\n');
-}
-
-function buildUserPrompt(locale: Locale, preferences: TravelPreferencesInput): string {
-  const context = formatPromptContext(locale, preferences);
-  if (locale === 'pt-BR') {
-    return [
-      'Gere o relatorio estruturado com 4 a 8 secoes.',
-      'Secoes sugeridas: Resumo da Viagem, Estrategia de Emissao, Ordem de Busca e Execucao, Riscos e Mitigacao, Proximos Passos.',
-      'Cada secao precisa ter 2 a 6 itens curtos e especificos.',
-      'Dados do usuario (JSON):',
-      context,
-    ].join('\n\n');
-  }
-
-  return [
-    'Generate the structured report with 4 to 8 sections.',
-    'Suggested sections: Trip Summary, Redemption Strategy, Search and Execution Order, Risks and Mitigations, Next Steps.',
-    'Each section must have 2 to 6 concise and specific items.',
-    'User data (JSON):',
-    context,
-  ].join('\n\n');
-}
 
 export type GeneratePlannerReportInput = {
   locale: Locale;
@@ -162,7 +35,9 @@ export type GeneratePlannerReportResult = {
   mode: PlannerGenerationMode;
 };
 
-function buildFallbackReport({
+type PlannerModel = Parameters<typeof generateText>[0]['model'];
+
+export function buildFallbackReport({
   locale,
   preferences,
   reason,
@@ -176,39 +51,39 @@ function buildFallbackReport({
   if (!preferences.programas_milhas.trim()) {
     assumptions.push(
       isPt
-        ? 'Programas de milhas nao informados; priorize programas com melhor taxa de transferencia.'
+        ? 'Programas de milhas não informados; priorize programas com melhor taxa de transferência.'
         : 'Miles programs not provided; prioritize programs with stronger transfer rates.'
     );
   }
   if (!preferences.orcamento_brl.trim()) {
     assumptions.push(
       isPt
-        ? 'Orcamento nao informado; defina teto por pessoa antes da emissao.'
+        ? 'Orçamento não informado; defina teto por pessoa antes da emissão.'
         : 'Budget not provided; define a per-passenger cap before booking.'
     );
   }
   if (!preferences.vistos_existentes.trim()) {
     assumptions.push(
       isPt
-        ? 'Documentacao nao informada; valide vistos e requisitos sanitarios antes de emitir.'
+        ? 'Documentação não informada; valide vistos e requisitos sanitários antes de emitir.'
         : 'Documentation not provided; validate visas and entry requirements before issuing tickets.'
     );
   }
   assumptions.push(
     isPt
-      ? 'Plano gerado em modo resiliente (fallback) por indisponibilidade temporaria da IA.'
+      ? 'Plano gerado em modo resiliente (fallback) por indisponibilidade temporária da IA.'
       : 'Plan generated in resilient fallback mode due to temporary AI unavailability.'
   );
   if (reason === 'missing_api_key') {
     assumptions.push(
       isPt
-        ? 'Configure GOOGLE_GENERATIVE_AI_API_KEY para habilitar analise IA completa.'
+        ? 'Configure GOOGLE_GENERATIVE_AI_API_KEY para habilitar análise IA completa.'
         : 'Set GOOGLE_GENERATIVE_AI_API_KEY to enable full AI analysis.'
     );
   }
 
   const report: PlannerReport = {
-    title: isPt ? 'Plano Estrategico de Emissao' : 'Strategic Redemption Plan',
+    title: isPt ? 'Plano Estratégico de Emissão' : 'Strategic Redemption Plan',
     summary: isPt
       ? `Roteiro para ${totalPassengers} passageiro(s), priorizando custo-beneficio entre ${preferences.origens} e ${preferences.destinos}.`
       : `Plan for ${totalPassengers} traveler(s), prioritizing value between ${preferences.origens} and ${preferences.destinos}.`,
@@ -225,10 +100,10 @@ function buildFallbackReport({
         ],
       },
       {
-        title: isPt ? 'Estrategia de emissao' : 'Redemption strategy',
+        title: isPt ? 'Estratégia de emissão' : 'Redemption strategy',
         items: [
           isPt
-            ? '1) Busque primeiro rotas com melhor combinacao de milhas + taxas; 2) compare com tarifa pagante; 3) emita no melhor valor liquido.'
+            ? '1) Busque primeiro rotas com melhor combinação de milhas + taxas; 2) compare com tarifa pagante; 3) emita no melhor valor líquido.'
             : '1) Search routes with best miles+fees first; 2) compare against cash fares; 3) issue on best net value.',
           isPt
             ? `Preferencia de voo: ${localizeEnum(locale, preferences.preferencia_voo)}; horarios: ${localizeEnum(locale, preferences.horarios_voo)}.`
@@ -236,35 +111,35 @@ function buildFallbackReport({
         ],
       },
       {
-        title: isPt ? 'Ordem de execucao' : 'Execution order',
+        title: isPt ? 'Ordem de execução' : 'Execution order',
         items: [
           isPt
-            ? 'Congele datas alternativas antes da busca para evitar dispersao.'
+            ? 'Congele datas alternativas antes da busca para evitar dispersão.'
             : 'Freeze alternative dates before searching to avoid noisy comparisons.',
           isPt
-            ? 'Valide bagagem e regras de conexao antes de confirmar emissao.'
+            ? 'Valide bagagem e regras de conexão antes de confirmar emissão.'
             : 'Validate baggage and connection constraints before confirming booking.',
         ],
       },
       {
-        title: isPt ? 'Riscos e mitigacoes' : 'Risks and mitigations',
+        title: isPt ? 'Riscos e mitigações' : 'Risks and mitigations',
         items: [
           isPt
             ? `Risco climatico (${localizeEnum(locale, preferences.tolerancia_risco)}): mantenha plano B em aeroporto alternativo.`
             : `Climate risk (${localizeEnum(locale, preferences.tolerancia_risco)}): keep a plan B with alternate airport options.`,
           isPt
-            ? 'Nao emita ida e volta em bilhetes separados sem checar politica de alteracao.'
+            ? 'Não emita ida e volta em bilhetes separados sem checar política de alteração.'
             : 'Do not issue outbound/return on separate tickets without checking change policies.',
         ],
       },
       {
-        title: isPt ? 'Proximos passos imediatos' : 'Immediate next steps',
+        title: isPt ? 'Próximos passos imediatos' : 'Immediate next steps',
         items: [
           isPt
             ? 'Defina limite de custo total (milhas + taxas) por passageiro.'
             : 'Define max total cost (miles + fees) per traveler.',
           isPt
-            ? 'Execute busca em 2 janelas (data alvo e +/- flexibilidade) e selecione a melhor opcao.'
+            ? 'Execute busca em 2 janelas (data alvo e +/- flexibilidade) e selecione a melhor opção.'
             : 'Search across 2 windows (target date and +/- flexibility) and pick the best option.',
         ],
       },
@@ -276,18 +151,18 @@ function buildFallbackReport({
   if (!parsed.success) {
     const emergencyAssumptions = [
       isPt
-        ? 'Nao foi possivel gerar analise detalhada. Revise os campos obrigatorios e tente novamente.'
+        ? 'Não foi possível gerar análise detalhada. Revise os campos obrigatórios e tente novamente.'
         : 'Detailed analysis could not be generated. Review required fields and try again.',
       FALLBACK_ASSUMPTION_TOKEN,
     ];
     return {
-      title: isPt ? 'Plano Basico de Viagem' : 'Basic Travel Plan',
+      title: isPt ? 'Plano Básico de Viagem' : 'Basic Travel Plan',
       summary: isPt
-        ? `Planejamento basico para ${totalPassengers} passageiro(s).`
+        ? `Planejamento básico para ${totalPassengers} passageiro(s).`
         : `Basic planning for ${totalPassengers} traveler(s).`,
       sections: [
         {
-          title: isPt ? 'Acoes sugeridas' : 'Suggested actions',
+          title: isPt ? 'Ações sugeridas' : 'Suggested actions',
           items: [
             isPt
               ? 'Revise origem, destino e datas antes de emitir.'
@@ -299,10 +174,10 @@ function buildFallbackReport({
           title: isPt ? 'Risco' : 'Risk',
           items: [
             isPt
-              ? 'A indisponibilidade temporaria da IA reduz a profundidade da analise.'
+              ? 'A indisponibilidade temporária da IA reduz a profundidade da análise.'
               : 'Temporary AI unavailability reduces analysis depth.',
             isPt
-              ? 'Use verificacao manual antes da compra.'
+              ? 'Use verificação manual antes da compra.'
               : 'Use manual verification before booking.',
           ],
         },
@@ -311,12 +186,12 @@ function buildFallbackReport({
           items: [
             isPt ? 'Defina teto de custo por pessoa.' : 'Set per-passenger cost cap.',
             isPt
-              ? 'Confirme regras de bagagem e conexao.'
+              ? 'Confirme regras de bagagem e conexão.'
               : 'Confirm baggage and connection rules.',
           ],
         },
         {
-          title: isPt ? 'Proximo passo' : 'Next step',
+          title: isPt ? 'Próximo passo' : 'Next step',
           items: [
             isPt ? 'Tente novamente em alguns minutos.' : 'Retry in a few minutes.',
             isPt
@@ -332,26 +207,21 @@ function buildFallbackReport({
   return parsed.data;
 }
 
-export async function generatePlannerReport({
-  locale,
-  preferences,
-}: GeneratePlannerReportInput): Promise<GeneratePlannerReportResult> {
-  const apiKey = resolvePlannerApiKey();
-  if (!apiKey) {
-    return {
-      mode: 'fallback',
-      report: buildFallbackReport({ locale, preferences, reason: 'missing_api_key' }),
-    };
-  }
-
-  const modelId = resolvePlannerModelId();
-  const google = createGoogleGenerativeAI({ apiKey });
+async function runStructuredObjectAttempt(params: {
+  model: PlannerModel;
+  locale: Locale;
+  preferences: TravelPreferencesInput;
+  fallback: PlannerReport;
+  temperature: number;
+  maxOutputTokens: number;
+}): Promise<PlannerReport | null> {
+  const { model, locale, preferences, fallback, temperature, maxOutputTokens } = params;
 
   try {
     const result = await generateText({
-      model: google(modelId),
-      temperature: 0.2,
-      maxOutputTokens: 1800,
+      model,
+      temperature,
+      maxOutputTokens,
       output: Output.object({
         schema: plannerReportSchema,
         name: locale === 'pt-BR' ? 'relatorio_planejamento_milhas' : 'miles_planning_report',
@@ -360,23 +230,97 @@ export async function generatePlannerReport({
       prompt: buildUserPrompt(locale, preferences),
     });
 
-    const parsed = plannerReportSchema.safeParse(result.output);
-    if (!parsed.success) {
+    return (
+      normalizePlannerReportCandidate({
+        candidate: result.output,
+        locale,
+        fallback,
+      }) ?? null
+    );
+  } catch (error) {
+    const candidate = extractPlannerCandidateFromError(error);
+    return (
+      normalizePlannerReportCandidate({
+        candidate,
+        locale,
+        fallback,
+      }) ?? null
+    );
+  }
+}
+
+export async function generatePlannerReport({
+  locale,
+  preferences,
+}: GeneratePlannerReportInput): Promise<GeneratePlannerReportResult> {
+  const baseline = buildFallbackReport({ locale, preferences, reason: 'provider_failure' });
+  const baselineWithoutAssumptions: PlannerReport = {
+    ...baseline,
+    assumptions: [],
+  };
+
+  const provider = resolvePlannerProvider();
+  const apiKey = resolvePlannerApiKey(provider);
+  if (provider === 'google' && !apiKey) {
+    return {
+      mode: 'fallback',
+      report: buildFallbackReport({ locale, preferences, reason: 'missing_api_key' }),
+    };
+  }
+
+  const modelId = resolvePlannerModelId(provider);
+  const isLmStudio = provider === 'lmstudio';
+  if (isLmStudio) {
+    const lmStudioBaseUrl = resolvePlannerBaseUrl(provider);
+    const fallbackModelId = resolvePlannerFallbackModelId(provider);
+    if (!lmStudioBaseUrl) {
       return {
         mode: 'fallback',
-        report: buildFallbackReport({ locale, preferences, reason: 'provider_failure' }),
+        report: baseline,
+      };
+    }
+    const repaired = await generateViaLmStudio({
+      locale,
+      preferences,
+      fallback: baselineWithoutAssumptions,
+      modelId,
+      fallbackModelId,
+      baseUrl: lmStudioBaseUrl,
+      apiKey: apiKey ?? 'lm-studio',
+      maxOutputTokens: 1400,
+    });
+    if (repaired) {
+      return {
+        mode: 'ai',
+        report: repaired,
       };
     }
 
     return {
-      mode: 'ai',
-      report: parsed.data,
-    };
-  } catch (error) {
-    void error;
-    return {
       mode: 'fallback',
-      report: buildFallbackReport({ locale, preferences, reason: 'provider_failure' }),
+      report: baseline,
     };
   }
+
+  const model = createGoogleGenerativeAI({ apiKey: apiKey as string })(modelId);
+
+  const structured = await runStructuredObjectAttempt({
+    model,
+    locale,
+    preferences,
+    fallback: baselineWithoutAssumptions,
+    temperature: 0.2,
+    maxOutputTokens: 2400,
+  });
+  if (structured) {
+    return {
+      mode: 'ai',
+      report: structured,
+    };
+  }
+
+  return {
+    mode: 'fallback',
+    report: baseline,
+  };
 }

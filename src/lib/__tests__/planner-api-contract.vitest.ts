@@ -72,4 +72,17 @@ describe('planner api contract', () => {
     expect(parsed?.code).toBe('planner_rate_limited');
     expect(parsed?.retryAfterSeconds).toBe(30);
   });
+
+  it('parses legacy error payload for backward compatibility', () => {
+    const parsed = parsePlannerProblemDetails({
+      error: 'Unauthorized',
+      requestId: 'req_legacy_123',
+      status: 401,
+    });
+
+    expect(parsed).not.toBeNull();
+    expect(parsed?.title).toBe('Unauthorized');
+    expect(parsed?.status).toBe(401);
+    expect(parsed?.requestId).toBe('req_legacy_123');
+  });
 });

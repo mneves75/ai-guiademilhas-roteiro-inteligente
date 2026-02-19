@@ -1,7 +1,5 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { drizzle as drizzleNeon, type NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import postgres from 'postgres';
-import { neon } from '@neondatabase/serverless';
 import * as schema from '../schema/postgres';
 import { requireDatabaseUrl } from '../env';
 
@@ -13,14 +11,17 @@ type Schema = typeof schema;
  */
 export function createPostgresDb(): PostgresJsDatabase<Schema> {
   const url = requireDatabaseUrl('postgres');
-  return drizzle(postgres(url), { schema, casing: 'snake_case' });
+  return drizzle(postgres(url, { prepare: false }), { schema, casing: 'snake_case' });
 }
 
 /**
- * Edge runtime client (Neon HTTP driver)
+ * Edge runtime client (postgres.js with Supabase connection pooler)
  * Use for: Middleware, Vercel Edge Functions
+ *
+ * Supabase connection pooler supports postgres.js, so we use the same driver
+ * for both Node and Edge (no more Neon HTTP driver).
  */
-export function createPostgresEdgeDb(): NeonHttpDatabase<Schema> {
+export function createPostgresEdgeDb(): PostgresJsDatabase<Schema> {
   const url = requireDatabaseUrl('edge');
-  return drizzleNeon(neon(url), { schema, casing: 'snake_case' });
+  return drizzle(postgres(url, { prepare: false }), { schema, casing: 'snake_case' });
 }

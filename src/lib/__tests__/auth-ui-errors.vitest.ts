@@ -8,8 +8,10 @@ describe('mapSignInError', () => {
     loginFailedFallback: 'loginFailed',
   };
 
-  it('maps INVALID_EMAIL to email field error', () => {
-    expect(mapSignInError({ code: 'INVALID_EMAIL' }, t)).toEqual({
+  it('maps validation_failed with email message to email field error', () => {
+    expect(
+      mapSignInError({ code: 'validation_failed', message: 'Invalid email address' }, t)
+    ).toEqual({
       fieldErrors: { email: 'invalidEmail' },
     });
   });
@@ -45,14 +47,14 @@ describe('mapSignUpError', () => {
     signupTrySignInHint: 'trySignIn',
   };
 
-  it('maps PASSWORD_TOO_SHORT to password field error', () => {
-    expect(mapSignUpError({ code: 'PASSWORD_TOO_SHORT' }, t)).toEqual({
+  it('maps weak_password to password field error', () => {
+    expect(mapSignUpError({ code: 'weak_password' }, t)).toEqual({
       fieldErrors: { password: 'passwordMinError' },
     });
   });
 
-  it('avoids enumeration for USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL', () => {
-    expect(mapSignUpError({ code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' }, t)).toEqual({
+  it('avoids enumeration for user_already_exists', () => {
+    expect(mapSignUpError({ code: 'user_already_exists' }, t)).toEqual({
       globalError: 'signupFailed trySignIn',
     });
   });

@@ -8,18 +8,12 @@ const mocks = vi.hoisted(() => ({
   mockRateLimit: vi.fn(),
   mockGeneratePlannerReport: vi.fn(),
   mockAudit: vi.fn(),
-}));
-
-vi.mock('next/headers', () => ({
-  headers: vi.fn(async () => new Headers()),
+  mockCaptureServerEvent: vi.fn(),
+  mockIncPlannerFunnelGenerated: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
-  getAuth: () => ({
-    api: {
-      getSession: mocks.mockGetSession,
-    },
-  }),
+  getSession: mocks.mockGetSession,
 }));
 
 vi.mock('@/lib/security/rate-limit', () => ({
@@ -34,11 +28,26 @@ vi.mock('@/audit', () => ({
   auditFromRequest: mocks.mockAudit,
 }));
 
+vi.mock('@/lib/analytics/posthog-server', () => ({
+  captureServerEvent: mocks.mockCaptureServerEvent,
+}));
+
+vi.mock('@/lib/planner/cache', () => ({
+  hashPreferences: vi.fn().mockResolvedValue('test_hash_abc123'),
+  getCachedReport: vi.fn().mockResolvedValue(null),
+  setCachedReport: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/metrics', () => ({
+  incPlannerFunnelGenerated: mocks.mockIncPlannerFunnelGenerated,
+}));
+
 import { POST } from '../../../app/api/planner/generate/route';
 
 function buildValidPayload() {
   return {
     locale: 'pt-BR',
+    source: 'landing_planner',
     preferences: {
       ...initialTravelPreferences,
       data_ida: '2026-08-10',
@@ -70,10 +79,51 @@ describe('POST /api/planner/generate', () => {
     mocks.mockGetSession.mockResolvedValueOnce(null);
 
     const response = await POST(createRequest(buildValidPayload()));
-    const payload = (await response.json()) as { error?: string; requestId?: string };
+    const payload = (await response.json()) as {
+      type: string;
+      title: string;
+      status: number;
+      detail: string;
+      instance: string;
+      code: string;
+      requestId?: string;
+      error?: string;
+    };
 
     expect(response.status).toBe(401);
+    expect(response.headers.get('content-type')).toContain('application/problem+json');
+    expect(payload.type).toBe('https://guiademilhas.app/problems/planner-unauthorized');
+    expect(payload.title).toBe('Unauthorized');
+    expect(payload.status).toBe(401);
+    expect(payload.code).toBe('planner_unauthorized');
     expect(payload.error).toBe('Unauthorized');
+    expect(payload.requestId).toBeTruthy();
+  });
+
+  it('returns 400 problem+json when payload is invalid', async () => {
+    mocks.mockGetSession.mockResolvedValueOnce({
+      user: { id: 'user_123' },
+      session: { impersonatedBy: null },
+    });
+    mocks.mockRateLimit.mockResolvedValueOnce({ ok: true });
+
+    const response = await POST(createRequest({ locale: 'pt-BR' }));
+    const payload = (await response.json()) as {
+      type: string;
+      title: string;
+      status: number;
+      detail: string;
+      instance: string;
+      code: string;
+      requestId?: string;
+    };
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get('content-type')).toContain('application/problem+json');
+    expect(payload.type).toBe('https://guiademilhas.app/problems/planner-invalid-request');
+    expect(payload.title).toBe('Invalid Request');
+    expect(payload.status).toBe(400);
+    expect(payload.code).toBe('planner_invalid_request');
     expect(payload.requestId).toBeTruthy();
   });
 
@@ -143,5 +193,20 @@ describe('POST /api/planner/generate', () => {
     expect(payload.mode).toBe('fallback');
     expect(payload.report.title).toBe('Plano de emissao');
     expect(mocks.mockAudit).toHaveBeenCalledTimes(1);
+    expect(mocks.mockCaptureServerEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'planner_funnel_generated',
+        distinctId: 'user_123',
+        properties: expect.objectContaining({
+          source: 'landing_planner',
+          channel: 'server',
+        }),
+      })
+    );
+    expect(mocks.mockIncPlannerFunnelGenerated).toHaveBeenCalledWith({
+      source: 'landing_planner',
+      mode: 'fallback',
+      channel: 'server',
+    });
   });
 });

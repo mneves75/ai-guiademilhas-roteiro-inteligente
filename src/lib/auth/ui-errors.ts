@@ -1,19 +1,11 @@
-import { $ERROR_CODES } from '@/lib/auth-client';
 import {
-  coerceErrorCode,
-  coerceErrorMessage,
   parseBodyFieldErrors,
   type AuthClientErrorLike,
+  coerceErrorCode,
+  coerceErrorMessage,
 } from './error-utils';
 
 export type FieldErrors = Record<string, string | undefined>;
-
-function matchesBaseError(error: AuthClientErrorLike, codeName: string): boolean {
-  const code = coerceErrorCode(error);
-  const message = coerceErrorMessage(error);
-  const messages = $ERROR_CODES as unknown as Record<string, string | undefined>;
-  return code === codeName || (!!message && message === messages[codeName]);
-}
 
 export function mapSignInError(
   error: AuthClientErrorLike,
@@ -23,14 +15,15 @@ export function mapSignInError(
     loginFailedFallback: string;
   }
 ): { globalError?: string; fieldErrors?: { email?: string; password?: string } } {
+  const code = coerceErrorCode(error);
   const message = coerceErrorMessage(error);
 
-  if (matchesBaseError(error, 'INVALID_EMAIL')) {
-    return { fieldErrors: { email: t.invalidEmail } };
-  }
-  if (matchesBaseError(error, 'INVALID_EMAIL_OR_PASSWORD')) {
-    // Generic by design (anti-enumeration).
+  // Supabase error codes
+  if (code === 'invalid_credentials' || message?.includes('Invalid login credentials')) {
     return { globalError: t.loginFailedFallback };
+  }
+  if (code === 'validation_failed' && message?.includes('email')) {
+    return { fieldErrors: { email: t.invalidEmail } };
   }
 
   const bodyFields = parseBodyFieldErrors(message);
@@ -57,21 +50,18 @@ export function mapSignUpError(
     signupTrySignInHint: string;
   }
 ): { globalError?: string; fieldErrors?: { name?: string; email?: string; password?: string } } {
+  const code = coerceErrorCode(error);
   const message = coerceErrorMessage(error);
 
-  if (matchesBaseError(error, 'INVALID_EMAIL')) {
-    return { fieldErrors: { email: t.invalidEmail } };
+  // Supabase error codes
+  if (code === 'user_already_exists' || message?.includes('already registered')) {
+    return { globalError: `${t.signupFailedFallback} ${t.signupTrySignInHint}` };
   }
-  if (matchesBaseError(error, 'PASSWORD_TOO_SHORT')) {
+  if (code === 'weak_password' || message?.includes('password')) {
     return { fieldErrors: { password: t.passwordMinError } };
   }
-
-  // Avoid account enumeration. Better Auth uses this code on signup when email exists.
-  if (
-    matchesBaseError(error, 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL') ||
-    coerceErrorCode(error) === 'USER_ALREADY_EXISTS'
-  ) {
-    return { globalError: `${t.signupFailedFallback} ${t.signupTrySignInHint}` };
+  if (code === 'validation_failed' && message?.includes('email')) {
+    return { fieldErrors: { email: t.invalidEmail } };
   }
 
   const bodyFields = parseBodyFieldErrors(message);

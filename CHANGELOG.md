@@ -7,8 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Planner domain refactoring (Carmack standard)**: Extracted god handlers into composable utilities, fixed 60+ pt-BR accent issues across 8 files.
+  - Extracted `src/lib/planner/lmstudio-provider.ts` from `generate-report.ts` (LM Studio isolation)
+  - Extracted `src/lib/planner/post-generation.ts` — unified save/analytics/metrics/cache pipeline (eliminates 3x duplication)
+  - Extracted `src/lib/planner/sse.ts` — SSE helpers: `sseHeaders()`, `encodeEvent()`, `singleEventResponse()`
+  - Added `src/lib/planner/strings.ts` — `normalizeForComparison()` (Unicode NFD) + shared section order
+  - `generate-stream/route.ts`: 448 → 227 lines (-49%)
+  - `generate/route.ts`: 201 → 131 lines (-35%)
+  - `generate-report.ts`: 557 → 326 lines (-41%)
+  - `normalize-report.ts`: accent-insensitive title matching via `normalizeForComparison()`
+  - All pt-BR strings corrected: `prompt.ts`, `stream-report.ts`, `generate-report.ts`, `lmstudio-provider.ts`, `normalize-report.ts`, PDF components
+  - Zero new dependencies, 100% behavioral equivalence preserved
+
+### Fixed
+
+- **Restored favicon assets**: `favicon.ico`, `favicon-16x16.png`, `apple-touch-icon.png` copied from `.scrap_bin/` to `public/`, resolving 404s on all browsers.
+- **Database schema on new Supabase instance**: All 12 tables pushed via `drizzle-kit push` (accounts, plans, plan_cache, sessions, shared_reports, stripe_events, subscriptions, users, verification, workspace_invitations, workspace_members, workspaces).
+
 ### Added
 
+- **Shareable report URLs**: planner reports can now be shared via public links (`/r/[token]`). Authenticated users click "Compartilhar" to generate a permanent, public link. Token-based (32-char hex, 128-bit entropy), idempotent (same content returns same link), with rate limiting (10 req/min) and audit logging.
+- **`shared_reports` table**: dual-dialect (Postgres + SQLite) with soft deletes, creator FK, locale, and report JSON storage.
+- **`POST /api/planner/share`**: authenticated endpoint that validates report via `plannerReportSchema`, creates or returns existing share token.
+- **`/r/[token]` public page**: Server Component with OG metadata, locale-aware rendering via `m()`, no auth required.
+- **Planner Streaming Architecture**: Progressive SSE streaming via AI SDK v6 `streamText` + `Output.object()`. Sections render one by one as the AI generates, replacing the full-wait experience.
+  - `app/api/planner/generate-stream/route.ts` — SSE endpoint with auth, rate limit, audit
+  - `src/lib/planner/stream-report.ts` — Core streaming via `partialOutputStream`
+  - `src/lib/planner/use-planner-stream.ts` — Client hook (`idle | streaming | complete | error`)
+- **Persistent Plans**: Auto-save generated plans to PostgreSQL on stream completion (best-effort, non-blocking).
+  - `src/db/queries/plans.ts` — CRUD (`createPlan`, `getUserPlans`, `getPlanById`, `softDeletePlan`)
+  - `app/api/planner/plans/route.ts` — `GET /api/planner/plans` (paginated list)
+  - `app/api/planner/plans/[id]/route.ts` — `GET` + `DELETE` (soft delete with ownership check)
+- **Progressive Rendering UI**: Streaming sections appear with `animate-in` transitions, pulsing dot indicator, green "Salvo"/"Saved" badge on completion.
+- **Google AI API key**: planner now generates reports using Google Generative AI instead of fallback mode.
 - Planner API contract helpers with resilient parsing for versioned success payloads and RFC 9457 problem details
 - Route-level unit tests for `POST /api/planner/generate` (401, 429 problem+json, 200 success)
 - OpenAPI 3.1 contract for planner endpoint (`docs/openapi.planner.yaml`)
@@ -30,6 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `src/components/planner/planner-form.tsx` now uses `usePlannerStream` hook for progressive section rendering during generation.
+- `src/lib/planner/generate-report.ts` exports `buildFallbackReport` for reuse by streaming endpoint.
+- Extracted shared planner modules to eliminate DRY violations:
+  - `src/lib/planner/prompt.ts` — shared prompt construction, API key resolution, enum localization
+  - `src/lib/planner/problem-response.ts` — RFC 9457 problem+json helpers (previously duplicated in 4 routes)
+- AbortSignal now propagated from client through SSE endpoint to Gemini API (prevents token waste on disconnect).
+- Silent `void error` swallowing replaced with `console.warn` + requestId for observability.
+- `src/db/queries/plans.ts` uses `globalThis.crypto.randomUUID()` instead of `import * as crypto`.
+- Share status auto-dismisses after 3 seconds (copied) or 4 seconds (error) for cleaner UX.
 - `POST /api/planner/generate` now returns versioned success payload (`schemaVersion`, `generatedAt`) and standardized 429 `application/problem+json`
 - Planner UI now parses both v2 and legacy payloads, and surfaces retry hints from rate-limit errors
 - Reuse docs now document executable upstream sync workflow with branch autodetection and local path defaults
@@ -55,6 +97,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CSP `style-src` blocking Radix UI**: removed nonce from `style-src` directive (kept `'unsafe-inline'`). Nonce stays on `script-src` for XSS protection. CSS injection cannot execute JS, so `'unsafe-inline'` for styles is safe.
+- **Share idempotency correctness**: `findFirst` returned an arbitrary row per user — now scans all user shares and compares SHA-256 content fingerprints to find the correct match.
+- **Share state leaking across reports**: `handleReset` did not clear `shareStatus`, so "Link copiado" persisted when generating a new report.
+- **Share API route consistency**: replaced manual `request.json()` with `readJsonBodyAs()` + `isHttpError` catch block, matching the generate endpoint pattern. Added `.strict()` to request schema.
 - `security:audit` now handles Git repos without commits by falling back to directory-based gitleaks scan
 - `framework:status` now parses ahead/behind counters correctly when Git returns tab-separated values
 

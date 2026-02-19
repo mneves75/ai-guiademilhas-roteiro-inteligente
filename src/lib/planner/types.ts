@@ -34,9 +34,36 @@ export interface TravelPreferences {
   restricoes: string;
 }
 
+// Action link for structured items
+export interface ActionLink {
+  label: string;
+  url: string;
+  type: 'search' | 'book' | 'info' | 'map';
+}
+
+// Rich item with optional metadata
+export interface StructuredItem {
+  text: string;
+  tag?: 'tip' | 'warning' | 'action' | 'info';
+  links?: ActionLink[];
+}
+
+// Backward-compatible union: plain string OR structured object
+export type ReportItem = string | StructuredItem;
+
+// Extract text from any ReportItem
+export function getItemText(item: ReportItem): string {
+  return typeof item === 'string' ? item : item.text;
+}
+
+// Type guard for structured items
+export function isStructuredItem(item: ReportItem): item is StructuredItem {
+  return item != null && typeof item !== 'string' && typeof item === 'object' && 'text' in item;
+}
+
 export interface ReportSection {
   title: string;
-  items: string[];
+  items: ReportItem[];
 }
 
 export interface PlannerReport {
@@ -45,3 +72,10 @@ export interface PlannerReport {
   sections: ReportSection[];
   assumptions: string[];
 }
+
+// --- Tipos para streaming ---
+
+export type PlannerStreamEvent =
+  | { type: 'delta'; title?: string; summary?: string; sections: ReportSection[] }
+  | { type: 'complete'; report: PlannerReport; mode: 'ai' | 'fallback'; planId?: string }
+  | { type: 'error'; code: string; message: string };

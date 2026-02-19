@@ -33,21 +33,36 @@ export async function signUpAndReachWorkspaces(
     }
   }
 
+  async function navigateDirectlyToCallback(): Promise<boolean> {
+    await page.goto(callbackUrl, { waitUntil: 'domcontentloaded' });
+    return callbackPattern.test(page.url());
+  }
+
   async function signInFallback(): Promise<boolean> {
-    await page.goto(`/login?callbackUrl=${callbackParam}`, { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('form[data-testid="login-form"]')).toBeVisible();
-    await page.getByLabel(/email address|email/i).fill(email);
-    await page.getByLabel(/^(password|senha)$/i).fill(password);
-    const signInButton = page.getByRole('button', { name: /sign in|entrar/i });
-    try {
-      await Promise.all([
-        page.waitForURL(callbackPattern, { timeout: 15_000 }),
-        signInButton.click(),
-      ]);
-      return true;
-    } catch {
-      return false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await page.goto(`/login?callbackUrl=${callbackParam}`, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('form[data-testid="login-form"]')).toBeVisible();
+      await page.getByLabel(/email address|email/i).fill(email);
+      await page.getByLabel(/^(password|senha)$/i).fill(password);
+      const signInButton = page.getByRole('button', { name: /sign in|entrar/i });
+      try {
+        await Promise.all([
+          page.waitForURL(callbackPattern, { timeout: 15_000 }),
+          signInButton.click(),
+        ]);
+        return true;
+      } catch {
+        if (attempt === 2) return false;
+        if (page.isClosed()) return false;
+        // Mobile Safari can lag after account creation; retry login deterministically.
+        try {
+          await page.waitForTimeout(500);
+        } catch {
+          return false;
+        }
+      }
     }
+    return false;
   }
 
   await page.goto(`/signup?callbackUrl=${callbackParam}`, { waitUntil: 'domcontentloaded' });
@@ -68,6 +83,10 @@ export async function signUpAndReachWorkspaces(
     navigated = true;
   } catch {
     navigated = await waitForCallbackNavigation(500);
+  }
+
+  if (!navigated) {
+    navigated = await navigateDirectlyToCallback();
   }
 
   if (!navigated) {

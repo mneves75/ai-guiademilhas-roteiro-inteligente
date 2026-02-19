@@ -1,8 +1,8 @@
 # STATE: NextJS Bootstrapped Shipped
 
 **Project:** NextJS Bootstrapped Shipped (nextjs-bootstrapped-shipped)
-**Status:** v1 Complete ✅
-**Updated:** 2026-02-06
+**Status:** Milestone complete
+**Updated:** 2026-02-19
 
 ---
 
@@ -18,8 +18,9 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 
 **Stack:**
 - Next.js 16 + React 19 + TypeScript
-- Better Auth (modern auth)
-- PostgreSQL + Drizzle ORM
+- Supabase Auth via `@supabase/ssr` (migrated from Better Auth)
+- PostgreSQL (Supabase) + Drizzle ORM (`casing: 'snake_case'`, `prepare: false`)
+- Gemini 2.5 Flash via AI SDK v6 (planner)
 - Stripe (payments)
 - Geist design system + shadcn/ui
 - Resend + React Email (transactional)
@@ -31,16 +32,16 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 ## Current Position
 
 **Milestone:** v1 Initial Release
-**Current Phase:** 12 of 12 COMPLETE ✅
-**Progress:** 12/12 phases complete (100% of v1 roadmap)
+**Current Phase:** 03
+**Current Plan:** 4 of 4
+**Progress:** [██████████] 100%
 
 ```
-[██████████] 100% Complete (v1 implemented + verified)
-Phase 1-12: COMPLETE
+Phase 03: [==========] 4/4 plans complete ✅
 ```
 
-**Last Activity:** 2026-02-06 - v1 features implemented and verified (lint/type-check/test/build/e2e)
-**Next Action:** Tag a release (ex: `v0.2.0`) and publish release notes
+**Last Activity:** 2026-02-19
+**Next Action:** Phase 3 complete — ready for Phase 4 (Design System & UI)
 
 ---
 
@@ -72,13 +73,13 @@ Phase 1-12: COMPLETE
 
 **Total Phases:** 12 (comprehensive depth)
 **Total Requirements:** 90 (100% mapped)
-**Critical Path:** Phase 1 ✅ → 2 → 3 → 4 → 5 → 9 → 12
+**Critical Path:** Phase 1 ✅ → 2 ✅ → 3 ✅ → 4 → 5 → 9 → 12
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 1 | Foundation & Code Quality | 10 | ✅ Complete |
-| 2 | Database & Schema | 5 | 🔜 Next |
-| 3 | Authentication Core | 8 | Pending |
+| 2 | Database & Schema | 5 | ✅ Complete |
+| 3 | Authentication Core | 8 | ✅ Complete |
 | 4 | Design System & UI | 11 | Pending |
 | 5 | Landing & Core Content | 4 | Pending |
 | 6 | Teams & Multi-Tenancy | 7 | Pending |
@@ -131,31 +132,98 @@ Phase 1-12: COMPLETE
 | 2026-02-05 | Initialize project during 01-01 | Entry criteria not met; auto-initialized |
 | 2026-02-05 | Upgrade eslint-config-prettier to v10 | v9 lacks flat config support |
 | 2026-02-05 | Phase 1 verified and approved | All 10 requirements met, ready for Phase 2 |
+| 2026-02-19 | Supabase (not Neon) for PostgreSQL | postgres.js driver for both Node and Edge; no @neondatabase/serverless needed |
+| 2026-02-19 | Multi-dialect DB architecture (postgres/sqlite/d1) | Adapter pattern exceeds original plan; lazy Proxy singleton for build safety |
+| 2026-02-19 | Phase 2 Plan 01 verified (pre-existing) | All 4 tasks satisfied by existing implementation; 0 code changes |
+| 2026-02-19 | Direct Drizzle inserts over drizzle-seed | Explicit data, deterministic by construction, no faker dependency |
+| 2026-02-19 | Phase 2 Plan 03 verified (pre-existing) | 45 query helpers across 9 modules; soft delete + multi-tenant patterns confirmed |
+| 2026-02-19 | Users skip soft delete filter (Supabase Auth) | Supabase manages user lifecycle; app users table is read-through mirror |
+| 2026-02-19 | Phase 2 Plan 04 verified (pre-existing) | Seed + 19 npm scripts already implemented; 0 code changes |
+| 2026-02-19 | Phase 2 verification auto-approved | All code pre-existing in production; 120+ tests passing; type-check clean |
+| 2026-02-19 | Phase 2 COMPLETE (5/5 plans) | 11 tables, 45 query helpers, 19 npm scripts verified; ready for Phase 3 |
+| 2026-02-19 | Supabase Auth verified as production auth provider | Roadmap says Better Auth; actual implementation is Supabase Auth via @supabase/ssr |
+| 2026-02-19 | Phase 3 Plan 01 verified (pre-existing) | AUTH-01/02/03/04/07/08 all implemented; 0 code changes; dual-layer protection confirmed |
+| 2026-02-19 | User enumeration protection on auth routes | Password-reset and magic-link always return 200 regardless of email existence |
+| 2026-02-19 | SEC-1: NODE_ENV=production guard on E2E bypass | Defense-in-depth: first check in both getPlaywrightE2ESession() and bootstrap route |
+| 2026-02-19 | Phase 3 Plan 02 complete (AUTH-05, AUTH-06, SEC-1) | 3 API routes created, 2 files hardened; 2 tasks in 2min |
+| 2026-02-19 | Phase 3 Plan 03 complete (cleanup + tests) | Better Auth refs replaced in 15 files; 13 regression tests added |
+| 2026-02-19 | Phase 3 COMPLETE (4/4 plans, 8/8 requirements) | All AUTH-01 through AUTH-08 verified; SEC-1 hardened; ready for Phase 4 |
 
 ---
 
-## Next Phase: Database & Schema
+## Phase 2 Completion Summary
 
-**Phase 2 Goals:**
-- PostgreSQL + Drizzle ORM setup
-- Schema design with soft deletes pattern
-- Migration system
-- Database seeding
-- Connection pooling for serverless
+**Phase:** Database & Schema
+**Plans:** 5/5 complete
+**Requirements:** 5/5 verified (DB-01 through DB-05)
 
-**Requirements (5):**
-- DB-01: PostgreSQL database configured
-- DB-02: Drizzle ORM with type-safe queries
-- DB-03: Soft delete pattern (deleted_at timestamp)
-- DB-04: Migration system working
-- DB-05: Seed data for development
+| Plan | Description | Status |
+|------|-------------|--------|
+| 02-01 | Drizzle ORM + database connection | ✅ Complete |
+| 02-02 | 11-table schema + migration | ✅ Complete |
+| 02-03 | 45 query helpers + soft delete + multi-tenant | ✅ Complete |
+| 02-04 | Multi-dialect seed + 19 npm scripts | ✅ Complete |
+| 02-05 | Verification checkpoint | ✅ Verified |
+
+**Key Deliverables:**
+- 11 tables (users, sessions, accounts, verification, workspaces, workspaceMembers, subscriptions, workspaceInvitations, stripeEvents, plans, planCache, sharedReports)
+- 45 query helpers across 9 modules with soft delete filtering and multi-tenant isolation
+- Multi-dialect architecture (postgres/sqlite/d1) with lazy Proxy singleton
+- 19 db:* npm scripts including CI assertions and smoke tests
+- Comprehensive 02-VERIFICATION.md documenting all results
+
+---
+
+## Next Phase: Authentication Core
+
+**Phase 3 Goals:**
+- Supabase Auth integration (email/password + OAuth)
+- Protected route middleware
+- Session management
+- Password reset flow
+
+**Requirements (8):**
+- AUTH-01 through AUTH-08
 
 **Entry Criteria:**
 - [x] Phase 1 complete (quality tooling in place)
-- [ ] PostgreSQL available (local Docker or Supabase/Neon)
+- [x] Phase 2 complete (database layer ready)
 
-**Run:** `/gsd:plan-phase 2` to begin
+**Run:** `/gsd:plan-phase 3` to begin
 
 ---
 
+## Quick Tasks Completed
+
+| Date | Task | Commit | Verification |
+|------|------|--------|--------------|
+| 2026-02-12 | Separate planner from dashboard into immersive standalone zone | `a1835d6` | type-check ✅ build ✅ 106 tests ✅ |
+| 2026-02-14 | Supabase Auth migration + Planner v3 (7 fases) + build verification | pending | type-check ✅ lint ✅ build ✅ 120 tests ✅ |
+
 **Phase 1-12 Status:** ✅ COMPLETE
+
+---
+
+## Planner v3 Summary (2026-02-14)
+
+7 implementation phases + build verification (Plano v5):
+
+| Fase | Feature | Status |
+|------|---------|--------|
+| 1 | Supabase Auth migration (from Better Auth) | ✅ |
+| 2 | 4-step wizard form (`useWizardForm` + localStorage) | ✅ |
+| 3 | SSE streaming + persistent plans | ✅ |
+| 4 | Enriched report schema (`ReportItem = string \| StructuredItem`) | ✅ |
+| 5 | SHA256 cache → `planCache` table (TTL 7d) | ✅ |
+| 6 | Plan history (`/planner/history` + paginated list) | ✅ |
+| 7 | PDF export (`@react-pdf/renderer`) | ✅ |
+| v5-A | Build verification (type-check, lint, build, 120 tests) | ✅ |
+| v5-B | `maxOutputTokens` 1800 → 2400 (2 files) | ✅ |
+| v5-C | Unit tests for rich types (14 new tests) | ✅ |
+| v5-D | Quality metrics in analytics event | ✅ |
+
+**Key changes in v5:**
+- Merged `middleware.ts` into `proxy.ts` (Next.js 16 proxy pattern)
+- Extracted `refreshSession()` to `src/lib/supabase/middleware.ts` (single source of truth)
+- Fixed Turbopack static resolution for `better-sqlite3` (removed import chain)
+- Updated auth error codes from Better Auth → Supabase format in tests

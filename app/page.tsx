@@ -1,23 +1,25 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { JsonLd } from '@/components/json-ld';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { getLandingContent } from '@/content/landing';
-import { getAuth } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { publicPathname } from '@/lib/locale-routing';
 import { getRequestLocale } from '@/lib/locale-server';
 import { plannerLoginHref, plannerSignupHref, PLANNER_PATH } from '@/lib/planner/navigation';
+import { LANDING_PLANNER_SOURCE } from '@/lib/analytics/funnel';
 import { publicAlternates } from '@/lib/seo/public-alternates';
 import { resolvePublicOrigin } from '@/lib/seo/base-url';
+import { buildFaqPageJsonLd, buildPlannerServiceJsonLd } from '@/lib/seo/structured-data';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const content = getLandingContent(locale);
   const canonical = publicPathname(locale, '/');
+  const ogLocale = locale === 'pt-BR' ? 'pt_BR' : 'en_US';
 
   return {
     title: content.metaTitle,
@@ -32,12 +34,23 @@ export async function generateMetadata(): Promise<Metadata> {
       title: content.metaTitle,
       description: content.metaDescription,
       type: 'website',
+      siteName: content.appName,
+      locale: ogLocale,
       url: canonical,
+      images: [
+        {
+          url: '/api/og',
+          width: 1200,
+          height: 630,
+          alt: content.appName,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: content.metaTitle,
       description: content.metaDescription,
+      images: ['/api/og'],
     },
   };
 }
@@ -49,16 +62,20 @@ export default async function HomePage() {
   const appName = content.appName;
   const canonicalPath = publicPathname(locale, '/');
   const plannerPath = PLANNER_PATH;
-  const auth = getAuth();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
   if (session) {
     redirect(plannerPath);
   }
-  const signupHref = plannerSignupHref();
-  const loginHref = plannerLoginHref();
+  const signupHref = plannerSignupHref(LANDING_PLANNER_SOURCE);
+  const loginHref = plannerLoginHref(LANDING_PLANNER_SOURCE);
   const primaryHref = signupHref;
+  const faqJsonLd = buildFaqPageJsonLd(content.faqs);
+  const plannerServiceJsonLd = buildPlannerServiceJsonLd({
+    appName,
+    siteUrl: url,
+    locale,
+    description: content.metaDescription,
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -70,6 +87,8 @@ export default async function HomePage() {
           url: `${url}${canonicalPath}`,
         }}
       />
+      <JsonLd data={plannerServiceJsonLd} />
+      <JsonLd data={faqJsonLd} />
       {/* Skip link for accessibility */}
       <a
         href="#main"

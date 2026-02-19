@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import {
   getWorkspaceMembers,
   getWorkspaceById,
@@ -37,8 +36,7 @@ const removeMemberSchema = z
 export const GET = withApiLogging(
   'api.workspaces.members.list',
   async (_request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }
@@ -67,8 +65,7 @@ export const GET = withApiLogging(
 export const PATCH = withApiLogging(
   'api.workspaces.members.update_role',
   async (request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }
@@ -121,8 +118,7 @@ export const PATCH = withApiLogging(
 export const DELETE = withApiLogging(
   'api.workspaces.members.remove',
   async (request: NextRequest, context: RouteContext) => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession();
     if (!session) {
       throw unauthorized();
     }

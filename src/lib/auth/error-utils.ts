@@ -7,7 +7,7 @@ export type AuthClientErrorLike =
   | null
   | undefined;
 
-// Better Auth (and some validation layers) may return compact messages like:
+// Supabase Auth (and some validation layers) may return compact messages like:
 // "[body.email] Invalid email address; [body.password] Too small: expected string to have >=1 characters"
 // We parse those into per-field strings so the UI can show field-level feedback without exposing raw internals.
 export function parseBodyFieldErrors(message: unknown): Record<string, string> {

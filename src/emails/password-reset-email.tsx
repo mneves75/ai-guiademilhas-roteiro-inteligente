@@ -14,7 +14,7 @@ export function PasswordResetEmail({
   expiresInMinutes = 60,
 }: PasswordResetEmailProps) {
   return (
-    <BaseLayout preview="Reset your Shipped password">
+    <BaseLayout preview="Reset your Guia de Milhas password">
       <Section style={content}>
         <Heading style={heading}>Reset your password</Heading>
         <Text style={paragraph}>Hi {name},</Text>

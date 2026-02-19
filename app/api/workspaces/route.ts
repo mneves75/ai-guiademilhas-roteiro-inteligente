@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 import { getUserWorkspaces, createWorkspace, addWorkspaceMember } from '@/db/queries/workspaces';
 import { isUniqueConstraintError } from '@/db/errors';
 import { withApiLogging } from '@/lib/logging';
@@ -26,8 +25,7 @@ const createWorkspaceSchema = z
  * List all workspaces for current user
  */
 export const GET = withApiLogging('api.workspaces.list', async (_request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }
@@ -46,8 +44,7 @@ export const GET = withApiLogging('api.workspaces.list', async (_request: NextRe
  * Create a new workspace
  */
 export const POST = withApiLogging('api.workspaces.create', async (request: NextRequest) => {
-  const auth = getAuth();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     throw unauthorized();
   }

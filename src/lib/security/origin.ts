@@ -27,8 +27,7 @@ function resolveOriginFromForwardedHeaders(request: NextRequest): string | null 
 export function resolveAppOrigin(request: NextRequest): string {
   const fromEnv =
     tryGetOriginFromEnv(process.env.NEXT_PUBLIC_APP_URL) ??
-    tryGetOriginFromEnv(process.env.BETTER_AUTH_BASE_URL) ??
-    tryGetOriginFromEnv(process.env.BETTER_AUTH_URL);
+    tryGetOriginFromEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
   if (fromEnv) return fromEnv;
 
@@ -36,7 +35,7 @@ export function resolveAppOrigin(request: NextRequest): string {
   // It's too easy to misconfigure proxies and end up with host header issues.
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      'Missing NEXT_PUBLIC_APP_URL (or BETTER_AUTH_BASE_URL/BETTER_AUTH_URL). ' +
+      'Missing NEXT_PUBLIC_APP_URL (or NEXT_PUBLIC_SUPABASE_URL). ' +
         'Refusing to build return URLs from request-derived origins in production.'
     );
   }

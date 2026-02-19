@@ -12,10 +12,7 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   async headers() {
     const originFromEnv =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      process.env.BETTER_AUTH_BASE_URL ??
-      process.env.BETTER_AUTH_URL ??
-      '';
+      process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
     const isHttps = originFromEnv.startsWith('https://');
 
     const securityHeaders = [
@@ -92,7 +89,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
     ],
   },
-  serverExternalPackages: ['better-sqlite3'],
+  serverExternalPackages: ['@react-pdf/renderer'],
   // Pin Turbopack root to repo root for deterministic builds.
   turbopack: {
     root: repoRoot,

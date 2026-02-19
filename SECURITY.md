@@ -39,7 +39,7 @@ When using this boilerplate:
 
 1. **Environment Variables**
    - Never commit `.env.local` or secrets
-   - Use strong, unique values for `BETTER_AUTH_SECRET`
+   - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Supabase Dashboard (anon key is safe for client exposure).
    - Rotate API keys periodically
 
 2. **Dependencies**
