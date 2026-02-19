@@ -130,7 +130,7 @@ const EN_MESSAGES = {
       items: [
         {
           title: 'Authentication',
-          description: 'Better Auth with email/password, OAuth, and magic links out of the box.',
+          description: 'Authentication with email/password, OAuth, and magic links out of the box.',
         },
         {
           title: 'Multi-Tenancy',
@@ -1018,7 +1018,7 @@ const PT_BR_MESSAGES: Localized<typeof EN_MESSAGES> = {
       items: [
         {
           title: 'Autenticação',
-          description: 'Better Auth com email/senha, OAuth e links mágicos.',
+          description: 'Autenticação com email/senha, OAuth e links mágicos.',
         },
         {
           title: 'Multi-tenancy',

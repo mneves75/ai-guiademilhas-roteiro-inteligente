@@ -8,7 +8,7 @@ const technologies = [
   'Tailwind CSS',
   'Drizzle ORM',
   'Stripe',
-  'Better Auth',
+  'Supabase Auth',
   'Resend',
   'shadcn/ui',
 ];

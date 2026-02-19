@@ -5,11 +5,6 @@ test.describe('Protected Routes', () => {
   test('should allow accessing /dashboard/workspaces after signup (real auth flow)', async ({
     page,
   }, testInfo) => {
-    test.skip(
-      testInfo.project.name === 'mobile-safari',
-      'Mobile Safari auth bootstrap is unstable in full-matrix run; covered in other engines.'
-    );
-
     await signUpAndReachWorkspaces(page, { seed: testInfo.testId });
   });
 
@@ -44,11 +39,6 @@ test.describe('Protected Routes', () => {
   test('authenticated users hitting localized home are redirected to planner', async ({
     page,
   }, testInfo) => {
-    test.skip(
-      testInfo.project.name === 'mobile-safari',
-      'Mobile Safari auth bootstrap is unstable in full-matrix run; covered in other engines.'
-    );
-
     await signUpAndReachWorkspaces(page, { seed: `${testInfo.testId}-home-redirect` });
     await page.goto('/en', { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/planner$/);
@@ -60,7 +50,7 @@ test.describe('Protected Routes', () => {
     const baseURL = testInfo.project.use.baseURL as string;
     await page.context().addCookies([
       {
-        name: 'better-auth.session_token',
+        name: 'sb-test-auth-token',
         value: 'invalid-token-for-e2e',
         url: baseURL,
         httpOnly: true,

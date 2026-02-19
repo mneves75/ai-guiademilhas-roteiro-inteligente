@@ -28,7 +28,7 @@ const timestamps = {
 
 /**
  * USERS TABLE
- * Managed by Better Auth (signup, OAuth, password reset)
+ * App-level user profiles. Supabase Auth manages auth.users separately; this table is kept for FK relations.
  */
 export const users = pgTable(
   'users',
@@ -38,7 +38,7 @@ export const users = pgTable(
     email: varchar({ length: 255 }).notNull().unique(),
     emailVerified: boolean().notNull().default(false),
     image: varchar({ length: 255 }),
-    // Better Auth admin plugin fields
+    // Admin plugin fields (role, banned status)
     role: varchar({ length: 255 }),
     banned: boolean().notNull().default(false),
     banReason: text(),
@@ -51,7 +51,7 @@ export const users = pgTable(
 
 /**
  * SESSIONS TABLE
- * Browser session tokens (Better Auth handles creation)
+ * Browser session tokens (legacy table, retained for FK compatibility)
  */
 export const sessions = pgTable(
   'sessions',
@@ -64,7 +64,7 @@ export const sessions = pgTable(
     expiresAt: timestamp().notNull(),
     ipAddress: varchar({ length: 255 }),
     userAgent: varchar({ length: 255 }),
-    // Better Auth admin plugin field (tracks impersonator user id)
+    // Admin impersonation field (tracks impersonator user id)
     impersonatedBy: varchar({ length: 255 }),
     createdAt: timestamp().notNull(),
     updatedAt: timestamp().notNull(),

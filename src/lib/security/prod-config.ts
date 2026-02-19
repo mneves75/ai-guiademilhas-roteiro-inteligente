@@ -18,7 +18,7 @@ export function validateProductionConfig(
     tryGetOriginFromEnv(env.NEXT_PUBLIC_APP_URL) ??
     tryGetOriginFromEnv(env.NEXT_PUBLIC_SUPABASE_URL);
 
-  // If origin is missing, other subsystems will fail fast (e.g. Better Auth baseURL).
+  // If origin is missing, other subsystems will fail fast (e.g. Supabase Auth, OAuth callbacks).
   // Keep this validator narrowly scoped to things we can assert safely.
   if (!origin) return { ok: true };
 

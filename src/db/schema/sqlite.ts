@@ -20,7 +20,7 @@ const timestamps = {
   deletedAt: integer({ mode: 'timestamp' }),
 };
 
-// ==================== BETTER AUTH TABLES ====================
+// ==================== AUTH TABLES ====================
 
 export const users = sqliteTable(
   'users',
@@ -30,7 +30,7 @@ export const users = sqliteTable(
     email: text().notNull().unique(),
     emailVerified: integer({ mode: 'boolean' }).notNull().default(false),
     image: text(),
-    // Better Auth admin plugin fields
+    // Admin plugin fields (role, banned status)
     role: text(),
     banned: integer({ mode: 'boolean' }).notNull().default(false),
     banReason: text(),
@@ -52,7 +52,7 @@ export const sessions = sqliteTable(
     expiresAt: integer({ mode: 'timestamp' }).notNull(),
     ipAddress: text(),
     userAgent: text(),
-    // Better Auth admin plugin field (tracks impersonator user id)
+    // Admin impersonation field (tracks impersonator user id)
     impersonatedBy: text(),
     createdAt: integer({ mode: 'timestamp' }).notNull(),
     updatedAt: integer({ mode: 'timestamp' }).notNull(),

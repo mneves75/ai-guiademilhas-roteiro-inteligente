@@ -42,12 +42,10 @@ function getWebServerEnv(): Record<string, string> {
 
   env.PORT = serverPort;
   env.DB_PROVIDER = dbProvider;
-  // Production start requires an explicit canonical origin for Better Auth.
+  // Production start requires an explicit canonical origin for auth callbacks.
   env.NEXT_PUBLIC_APP_URL ||= baseURL;
-  env.BETTER_AUTH_BASE_URL ||= env.BETTER_AUTH_URL || baseURL;
-  env.BETTER_AUTH_URL ||= env.BETTER_AUTH_BASE_URL;
-  // Make E2E self-contained: the auth secret must exist for session cookies/signing.
-  env.BETTER_AUTH_SECRET ||= 'e2e-secret-please-override-this-in-prod-32chars';
+  env.NEXT_PUBLIC_SUPABASE_URL ||= 'http://127.0.0.1:54321';
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= 'test-anon-key';
 
   if (dbProvider === 'sqlite') {
     env.SQLITE_PATH = sqlitePath;
