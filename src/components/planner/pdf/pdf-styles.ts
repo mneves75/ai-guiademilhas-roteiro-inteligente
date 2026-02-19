@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
 
 export const tagLabels: Record<string, string> = {
   tip: '[dica]',
-  warning: '[atencao]',
-  action: '[acao]',
+  warning: '[atenção]',
+  action: '[ação]',
   info: '[info]',
 };

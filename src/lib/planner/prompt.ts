@@ -3,17 +3,67 @@ import 'server-only';
 import type { Locale } from '@/lib/locale';
 import type { TravelPreferencesInput } from './schema';
 
-const DEFAULT_PLANNER_MODEL = 'gemini-2.5-flash';
+const DEFAULT_GOOGLE_PLANNER_MODEL = 'gemini-2.5-flash';
+const DEFAULT_LM_STUDIO_MODEL = 'qwen_qwen3-next-80b-a3b-instruct';
+const DEFAULT_LM_STUDIO_FALLBACK_MODEL = 'liquid/lfm2.5-1.2b';
+const DEFAULT_LM_STUDIO_BASE_URL = 'http://localhost:1234/v1';
 
-export function resolvePlannerApiKey(): string | null {
+export type PlannerProvider = 'google' | 'lmstudio';
+
+export function resolvePlannerProvider(): PlannerProvider {
+  const configured = process.env.PLANNER_PROVIDER?.trim().toLowerCase();
+  if (configured === 'lmstudio' || configured === 'lm-studio' || configured === 'lm_studio') {
+    return 'lmstudio';
+  }
+  return 'google';
+}
+
+export function resolvePlannerApiKey(
+  provider: PlannerProvider = resolvePlannerProvider()
+): string | null {
+  if (provider === 'lmstudio') {
+    const key = process.env.PLANNER_LM_STUDIO_API_KEY ?? process.env.OPENAI_API_KEY ?? 'lm-studio';
+    const trimmed = key?.trim();
+    return trimmed || 'lm-studio';
+  }
+
   const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
   const trimmed = key?.trim();
   return trimmed ? trimmed : null;
 }
 
-export function resolvePlannerModelId(): string {
+export function resolvePlannerModelId(
+  provider: PlannerProvider = resolvePlannerProvider()
+): string {
+  if (provider === 'lmstudio') {
+    const configured = process.env.PLANNER_LM_STUDIO_MODEL?.trim();
+    return configured || DEFAULT_LM_STUDIO_MODEL;
+  }
+
   const configured = process.env.PLANNER_GOOGLE_MODEL?.trim();
-  return configured || DEFAULT_PLANNER_MODEL;
+  return configured || DEFAULT_GOOGLE_PLANNER_MODEL;
+}
+
+export function resolvePlannerFallbackModelId(
+  provider: PlannerProvider = resolvePlannerProvider()
+): string | null {
+  if (provider !== 'lmstudio') {
+    return null;
+  }
+
+  const configured = process.env.PLANNER_LM_STUDIO_FALLBACK_MODEL?.trim();
+  const candidate = configured || DEFAULT_LM_STUDIO_FALLBACK_MODEL;
+  return candidate || null;
+}
+
+export function resolvePlannerBaseUrl(
+  provider: PlannerProvider = resolvePlannerProvider()
+): string | null {
+  if (provider !== 'lmstudio') {
+    return null;
+  }
+  const configured = process.env.PLANNER_LM_STUDIO_BASE_URL?.trim();
+  return configured || DEFAULT_LM_STUDIO_BASE_URL;
 }
 
 export function localizeEnum(locale: Locale, value: string): string {
@@ -40,19 +90,19 @@ export function localizeEnum(locale: Locale, value: string): string {
 
   const map: Record<string, string> = {
     direto: 'somente voos diretos',
-    '1_conexao': 'ate 1 conexao',
-    indiferente: 'sem preferencia rigida',
-    qualquer: 'qualquer horario',
-    manha: 'manha',
+    '1_conexao': 'até 1 conexão',
+    indiferente: 'sem preferência rígida',
+    qualquer: 'qualquer horário',
+    manha: 'manhã',
     tarde: 'tarde',
     noite: 'noite',
     madrugada: 'madrugada',
     evitar_madrugada: 'evitar madrugada',
-    mao: 'somente bagagem de mao',
+    mao: 'somente bagagem de mão',
     '1_despachada': '1 bagagem despachada',
     mais_despachadas: '2+ bagagens despachadas',
     baixa: 'baixa',
-    media: 'media',
+    media: 'média',
     alta: 'alta',
   };
   return map[value] ?? value;
@@ -74,7 +124,7 @@ export function formatPromptContext(locale: Locale, preferences: TravelPreferenc
       adults: preferences.num_adultos,
       children: preferences.num_chd,
       infants: preferences.num_inf,
-      agesChildrenInfants: preferences.idades_chd_inf || (isPt ? 'Nao informado' : 'Not provided'),
+      agesChildrenInfants: preferences.idades_chd_inf || (isPt ? 'Não informado' : 'Not provided'),
     },
     flight: {
       preference: localizeEnum(locale, preferences.preferencia_voo),
@@ -82,17 +132,17 @@ export function formatPromptContext(locale: Locale, preferences: TravelPreferenc
       baggage: localizeEnum(locale, preferences.bagagem),
     },
     milesAndBudget: {
-      milesPrograms: preferences.programas_milhas || (isPt ? 'Nao informado' : 'Not provided'),
-      bankPrograms: preferences.programas_bancos || (isPt ? 'Nao informado' : 'Not provided'),
-      budgetPerPersonBRL: preferences.orcamento_brl || (isPt ? 'Nao informado' : 'Not provided'),
+      milesPrograms: preferences.programas_milhas || (isPt ? 'Não informado' : 'Not provided'),
+      bankPrograms: preferences.programas_bancos || (isPt ? 'Não informado' : 'Not provided'),
+      budgetPerPersonBRL: preferences.orcamento_brl || (isPt ? 'Não informado' : 'Not provided'),
     },
     profile: {
-      travelerProfile: preferences.perfil || (isPt ? 'Nao informado' : 'Not provided'),
+      travelerProfile: preferences.perfil || (isPt ? 'Não informado' : 'Not provided'),
       hotelStandard: preferences.hospedagem_padrao,
-      preferredAreas: preferences.bairros_pref || (isPt ? 'Nao informado' : 'Not provided'),
-      constraints: preferences.restricoes || (isPt ? 'Nao informado' : 'Not provided'),
+      preferredAreas: preferences.bairros_pref || (isPt ? 'Não informado' : 'Not provided'),
+      constraints: preferences.restricoes || (isPt ? 'Não informado' : 'Not provided'),
       climateRiskTolerance: localizeEnum(locale, preferences.tolerancia_risco),
-      visasOrDocuments: preferences.vistos_existentes || (isPt ? 'Nao informado' : 'Not provided'),
+      visasOrDocuments: preferences.vistos_existentes || (isPt ? 'Não informado' : 'Not provided'),
     },
   };
 
@@ -103,24 +153,24 @@ export function buildSystemPrompt(locale: Locale, options?: { sectionOrder?: str
   const isPt = locale === 'pt-BR';
   const base = isPt
     ? [
-        'Voce e um estrategista senior de emissoes com milhas para viagens de lazer e negocio.',
-        'Gere um plano objetivo, pratico e executavel em portugues do Brasil.',
-        'Regras obrigatorias:',
-        '- Nao invente disponibilidade real, tarifas exatas ou regras especificas de companhias sem fonte.',
+        'Você é um estrategista sênior de emissões com milhas para viagens de lazer e negócio.',
+        'Gere um plano objetivo, prático e executável em português do Brasil.',
+        'Regras obrigatórias:',
+        '- Não invente disponibilidade real, tarifas exatas ou regras específicas de companhias sem fonte.',
         '- Sempre explicite trade-offs entre custo em milhas, tempo, conforto e risco.',
-        '- Em caso de dados faltantes, registre em assumptions de forma curta e acionavel.',
-        '- Priorize clareza operacional: o usuario deve saber o que fazer depois de ler o relatorio.',
-        '- Evite jargoes desnecessarios, frases vagas e marketing.',
-        '- Cada item pode ser uma string simples OU um objeto estruturado com campos: text (obrigatorio), tag (tip/warning/action/info), links (array de {label, url, type}).',
-        '- Use items estruturados quando for util: dicas praticas (tag: tip), alertas (tag: warning), acoes executaveis com link (tag: action).',
-        '- Nao force items estruturados — use string simples quando nao houver valor agregado.',
+        '- Em caso de dados faltantes, registre em assumptions de forma curta e acionável.',
+        '- Priorize clareza operacional: o usuário deve saber o que fazer depois de ler o relatório.',
+        '- Evite jargões desnecessários, frases vagas e marketing.',
+        '- Cada item pode ser uma string simples OU um objeto estruturado com campos: text (obrigatório), tag (tip/warning/action/info), links (array de {label, url, type}).',
+        '- Use items estruturados quando for útil: dicas práticas (tag: tip), alertas (tag: warning), ações executáveis com link (tag: action).',
+        '- Não force items estruturados — use string simples quando não houver valor agregado.',
         '',
-        'SECAO DESTINO:',
-        '- Se o usuario informou destinos candidatos, inclua uma secao "Guia Rapido: [Destino]" no final do relatorio.',
-        '- Conteudo: transporte do aeroporto ao centro, bairros recomendados para o perfil do viajante, culinaria local imperdivel, dicas praticas, cuidados.',
-        '- Seja especifico: nomes de linhas de metro/onibus, precos aproximados, nomes de restaurantes/bairros reais.',
-        '- Se multiplos destinos, faca uma secao para cada (max 2).',
-        '- Se nenhum destino informado, nao inclua esta secao.',
+        'SEÇÃO DESTINO:',
+        '- Se o usuário informou destinos candidatos, inclua uma seção "Guia Rápido: [Destino]" no final do relatório.',
+        '- Conteúdo: transporte do aeroporto ao centro, bairros recomendados para o perfil do viajante, culinária local imperdível, dicas práticas, cuidados.',
+        '- Seja específico: nomes de linhas de metrô/ônibus, preços aproximados, nomes de restaurantes/bairros reais.',
+        '- Se múltiplos destinos, faça uma seção para cada (max 2).',
+        '- Se nenhum destino informado, não inclua esta seção.',
       ]
     : [
         'You are a senior miles redemption strategist for domestic and international trips.',
@@ -147,7 +197,7 @@ export function buildSystemPrompt(locale: Locale, options?: { sectionOrder?: str
     base.push('');
     base.push(
       isPt
-        ? 'ORDEM DAS SECOES (gere nesta sequencia para renderizacao progressiva):'
+        ? 'ORDEM DAS SEÇÕES (gere nesta sequência para renderização progressiva):'
         : 'SECTION ORDER (generate in this sequence for progressive rendering):'
     );
     options.sectionOrder.forEach((s, i) => base.push(`${i + 1}. ${s}`));
@@ -160,10 +210,10 @@ export function buildUserPrompt(locale: Locale, preferences: TravelPreferencesIn
   const context = formatPromptContext(locale, preferences);
   if (locale === 'pt-BR') {
     return [
-      'Gere o relatorio estruturado com 4 a 8 secoes.',
-      'Secoes sugeridas: Resumo da Viagem, Estrategia de Emissao, Ordem de Busca e Execucao, Riscos e Mitigacao, Proximos Passos.',
-      'Cada secao precisa ter 2 a 6 itens curtos e especificos.',
-      'Se destinos candidatos foram informados, inclua secao "Guia Rapido: [Destino]" com info pratica (transporte, bairros, culinaria, dicas).',
+      'Gere o relatório estruturado com 4 a 8 seções.',
+      'Seções sugeridas: Resumo da Viagem, Estratégia de Emissão, Ordem de Busca e Execução, Riscos e Mitigação, Próximos Passos.',
+      'Cada seção precisa ter 2 a 6 itens curtos e específicos.',
+      'Se destinos candidatos foram informados, inclua seção "Guia Rápido: [Destino]" com info prática (transporte, bairros, culinária, dicas).',
       'Formato dos items: string simples OU objeto { text, tag?, links?: [{label, url, type}] }.',
       'Dados do usuario (JSON):',
       context,

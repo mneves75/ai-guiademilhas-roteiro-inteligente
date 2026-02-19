@@ -607,3 +607,147 @@ Data: 2026-02-11
   - `PW_FULL=1 pnpm test:e2e` -> PASS
     - `225 passed`, `5 skipped`, `0 failed`
     - skips mantidos como intencionais em `mobile-safari` para cenarios auth-heavy documentados nos testes.
+
+## 2026-02-18 02:29 - Fechamento LM Studio + shared link
+
+- Revalidei `pnpm verify` completo no estado atual: passou (lint, type-check, unit, build, db smoke sqlite/postgres e 50 E2E chromium).
+- Executei fluxo real `bootstrap auth -> POST /api/planner/generate -> POST /api/planner/share -> GET /r/{token}`.
+- Evidência final: `generate_code=200 mode=ai sections=4 share_code=201 share_url=/r/c745a85b1bd5580237c2a9688de15fa8 link_code=200 elapsed_s=2`.
+- Diagnóstico do 403 no teste via curl: proteção CSRF em `proxy.ts` exige `Origin/Referer` válidos quando há cookie de sessão.
+
+## 2026-02-18 02:33 - Bateria autônoma de confiabilidade LM Studio
+
+- Loop real autenticado (cookie E2E + headers Origin/Referer válidos) executado em produção local.
+- `POST /api/planner/generate` x3: 3/3 `200`, 3/3 `mode=ai`, 3/3 `sections=4`.
+- `POST /api/planner/share` x3 + `GET /r/{token}` x3: 3/3 `201` + 3/3 `200`.
+- `POST /api/planner/generate-stream` x2: 2/2 `200`, 2/2 `mode=ai`, 2/2 `sections=4`.
+- Evidência resumida: `generate_ok=3/3 ai_ok=3/3 share_ok=3/3 link_ok=3/3 stream_ok=2/2 stream_ai_ok=2/2`.
+
+## 2026-02-18 02:36 - Smoke script integrado + verify completo
+
+- Adicionado `scripts/planner-lmstudio-smoke.mjs` para validação automática real de generate/share/link + stream SSE com LM Studio.
+- Ajuste pós-falha inicial: tratamento de rate limit 429 com retry guiado por `retryAfterSeconds` e orçamento de chamadas para não estourar o limite.
+- Novo script exposto em `package.json` como `pnpm test:planner:lmstudio`.
+- Evidência smoke final: `generate_ok=3/3 ai_ok=3/3 cold_ok=3/3 warm_cache_hit_ok=1/1 share_ok=3/3 link_ok=3/3 stream_ok=2/2 stream_ai_ok=2/2`, último link `/r/a90bf3c197048b2f4501a6cdabb46e5f`.
+- Evidência gate completo: `pnpm verify` finalizou com sucesso (incluindo 50 E2E passando).
+
+## 2026-02-18 02:43 - Gate composto `verify:planner:local`
+
+- Adicionados scripts NPM:
+  - `test:planner:lmstudio:soak` (8 gerações + 4 streams)
+  - `verify:planner:local` (`pnpm verify` + soak LM Studio)
+- Execução validada: `pnpm verify:planner:local` finalizou com sucesso.
+- Evidência verify interno: lint/type/unit/build/db-smoke/e2e chromium (50 passed).
+- Evidência soak no mesmo comando: `generate_ok=8/8 ai_ok=8/8 cold_ok=8/8 warm_cache_hit_ok=1/1 share_ok=8/8 link_ok=8/8 stream_ok=4/4 stream_ai_ok=4/4`.
+- Link final validado: `/r/720f9401d38ed05ed8f791fb600447d8` com HTTP 200.
+
+## 2026-02-18 02:48 - Stress test extremo LM Studio
+
+- Execução: `SMOKE_GENERATE_LOOPS=12 SMOKE_STREAM_LOOPS=6 pnpm test:planner:lmstudio`.
+- Resultado: `generate_ok=12/12 ai_ok=12/12 cold_ok=12/12 warm_cache_hit_ok=1/1 share_ok=12/12 link_ok=12/12 stream_ok=6/6 stream_ai_ok=6/6`.
+- Sob carga, ocorreram 429 transitórios (iteração 11 de generate e 5 de stream) tratados pelo retry com sucesso, sem falha final.
+- Link final do stress test: `/r/454ae3dac0f9cac1b2f5782fc964c9c5` validado com HTTP 200.
+
+## 2026-02-18 02:51 - Preflight LM Studio + revalidação composta
+
+- Harden do smoke: preflight obrigatório de `PLANNER_PROVIDER=lmstudio` e health-check de `PLANNER_LM_STUDIO_BASE_URL/models` antes dos loops.
+- Gate reexecutado: `pnpm verify:planner:local` com sucesso após o harden.
+- Evidência verify interno: 50 E2E Chromium pass.
+- Evidência soak interno: `generate_ok=8/8 ai_ok=8/8 cold_ok=8/8 warm_cache_hit_ok=1/1 share_ok=8/8 link_ok=8/8 stream_ok=4/4 stream_ai_ok=4/4`.
+- Link final dessa rodada: `/r/bef760c9676f56a2f70d44bc151f3a08` validado com HTTP 200.
+
+## 2026-02-18 02:55 - Robustez fail-fast validada
+
+- Teste negativo 1: `PLANNER_PROVIDER=google pnpm test:planner:lmstudio` -> falha esperada (`PLANNER_PROVIDER must be lmstudio`).
+- Teste negativo 2: `PLANNER_PROVIDER=lmstudio PLANNER_LM_STUDIO_BASE_URL=http://localhost:59999/v1 pnpm test:planner:lmstudio` -> falha esperada (`LM Studio unreachable .../models`).
+- Revalidação positiva imediata: `pnpm test:planner:lmstudio` -> sucesso completo (`3/3` generate/share/link e `2/2` stream).
+- Link final da rodada: `/r/a4ae72b9f07cbf2f0da56ccb0c611a88` com HTTP 200.
+
+## 2026-02-18 03:00 - Rodada final autônoma (gate + stress extra)
+
+- `pnpm verify:planner:local` executado com sucesso completo (verify + soak 8/4).
+- Stress extra final: `SMOKE_GENERATE_LOOPS=12 SMOKE_STREAM_LOOPS=6 pnpm test:planner:lmstudio`.
+- Resultado stress extra: `generate_ok=12/12 ai_ok=12/12 cold_ok=12/12 warm_cache_hit_ok=1/1 share_ok=12/12 link_ok=12/12 stream_ok=6/6 stream_ai_ok=6/6`.
+- Link final validado: `/r/77dc1bf3096b1377de63d12cea545623` com HTTP 200.
+
+## 2026-02-18 03:07 - Rodada máxima extra (16/8)
+
+- Gate completo executado: `pnpm verify:planner:local` -> sucesso.
+- Stress extra: `SMOKE_GENERATE_LOOPS=16 SMOKE_STREAM_LOOPS=8 pnpm test:planner:lmstudio` -> sucesso.
+- Resultado: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- Link final validado: `/r/a29bbc9e67b239276f771d146cdcfab2` com HTTP 200.
+
+## 2026-02-18 03:15 - Gate autônomo único concluído
+
+- Executado `pnpm verify:planner:autonomous` (script único end-to-end).
+- Fluxo coberto no mesmo comando:
+  1. `verify:planner:local` (verify completo + soak 8/4),
+  2. negativo provider incorreto (falha esperada),
+  3. negativo endpoint LM Studio inválido (falha esperada),
+  4. stress positivo 16/8.
+- Resultado final do stress positivo no gate: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- Link final do gate: `/r/0e484355a724ee84c2e208ce243f09f7` validado com HTTP 200.
+
+## 2026-02-18 03:42 - Reexecução total autônoma concluída (sessão atual)
+
+- Comando executado: `pnpm verify:planner:autonomous`.
+- Resultado do gate: sucesso completo (exit 0) cobrindo:
+  1. `verify:planner:local` (inclui `pnpm verify` + soak 8/4),
+  2. guard negativo provider incorreto (falha esperada),
+  3. guard negativo endpoint LM Studio inválido (falha esperada),
+  4. stress positivo final 16/8.
+- Resultado do stress positivo: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- `latest_link` do próprio gate: `/r/fac89bd17523120046404f72db204c97`.
+- Validação externa após gate: `curl http://localhost:3000/r/fac89bd17523120046404f72db204c97` retornou HTTP `200`.
+
+## 2026-02-18 03:50 - Reexecução autônoma extra concluída
+
+- Rodado novamente: `pnpm verify:planner:autonomous`.
+- Resultado: sucesso completo (exit 0), incluindo `verify`, E2E Chromium `50/50`, guards negativos e stress final `16/8`.
+- Saída final do stress: `generate_ok=16/16 ai_ok=16/16 cold_ok=16/16 warm_cache_hit_ok=1/1 share_ok=16/16 link_ok=16/16 stream_ok=8/8 stream_ai_ok=8/8`.
+- `latest_link` do gate: `/r/631db4938aaed4802caabee09ffe2a70`.
+- Validação pós-gate: `curl` em `http://localhost:3000/r/631db4938aaed4802caabee09ffe2a70` retornou HTTP `200`.
+
+## 2026-02-19 - Refatoração Elegante do Planner (Padrão Carmack)
+
+### Escopo
+
+- Extração de god handlers em utilitários composáveis
+- Correção de 60+ strings pt-BR sem acentos
+- Isolamento do provider LM Studio
+- Unificação do pipeline pós-geração (save + analytics + metrics + cache)
+
+### Novos arquivos
+
+| Arquivo                                | Propósito                                                | Linhas |
+| -------------------------------------- | -------------------------------------------------------- | ------ |
+| `src/lib/planner/strings.ts`           | `normalizeForComparison()` + `sectionOrder(locale)`      | 40     |
+| `src/lib/planner/sse.ts`               | `sseHeaders()`, `encodeEvent()`, `singleEventResponse()` | 40     |
+| `src/lib/planner/post-generation.ts`   | Pipeline pós-geração unificado (best-effort)             | 102    |
+| `src/lib/planner/lmstudio-provider.ts` | `generateViaLmStudio()` extraído de generate-report.ts   | 240    |
+
+### Reduções
+
+| Arquivo                    | Antes | Depois | Delta |
+| -------------------------- | ----- | ------ | ----- |
+| `generate-stream/route.ts` | 448   | 227    | -49%  |
+| `generate/route.ts`        | 201   | 131    | -35%  |
+| `generate-report.ts`       | 557   | 326    | -41%  |
+
+### Acentos corrigidos em
+
+- `prompt.ts` (~30 strings: `localizeEnum`, `buildSystemPrompt`, `buildUserPrompt`, `formatPromptContext`)
+- `stream-report.ts` (5 section titles)
+- `generate-report.ts` (fallback report strings)
+- `lmstudio-provider.ts` (repair rules)
+- `normalize-report.ts` (matching + fallback strings)
+- `planner-pdf-document.tsx` ("Assunções")
+- `pdf-styles.ts` ("[atenção]", "[ação]")
+- `generate-stream/route.ts` ("geração do relatório")
+
+### Verificação
+
+- `pnpm type-check` ✅
+- `pnpm lint` ✅ (zero warnings)
+- `pnpm test` ✅ (146/147 — 1 pre-existing SQLite binding failure)
+- `pnpm build` ✅

@@ -1,15 +1,19 @@
 import 'server-only';
 
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, Output } from 'ai';
 import type { Locale } from '@/lib/locale';
 import { plannerReportSchema, type TravelPreferencesInput } from './schema';
 import {
+  resolvePlannerProvider,
   resolvePlannerApiKey,
+  resolvePlannerBaseUrl,
   resolvePlannerModelId,
   buildSystemPrompt,
   buildUserPrompt,
 } from './prompt';
+import { sectionOrder } from './strings';
 
 export type StreamPlannerReportInput = {
   locale: Locale;
@@ -18,44 +22,33 @@ export type StreamPlannerReportInput = {
 };
 
 export function streamPlannerReport({ locale, preferences, signal }: StreamPlannerReportInput) {
-  const apiKey = resolvePlannerApiKey();
-  if (!apiKey) {
+  const provider = resolvePlannerProvider();
+  const apiKey = resolvePlannerApiKey(provider);
+  if (provider === 'google' && !apiKey) {
     throw new Error('PLANNER_API_KEY_MISSING');
   }
 
-  const modelId = resolvePlannerModelId();
-  const google = createGoogleGenerativeAI({ apiKey });
+  const modelId = resolvePlannerModelId(provider);
+  const model =
+    provider === 'lmstudio'
+      ? createOpenAI({
+          apiKey: apiKey ?? 'lm-studio',
+          baseURL: resolvePlannerBaseUrl(provider) ?? undefined,
+          name: 'lmstudio',
+        })(modelId)
+      : createGoogleGenerativeAI({ apiKey: apiKey as string })(modelId);
 
-  const sectionOrder =
-    locale === 'pt-BR'
-      ? [
-          'Resumo da Viagem',
-          'Analise de Rotas',
-          'Estrategia de Milhas',
-          'Hospedagem',
-          'Riscos e Mitigacoes',
-          'Proximos Passos',
-          'Guia Rapido do Destino',
-        ]
-      : [
-          'Trip Summary',
-          'Route Analysis',
-          'Miles Strategy',
-          'Lodging',
-          'Risks and Mitigations',
-          'Next Steps',
-          'Quick Destination Guide',
-        ];
+  const titles = sectionOrder(locale);
 
   return streamText({
-    model: google(modelId),
+    model,
     temperature: 0.2,
     maxOutputTokens: 2400,
     output: Output.object({
       schema: plannerReportSchema,
       name: locale === 'pt-BR' ? 'relatorio_planejamento_milhas' : 'miles_planning_report',
     }),
-    system: buildSystemPrompt(locale, { sectionOrder }),
+    system: buildSystemPrompt(locale, { sectionOrder: titles }),
     prompt: buildUserPrompt(locale, preferences),
     abortSignal: signal,
   });

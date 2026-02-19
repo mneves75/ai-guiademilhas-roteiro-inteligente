@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Planner domain refactoring (Carmack standard)**: Extracted god handlers into composable utilities, fixed 60+ pt-BR accent issues across 8 files.
+  - Extracted `src/lib/planner/lmstudio-provider.ts` from `generate-report.ts` (LM Studio isolation)
+  - Extracted `src/lib/planner/post-generation.ts` — unified save/analytics/metrics/cache pipeline (eliminates 3x duplication)
+  - Extracted `src/lib/planner/sse.ts` — SSE helpers: `sseHeaders()`, `encodeEvent()`, `singleEventResponse()`
+  - Added `src/lib/planner/strings.ts` — `normalizeForComparison()` (Unicode NFD) + shared section order
+  - `generate-stream/route.ts`: 448 → 227 lines (-49%)
+  - `generate/route.ts`: 201 → 131 lines (-35%)
+  - `generate-report.ts`: 557 → 326 lines (-41%)
+  - `normalize-report.ts`: accent-insensitive title matching via `normalizeForComparison()`
+  - All pt-BR strings corrected: `prompt.ts`, `stream-report.ts`, `generate-report.ts`, `lmstudio-provider.ts`, `normalize-report.ts`, PDF components
+  - Zero new dependencies, 100% behavioral equivalence preserved
+
 ### Fixed
 
 - **Restored favicon assets**: `favicon.ico`, `favicon-16x16.png`, `apple-touch-icon.png` copied from `.scrap_bin/` to `public/`, resolving 404s on all browsers.

@@ -57,7 +57,7 @@ export function PlannerPdfDocument({ report, locale = 'pt-BR' }: PlannerPdfDocum
         {report.assumptions.length > 0 && (
           <View style={styles.assumptions}>
             <Text style={styles.assumptionsTitle}>
-              {locale === 'pt-BR' ? 'Assuncoes' : 'Assumptions'}
+              {locale === 'pt-BR' ? 'Assunções' : 'Assumptions'}
             </Text>
             {report.assumptions.map((item, i) => (
               <Text key={`assumption-${i}`} style={styles.item}>

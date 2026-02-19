@@ -14,6 +14,7 @@ import { captureServerEvent } from '@/lib/analytics/posthog-server';
 import { plannerFunnelEvents } from '@/lib/analytics/funnel';
 import { incPlannerFunnelGenerated } from '@/lib/metrics';
 import { plannerProblemResponse } from '@/lib/planner/problem-response';
+import { runPostGeneration } from '@/lib/planner/post-generation';
 
 const RATE_LIMIT_MAX = 6;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -27,11 +28,7 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
   try {
     const session = await getSession();
     if (!session) {
-      return plannerProblemResponse({
-        status: 401,
-        requestId,
-        instance,
-      });
+      return plannerProblemResponse({ status: 401, requestId, instance });
     }
 
     const rateLimit = await checkRateLimit({
@@ -53,11 +50,12 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
     const payload = await readJsonBodyAs(request, plannerGenerateRequestSchema);
     const locale = normalizeLocale(payload.locale);
 
-    // --- Check cache ---
-    const { hashPreferences, getCachedReport, setCachedReport } =
-      await import('@/lib/planner/cache');
+    const { hashPreferences, getCachedReport } = await import('@/lib/planner/cache');
     const cacheHash = await hashPreferences(payload.preferences);
     const cachedReport = await getCachedReport(cacheHash);
+
+    const passengers =
+      payload.preferences.num_adultos + payload.preferences.num_chd + payload.preferences.num_inf;
 
     if (cachedReport) {
       auditFromRequest(request, {
@@ -65,10 +63,7 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
         actor: { userId: String(session.user.id) },
         metadata: {
           locale,
-          passengers:
-            payload.preferences.num_adultos +
-            payload.preferences.num_chd +
-            payload.preferences.num_inf,
+          passengers,
           destinationsProvided: payload.preferences.destinos.length > 0,
           generationMode: 'cached',
           source: payload.source,
@@ -79,12 +74,7 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
         captureServerEvent({
           distinctId: String(session.user.id),
           event: plannerFunnelEvents.plannerGenerated,
-          properties: {
-            source: payload.source,
-            locale,
-            mode: 'cached',
-            channel: 'server',
-          },
+          properties: { source: payload.source, locale, mode: 'cached', channel: 'server' },
         });
       }
 
@@ -101,68 +91,34 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
           report: cachedReport,
           mode: 'ai' as const,
         },
-        {
-          status: 200,
-          headers: {
-            'x-request-id': requestId,
-            'x-cache': 'hit',
-          },
-        }
+        { status: 200, headers: { 'x-request-id': requestId, 'x-cache': 'hit' } }
       );
     }
 
-    const generation = await generatePlannerReport({
-      locale,
-      preferences: payload.preferences,
-    });
+    const generation = await generatePlannerReport({ locale, preferences: payload.preferences });
 
     auditFromRequest(request, {
       action: 'planner.generate',
-      actor: {
-        userId: String(session.user.id),
-      },
+      actor: { userId: String(session.user.id) },
       metadata: {
         locale,
-        passengers:
-          payload.preferences.num_adultos +
-          payload.preferences.num_chd +
-          payload.preferences.num_inf,
+        passengers,
         destinationsProvided: payload.preferences.destinos.length > 0,
         generationMode: generation.mode,
         source: payload.source,
       },
     });
 
-    if (payload.source) {
-      captureServerEvent({
-        distinctId: String(session.user.id),
-        event: plannerFunnelEvents.plannerGenerated,
-        properties: {
-          source: payload.source,
-          locale,
-          mode: generation.mode,
-          channel: 'server',
-        },
-      });
-    }
-
-    incPlannerFunnelGenerated({
-      source: payload.source ?? 'unknown',
+    await runPostGeneration({
+      userId: session.user.id,
+      locale,
+      preferences: payload.preferences,
+      report: generation.report,
       mode: generation.mode,
-      channel: 'server',
+      source: payload.source,
+      cacheHash,
+      requestId,
     });
-
-    // Save to LLM response cache on successful AI generation (best-effort)
-    if (generation.mode === 'ai') {
-      try {
-        await setCachedReport(cacheHash, generation.report, 'gemini-2.5-flash');
-      } catch (cacheError) {
-        console.warn('[planner.generate] cache save failed', {
-          requestId,
-          error: cacheError instanceof Error ? cacheError.message : String(cacheError),
-        });
-      }
-    }
 
     return NextResponse.json(
       {
@@ -171,12 +127,7 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
         report: generation.report,
         mode: generation.mode,
       },
-      {
-        status: 200,
-        headers: {
-          'x-request-id': requestId,
-        },
-      }
+      { status: 200, headers: { 'x-request-id': requestId } }
     );
   } catch (err) {
     if (isHttpError(err) && err.expose) {
@@ -188,10 +139,6 @@ export const POST = withApiLogging('api.planner.generate', async (request: NextR
       });
     }
 
-    return plannerProblemResponse({
-      status: 500,
-      requestId,
-      instance,
-    });
+    return plannerProblemResponse({ status: 500, requestId, instance });
   }
 });
