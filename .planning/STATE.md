@@ -143,6 +143,9 @@ Phase 03: [=====-----] 2/4 plans complete
 | 2026-02-19 | Phase 2 COMPLETE (5/5 plans) | 11 tables, 45 query helpers, 19 npm scripts verified; ready for Phase 3 |
 | 2026-02-19 | Supabase Auth verified as production auth provider | Roadmap says Better Auth; actual implementation is Supabase Auth via @supabase/ssr |
 | 2026-02-19 | Phase 3 Plan 01 verified (pre-existing) | AUTH-01/02/03/04/07/08 all implemented; 0 code changes; dual-layer protection confirmed |
+| 2026-02-19 | User enumeration protection on auth routes | Password-reset and magic-link always return 200 regardless of email existence |
+| 2026-02-19 | SEC-1: NODE_ENV=production guard on E2E bypass | Defense-in-depth: first check in both getPlaywrightE2ESession() and bootstrap route |
+| 2026-02-19 | Phase 3 Plan 02 complete (AUTH-05, AUTH-06, SEC-1) | 3 API routes created, 2 files hardened; 2 tasks in 2min |
 
 ---
 
