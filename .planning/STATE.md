@@ -33,15 +33,15 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 
 **Milestone:** v1 Initial Release
 **Current Phase:** 12 of 12 COMPLETE ✅
-**Progress:** [███████░░░] 67%
+**Progress:** [█████████░] 89%
 
 ```
 [██████████] 100% Complete (v1 implemented + verified)
 Phase 1-12: COMPLETE
 ```
 
-**Last Activity:** 2026-02-19 - GSD Phase 2 retroactive documentation (Plan 02-02 schema verified: 11 tables, multi-dialect, migrations present)
-**Next Action:** Continue GSD Phase 2 retroactive documentation (Plans 02-03 through 02-05)
+**Last Activity:** 2026-02-19 - GSD Phase 2 retroactive documentation (Plan 02-03 query helpers verified: 45 helpers across 9 modules)
+**Next Action:** Continue GSD Phase 2 retroactive documentation (Plan 02-05 verification checkpoint)
 
 ---
 
@@ -135,6 +135,10 @@ Phase 1-12: COMPLETE
 | 2026-02-19 | Supabase (not Neon) for PostgreSQL | postgres.js driver for both Node and Edge; no @neondatabase/serverless needed |
 | 2026-02-19 | Multi-dialect DB architecture (postgres/sqlite/d1) | Adapter pattern exceeds original plan; lazy Proxy singleton for build safety |
 | 2026-02-19 | Phase 2 Plan 01 verified (pre-existing) | All 4 tasks satisfied by existing implementation; 0 code changes |
+| 2026-02-19 | Direct Drizzle inserts over drizzle-seed | Explicit data, deterministic by construction, no faker dependency |
+| 2026-02-19 | Phase 2 Plan 03 verified (pre-existing) | 45 query helpers across 9 modules; soft delete + multi-tenant patterns confirmed |
+| 2026-02-19 | Users skip soft delete filter (Supabase Auth) | Supabase manages user lifecycle; app users table is read-through mirror |
+| 2026-02-19 | Phase 2 Plan 04 verified (pre-existing) | Seed + 19 npm scripts already implemented; 0 code changes |
 
 ---
 
