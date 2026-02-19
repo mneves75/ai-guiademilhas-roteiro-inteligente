@@ -14,15 +14,15 @@ pnpm type-check
 pnpm test
 
 DB_PROVIDER=sqlite SQLITE_PATH=:memory: \
-  BETTER_AUTH_SECRET=devsecretdevsecretdevsecretdevsecret \
-  BETTER_AUTH_URL=http://localhost:3000 \
+  NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key \
   NEXT_PUBLIC_APP_URL=http://localhost:3000 \
   pnpm build
 
 CI=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 \
   DB_PROVIDER=sqlite SQLITE_PATH=:memory: \
-  BETTER_AUTH_SECRET=devsecretdevsecretdevsecretdevsecret \
-  BETTER_AUTH_URL=http://localhost:3000 \
+  NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key \
   NEXT_PUBLIC_APP_URL=http://localhost:3000 \
   pnpm test:e2e
 

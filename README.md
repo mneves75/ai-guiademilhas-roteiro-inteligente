@@ -5,7 +5,7 @@ Aplicacao de planejamento de viagens com milhas, baseada no framework Next.js 16
 ## Features
 
 - **Next.js 16** + React 19 + TypeScript (strict mode)
-- **Better Auth** - Email/password, OAuth (Google/GitHub), password reset, magic link
+- **Supabase Auth** - Email/password, OAuth (Google/GitHub), password reset, magic link
 - **PostgreSQL / SQLite / D1 + Drizzle ORM** - Type-safe database (multi-provider)
 - **Multi-tenancy** - Workspaces, members, invitations, roles
 - **Stripe Integration** - Subscriptions (monthly/yearly), one-time payment, portal, idempotent webhooks
@@ -47,17 +47,17 @@ curl -s http://localhost:3000/health
 
 ## Tech Stack
 
-| Category   | Technology                   |
-| ---------- | ---------------------------- |
-| Framework  | Next.js 16 (App Router)      |
-| Language   | TypeScript 5.9 (strict mode) |
-| Styling    | Tailwind CSS + shadcn/ui     |
-| Database   | PostgreSQL + Drizzle ORM     |
-| Auth       | Better Auth                  |
-| Payments   | Stripe                       |
-| Email      | Resend + React Email         |
-| Testing    | Vitest + Playwright          |
-| Deployment | Vercel + Docker              |
+| Category   | Technology                        |
+| ---------- | --------------------------------- |
+| Framework  | Next.js 16 (App Router)           |
+| Language   | TypeScript 5.9 (strict mode)      |
+| Styling    | Tailwind CSS + shadcn/ui          |
+| Database   | PostgreSQL + Drizzle ORM          |
+| Auth       | Supabase Auth (via @supabase/ssr) |
+| Payments   | Stripe                            |
+| Email      | Resend + React Email              |
+| Testing    | Vitest + Playwright               |
+| Deployment | Vercel + Docker                   |
 
 ## Code Quality
 

@@ -27,11 +27,11 @@ Resposta:
 
 Em producao, requer `METRICS_TOKEN` e o header `Authorization: Bearer <token>`.
 
-## Auth (Better Auth)
+## Auth (Supabase Auth)
 
 - `GET|POST /api/auth/*` (catch-all em `app/api/auth/[...all]/route.ts`)
 
-Obs.: endpoints e payloads dependem da configuracao do Better Auth em `src/lib/auth.ts`.
+Obs.: endpoints e payloads usam Supabase Auth via `@supabase/ssr`. Config em `src/lib/supabase/server.ts`.
 
 ## Workspaces (multi-tenancy)
 

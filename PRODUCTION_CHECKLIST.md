@@ -3,7 +3,7 @@
 ## Environment
 
 - Set `NEXT_PUBLIC_APP_URL` to the canonical public origin (https).
-- Set a strong `BETTER_AUTH_SECRET` (32+ chars, randomly generated).
+- Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Supabase Dashboard.
 - Set `ADMIN_EMAILS` (comma-separated) and verify the intended admins can access `/admin`.
 - Set `SECURITY_CONTACT_EMAIL` (or `SECURITY_CONTACT_URL`) so `/.well-known/security.txt` publishes a real contact channel (RFC 9116).
 
