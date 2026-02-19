@@ -90,8 +90,8 @@ Plans:
 **Plans:** 5 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Install Drizzle ORM, configure database connection (Wave 1)
-- [ ] 02-02-PLAN.md — Create database schema with 7 tables + generate migration (Wave 1)
+- [x] 02-01-PLAN.md — Install Drizzle ORM, configure database connection (Wave 1)
+- [x] 02-02-PLAN.md — Create database schema with 7 tables + generate migration (Wave 1)
 - [ ] 02-03-PLAN.md — Create soft delete query helpers + multi-tenant isolation (Wave 2)
 - [ ] 02-04-PLAN.md — Create seed script + npm database scripts (Wave 2)
 - [ ] 02-05-PLAN.md — Verification checkpoint: database working end-to-end (Wave 3)

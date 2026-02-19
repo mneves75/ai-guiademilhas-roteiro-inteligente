@@ -2,7 +2,7 @@
 
 **Project:** NextJS Bootstrapped Shipped (nextjs-bootstrapped-shipped)
 **Status:** v1 Complete ✅
-**Updated:** 2026-02-06
+**Updated:** 2026-02-19
 
 ---
 
@@ -33,15 +33,15 @@ An open-source Next.js 15 boilerplate for developers who want a modern, full-fea
 
 **Milestone:** v1 Initial Release
 **Current Phase:** 12 of 12 COMPLETE ✅
-**Progress:** 12/12 phases complete (100% of v1 roadmap)
+**Progress:** [███████░░░] 67%
 
 ```
 [██████████] 100% Complete (v1 implemented + verified)
 Phase 1-12: COMPLETE
 ```
 
-**Last Activity:** 2026-02-14 - Supabase Auth migration + Planner v3 (enriched schema, cache, history, PDF, wizard form, proxy.ts session refresh, build verification, 120 tests passing)
-**Next Action:** Tag a release (ex: `v0.3.0`) and publish release notes
+**Last Activity:** 2026-02-19 - GSD Phase 2 retroactive documentation (Plan 02-02 schema verified: 11 tables, multi-dialect, migrations present)
+**Next Action:** Continue GSD Phase 2 retroactive documentation (Plans 02-03 through 02-05)
 
 ---
 
@@ -132,6 +132,9 @@ Phase 1-12: COMPLETE
 | 2026-02-05 | Initialize project during 01-01 | Entry criteria not met; auto-initialized |
 | 2026-02-05 | Upgrade eslint-config-prettier to v10 | v9 lacks flat config support |
 | 2026-02-05 | Phase 1 verified and approved | All 10 requirements met, ready for Phase 2 |
+| 2026-02-19 | Supabase (not Neon) for PostgreSQL | postgres.js driver for both Node and Edge; no @neondatabase/serverless needed |
+| 2026-02-19 | Multi-dialect DB architecture (postgres/sqlite/d1) | Adapter pattern exceeds original plan; lazy Proxy singleton for build safety |
+| 2026-02-19 | Phase 2 Plan 01 verified (pre-existing) | All 4 tasks satisfied by existing implementation; 0 code changes |
 
 ---
 
